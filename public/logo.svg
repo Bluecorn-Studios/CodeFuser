@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 741 100" width="100%" height="100%">
+  <g fill="none" stroke="#ffffff" stroke-width="12.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- C -->
+    <path d="M 75,18 L 47,18 A 32,32 0 0 0 47,82 L 75,82" />
+    
+    <!-- { (4-5% larger, pristine curves, elegant gap) -->
+    <path d="M 126,16.4 C 107,16.4 104,29 104,40.5 C 104,46.8 99,50 88,50 C 99,50 104,53.2 104,59.5 C 104,71 107,83.6 126,83.6" />
+    
+    <!-- } (4-5% larger, pristine curves, elegant gap) -->
+    <path d="M 144,16.4 C 163,16.4 166,29 166,40.5 C 166,46.8 171,50 182,50 C 171,50 166,53.2 166,59.5 C 166,71 163,83.6 144,83.6" />
+    
+    <!-- D (fully separate, beautiful whitespace gap) -->
+    <path d="M 210,18 L 210,82" />
+    <path d="M 210,18 L 235,18 A 32,32 0 0 1 235,82 L 210,82" />
+    
+    <!-- E (first) - Floating top/bottom bars, middle bar seamlessly bridging with F -->
+    <path d="M 295,18 L 343,18" />
+    <path d="M 295,50 L 370,50" />
+    <path d="M 295,82 L 343,82" />
+    
+    <!-- F -->
+    <path d="M 370,18 L 370,82" />
+    <path d="M 370,18 L 420,18" />
+    <path d="M 370,50 L 410,50" />
+    
+    <!-- U -->
+    <path d="M 448,18 L 448,53 A 27,27 0 0 0 502,53 L 502,18" />
+    
+    <!-- S (Symmetric, classic, smooth sans-serif curves matching other letter styling) -->
+    <path d="M 572,28 C 572,18 530,18 530,33 C 530,47 572,53 572,67 C 572,82 530,82 530,72" />
+    
+    <!-- E (second) -->
+    <path d="M 604,18 L 604,82" />
+    <path d="M 604,18 L 654,18" />
+    <path d="M 604,50 L 654,50" />
+    <path d="M 604,82 L 654,82" />
+    
+    <!-- R -->
+    <path d="M 682,18 L 682,82" />
+    <path d="M 682,18 L 710,18 A 16,16 0 0 1 710,50 L 682,50" />
+    <path d="M 694,50 L 728,82" />
+  </g>
+</svg>

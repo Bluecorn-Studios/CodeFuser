@@ -1,0 +1,1 @@
+import{j as o}from"./index-BFx6-xU-.js";import{P as s}from"./Reveal-CS6IUd4w.js";import{F as t}from"./Faq-CJ_zZ8Rd.js";import{F as m}from"./FinalCta-D21Xhhf6.js";const e=()=>o.jsx(s,{children:o.jsxs("div",{className:"pt-12",children:[o.jsx(t,{}),o.jsx(m,{})]})});export{e as component};

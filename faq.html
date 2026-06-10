@@ -1,0 +1,241 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="/assets/styles-C8Z6e70h.css" data-precedence="default"/><title>FAQ — CodeFuser</title><meta name="author" content="Lovable"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary"/><meta name="twitter:site" content="@Lovable"/><meta name="description" content="Quiet answers to loud questions about websites, visibility, AI, and ownership."/><meta property="og:title" content="FAQ — CodeFuser"/><meta property="og:description" content="Answers to the questions every founder asks before starting."/><link rel="modulepreload" href="/assets/index-BFx6-xU-.js"/><link rel="modulepreload" href="/assets/faq-C99FlKue.js"/><link rel="modulepreload" href="/assets/Reveal-CS6IUd4w.js"/><link rel="modulepreload" href="/assets/Faq-CJ_zZ8Rd.js"/><link rel="modulepreload" href="/assets/FinalCta-D21Xhhf6.js"/>
+<style>
+	@font-face {
+		font-family: 'CameraPlainVariable';
+		src: url('https://cdn.gpteng.co/mcp-widgets/v1/fonts/CameraPlainVariable.woff2') format('woff2');
+		font-weight: 100 900;
+		font-style: normal;
+		font-display: swap;
+	}
+
+	#lovable-badge {
+		--badge-bg: #1b1b1b;
+		--badge-text: #c5c1b9;
+		--badge-text-hover: #dcdad5;
+		--badge-radius: 6px;
+		--badge-padding: 8px;
+		--badge-gap: 6px;
+		--badge-shadow: 
+			0 0 0 1px rgba(0, 0, 0, 0.88),
+			0 1px 0 0 rgba(0, 0, 0, 0.04),
+			0 2px 2px -1px rgba(0, 0, 0, 0.08),
+			0 4px 4px -2px rgba(0, 0, 0, 0.08),
+			0 8px 8px -4px rgba(0, 0, 0, 0.08),
+			0 16px 16px -8px rgba(0, 0, 0, 0.08);
+		--badge-transition-duration: 0.2s;
+		--badge-transition-easing: cubic-bezier(0.16, 1, 0.32, 1);
+		--focus-color: #575ECF;
+		--focus-offset: 2px;
+		--focus-width: 2px;
+		
+		position: fixed;
+		bottom: 12px;
+		right: 12px;
+		height: 24px;
+		display: flex;
+		align-items: center;
+		z-index: 1000000;
+		background-color: var(--badge-bg) !important;
+		color: var(--badge-text) !important;
+		border-radius: var(--badge-radius);
+		box-shadow: var(--badge-shadow) !important;
+		font-size: 12px;
+		font-family: CameraPlainVariable, "CameraPlainVariable Fallback", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+		font-weight: 400 !important;
+		text-transform: none !important;
+		font-feature-settings: normal !important;
+		transform: translateZ(0);
+		will-change: transform, opacity;
+	}
+
+	#lovable-badge-cta {
+		display: flex;
+		align-items: center;
+		gap: var(--badge-gap);
+		padding: 0 var(--badge-padding);
+		height: 100%;
+		color: inherit;
+		text-decoration: none;
+		white-space: nowrap;
+		border-radius: var(--badge-radius) 0 0 var(--badge-radius);
+		transition: 
+			background-color var(--badge-transition-duration) ease,
+			color var(--badge-transition-duration) ease,
+			transform 0.1s ease;
+	}
+
+	#lovable-badge-cta:hover {
+		background: rgba(255, 255, 255, 0.04);
+		color: var(--badge-text-hover);
+	}
+
+	#lovable-badge-cta:active {
+		transform: scale(0.98);
+	}
+
+	#lovable-badge-cta:focus {
+		outline: none;
+	}
+
+	#lovable-badge-cta:focus-visible {
+		outline: var(--focus-width) solid var(--focus-color);
+		outline-offset: var(--focus-offset);
+		z-index: 1;
+	}
+
+	#lovable-badge-text {
+		line-height: 1;
+	}
+
+	#lovable-badge-divider {
+		width: 1px;
+		height: 24px;
+		background-color: rgba(255, 255, 255, 0.04);
+		flex-shrink: 0;
+	}
+
+	#lovable-badge-close {
+		width: 24px;
+		height: 24px;
+		min-width: 24px;
+		min-height: 24px;
+		cursor: pointer;
+		background: none;
+		border: none;
+		padding: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 0 var(--badge-radius) var(--badge-radius) 0;
+		flex-shrink: 0;
+		transition: 
+			background-color var(--badge-transition-duration) ease,
+			transform 0.1s ease;
+	}
+
+	#lovable-badge-close:hover {
+		background: rgba(255, 255, 255, 0.04);
+	}
+
+	#lovable-badge-close:active {
+		transform: scale(0.92);
+	}
+
+	#lovable-badge-close:focus {
+		outline: none;
+	}
+
+	#lovable-badge-close:focus-visible {
+		outline: var(--focus-width) solid var(--focus-color);
+		outline-offset: calc(var(--focus-offset) * -1);
+		z-index: 1;
+	}
+
+	#lovable-badge-close svg path {
+		fill: var(--badge-text);
+		transition: fill var(--badge-transition-duration) ease;
+	}
+
+	#lovable-badge-close:hover svg path {
+		fill: var(--badge-text-hover);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		#lovable-badge-cta,
+		#lovable-badge-close,
+		#lovable-badge-close svg path {
+			transition: none;
+		}
+		
+		#lovable-badge-cta:active,
+		#lovable-badge-close:active {
+			transform: none;
+		}
+	}
+
+	@media (prefers-contrast: high) {
+		#lovable-badge {
+			--badge-bg: #000;
+			--badge-text: #fff;
+			--badge-text-hover: #fff;
+			border: 2px solid currentColor;
+		}
+		
+		#lovable-badge-cta:focus-visible,
+		#lovable-badge-close:focus-visible {
+			outline-width: 3px;
+		}
+	}
+</style>
+<script defer src="/__l5e/events.js" data-artifact-kind="static_preview" data-artifact-id="f651545c91b4fcd25012057213d097b62b271891" data-commit-sha="f651545c91b4fcd25012057213d097b62b271891" data-context-token="v1.eyJwcm9qZWN0X2lkIjoiOTQxODU5ZjAtM2QyOS00MDEzLWE5YjktZjZiNjE3NTZlNDJkIiwiYXJ0aWZhY3Rfa2luZCI6InN0YXRpY19wcmV2aWV3IiwiYXJ0aWZhY3RfaWQiOiJmNjUxNTQ1YzkxYjRmY2QyNTAxMjA1NzIxM2QwOTdiNjJiMjcxODkxIiwiY29tbWl0X3NoYSI6ImY2NTE1NDVjOTFiNGZjZDI1MDEyMDU3MjEzZDA5N2I2MmIyNzE4OTEiLCJleHAiOjE3ODEwOTExNzR9.A1wPUp10ByDSVRp-r9_cC9nJB8msO_JlXvgc16YlExg" data-track-url="/__l5e/trackevents?__lovable_sha=f651545c91b4fcd25012057213d097b62b271891" data-replay="rrweb" data-replay-sample-rate="1" data-replay-url="/__l5e/replay?__lovable_sha=f651545c91b4fcd25012057213d097b62b271891" data-replay-script-url="/__l5e/rrweb-record.js?__lovable_sha=f651545c91b4fcd25012057213d097b62b271891&amp;__l5e_v=0.1.1-replay-recorder-fix"></script><meta name="twitter:title" content="FAQ — CodeFuser"><meta name="twitter:description" content="Answers to the questions every founder asks before starting."><meta property="og:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d28960e2-b36a-4f07-bf6b-25593a848b66/id-preview-f651545c--941859f0-3d29-4013-a9b9-f6b61756e42d.lovable.app-1780479310620.png"><meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d28960e2-b36a-4f07-bf6b-25593a848b66/id-preview-f651545c--941859f0-3d29-4013-a9b9-f6b61756e42d.lovable.app-1780479310620.png"></head><body><!--$--><div class="relative min-h-screen bg-background"><header class="fixed inset-x-0 top-0 z-50 border-b border-border/60 bg-background/70 backdrop-blur-xl"><nav class="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8"><a href="/" class="font-display text-xl tracking-tight text-foreground">CodeFuser</a><div class="hidden items-center gap-8 md:flex"><a href="/story" class="text-sm text-muted-foreground transition-colors hover:text-foreground">Story</a><a href="/process" class="text-sm text-muted-foreground transition-colors hover:text-foreground">Process</a><a href="/pricing" class="text-sm text-muted-foreground transition-colors hover:text-foreground">Pricing</a><a class="text-sm text-muted-foreground transition-colors hover:text-foreground text-foreground" href="/faq" data-status="active" aria-current="page">FAQ</a><a href="/contact" class="text-sm text-muted-foreground transition-colors hover:text-foreground">Contact</a></div><a class="btn-pressure items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium tracking-wide transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring bg-foreground text-background hover:shadow-glow hover:-translate-y-0.5 hidden md:inline-flex" href="mailto:hello@codefuser.com?subject=Strategy%20Session%20%E2%80%94%20CodeFuser&amp;body=Hi%20CodeFuser%20team%2C%0A%0AI&#x27;d%20like%20to%20book%20a%20strategy%20session%20to%20discuss%20visibility%20and%20growth%20for%20my%20business.%0A%0A%E2%80%94%20">Book Strategy Session</a></nav></header><main class="pt-16"><div class="pt-12"><section class="relative overflow-hidden px-5 py-28 sm:px-8"><div class="mx-auto max-w-3xl"><div class="reveal" style="transition-delay:0ms"><p class="text-eyebrow">10 — FAQ</p><h2 class="font-display mt-6 text-balance text-[clamp(2rem,4vw,3rem)] leading-[1.05] text-foreground text-glow">Quiet answers to loud questions.</h2></div><div class="reveal mt-10" style="transition-delay:120ms"><div class="w-full" data-orientation="vertical"><div data-state="closed" data-orientation="vertical" class="border-b border-border"><h3 data-orientation="vertical" data-state="closed" class="flex"><button type="button" aria-controls="radix-_R_j6aq_" aria-expanded="false" data-state="closed" data-orientation="vertical" id="radix-_R_36aq_" class="flex flex-1 items-center justify-between font-medium cursor-pointer transition-all hover:underline [&amp;[data-state=open]&gt;svg]:rotate-180 font-display py-5 text-left text-base text-foreground sm:text-lg" data-radix-collection-item="">Why do I need a website if I already have social media?<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button></h3><div data-state="closed" id="radix-_R_j6aq_" hidden="" role="region" aria-labelledby="radix-_R_36aq_" data-orientation="vertical" class="overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down" style="--radix-accordion-content-height:var(--radix-collapsible-content-height);--radix-accordion-content-width:var(--radix-collapsible-content-width)"></div></div><div data-state="closed" data-orientation="vertical" class="border-b border-border"><h3 data-orientation="vertical" data-state="closed" class="flex"><button type="button" aria-controls="radix-_R_l6aq_" aria-expanded="false" data-state="closed" data-orientation="vertical" id="radix-_R_56aq_" class="flex flex-1 items-center justify-between font-medium cursor-pointer transition-all hover:underline [&amp;[data-state=open]&gt;svg]:rotate-180 font-display py-5 text-left text-base text-foreground sm:text-lg" data-radix-collection-item="">Why isn&#x27;t Google Reviews enough?<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button></h3><div data-state="closed" id="radix-_R_l6aq_" hidden="" role="region" aria-labelledby="radix-_R_56aq_" data-orientation="vertical" class="overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down" style="--radix-accordion-content-height:var(--radix-collapsible-content-height);--radix-accordion-content-width:var(--radix-collapsible-content-width)"></div></div><div data-state="closed" data-orientation="vertical" class="border-b border-border"><h3 data-orientation="vertical" data-state="closed" class="flex"><button type="button" aria-controls="radix-_R_n6aq_" aria-expanded="false" data-state="closed" data-orientation="vertical" id="radix-_R_76aq_" class="flex flex-1 items-center justify-between font-medium cursor-pointer transition-all hover:underline [&amp;[data-state=open]&gt;svg]:rotate-180 font-display py-5 text-left text-base text-foreground sm:text-lg" data-radix-collection-item="">How long does it take?<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button></h3><div data-state="closed" id="radix-_R_n6aq_" hidden="" role="region" aria-labelledby="radix-_R_76aq_" data-orientation="vertical" class="overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down" style="--radix-accordion-content-height:var(--radix-collapsible-content-height);--radix-accordion-content-width:var(--radix-collapsible-content-width)"></div></div><div data-state="closed" data-orientation="vertical" class="border-b border-border"><h3 data-orientation="vertical" data-state="closed" class="flex"><button type="button" aria-controls="radix-_R_p6aq_" aria-expanded="false" data-state="closed" data-orientation="vertical" id="radix-_R_96aq_" class="flex flex-1 items-center justify-between font-medium cursor-pointer transition-all hover:underline [&amp;[data-state=open]&gt;svg]:rotate-180 font-display py-5 text-left text-base text-foreground sm:text-lg" data-radix-collection-item="">Can AI help my business?<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button></h3><div data-state="closed" id="radix-_R_p6aq_" hidden="" role="region" aria-labelledby="radix-_R_96aq_" data-orientation="vertical" class="overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down" style="--radix-accordion-content-height:var(--radix-collapsible-content-height);--radix-accordion-content-width:var(--radix-collapsible-content-width)"></div></div><div data-state="closed" data-orientation="vertical" class="border-b border-border"><h3 data-orientation="vertical" data-state="closed" class="flex"><button type="button" aria-controls="radix-_R_r6aq_" aria-expanded="false" data-state="closed" data-orientation="vertical" id="radix-_R_b6aq_" class="flex flex-1 items-center justify-between font-medium cursor-pointer transition-all hover:underline [&amp;[data-state=open]&gt;svg]:rotate-180 font-display py-5 text-left text-base text-foreground sm:text-lg" data-radix-collection-item="">Do I own my website?<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button></h3><div data-state="closed" id="radix-_R_r6aq_" hidden="" role="region" aria-labelledby="radix-_R_b6aq_" data-orientation="vertical" class="overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down" style="--radix-accordion-content-height:var(--radix-collapsible-content-height);--radix-accordion-content-width:var(--radix-collapsible-content-width)"></div></div><div data-state="closed" data-orientation="vertical" class="border-b border-border"><h3 data-orientation="vertical" data-state="closed" class="flex"><button type="button" aria-controls="radix-_R_t6aq_" aria-expanded="false" data-state="closed" data-orientation="vertical" id="radix-_R_d6aq_" class="flex flex-1 items-center justify-between font-medium cursor-pointer transition-all hover:underline [&amp;[data-state=open]&gt;svg]:rotate-180 font-display py-5 text-left text-base text-foreground sm:text-lg" data-radix-collection-item="">Why CodeFuser?<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button></h3><div data-state="closed" id="radix-_R_t6aq_" hidden="" role="region" aria-labelledby="radix-_R_d6aq_" data-orientation="vertical" class="overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down" style="--radix-accordion-content-height:var(--radix-collapsible-content-height);--radix-accordion-content-width:var(--radix-collapsible-content-width)"></div></div></div></div></div></section><section class="relative overflow-hidden px-5 py-44 sm:px-8"><div class="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2"><svg width="760" height="760" viewBox="0 0 760 760" class="block" aria-hidden="true"><defs><radialGradient id="ring-soft" cx="50%" cy="50%" r="50%"><stop offset="60%" stop-color="rgba(255,255,255,0.0)"></stop><stop offset="100%" stop-color="rgba(255,255,255,0.06)"></stop></radialGradient><linearGradient id="ring-stroke" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="rgba(244,241,234,0.9)"></stop><stop offset="50%" stop-color="rgba(244,241,234,0.4)"></stop><stop offset="100%" stop-color="rgba(244,241,234,0.05)"></stop></linearGradient></defs><circle cx="380" cy="380" r="379.5" fill="url(#ring-soft)"></circle><circle cx="380" cy="380" r="379.5" fill="none" stroke="url(#ring-stroke)" stroke-width="1" stroke-linecap="round" stroke-dasharray="2384.468824074653" stroke-dashoffset="1073.0109708335938" style="transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset 1.8s cubic-bezier(0.22, 1, 0.36, 1);filter:drop-shadow(0 0 8px rgba(255,255,255,0.15))"></circle></svg></div><div class="mx-auto max-w-4xl text-center"><div class="reveal" style="transition-delay:0ms"><p class="text-eyebrow">11 — Final Step</p><h2 class="font-display mt-8 text-balance text-[clamp(2.5rem,6vw,5rem)] leading-[1.0] text-foreground text-glow-strong">Ready To Break<br/><span class="text-platinum">The Invisible Ceiling?</span></h2><div class="mx-auto mt-10 max-w-xl space-y-3 text-lg text-muted-foreground"><p>The opportunity already exists.</p><p>The question is whether people can see it.</p></div><div class="mt-12 flex flex-col items-center justify-center gap-3 sm:flex-row"><a class="btn-pressure inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium tracking-wide transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring bg-foreground text-background hover:shadow-glow hover:-translate-y-0.5" href="mailto:hello@codefuser.com?subject=Strategy%20Session%20%E2%80%94%20CodeFuser&amp;body=Hi%20CodeFuser%20team%2C%0A%0AI&#x27;d%20like%20to%20book%20a%20strategy%20session%20to%20discuss%20visibility%20and%20growth%20for%20my%20business.%0A%0A%E2%80%94%20">Book A Strategy Session</a><a class="btn-pressure inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium tracking-wide transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring border border-border bg-transparent text-foreground hover:border-foreground/40 hover:bg-foreground/[0.04] hover:shadow-glow-soft" href="https://wa.me/919999999999?text=Hi%20CodeFuser%2C%20I&#x27;d%20like%20to%20book%20a%20strategy%20session.">Message on WhatsApp</a></div></div><div class="reveal mt-24" style="transition-delay:250ms"><p class="font-display text-balance text-xl leading-snug text-foreground/80 sm:text-2xl">Visibility changes attention.<br/>Attention changes decisions.<br/><span class="text-platinum">Decisions change businesses.</span></p></div></div></section></div></main><footer class="relative border-t border-border/60 px-5 py-16 sm:px-8"><div class="mx-auto grid max-w-7xl gap-12 lg:grid-cols-4"><div class="lg:col-span-2"><a href="/" class="font-display text-3xl text-foreground">CodeFuser</a><p class="mt-4 max-w-sm text-sm text-muted-foreground">We Fuse Potential With Scale.</p><p class="mt-2 text-xs uppercase tracking-[0.3em] text-muted-foreground/80">Visibility · Trust · Growth</p></div><div><p class="text-xs uppercase tracking-[0.25em] text-muted-foreground">Company</p><ul class="mt-4 space-y-2 text-sm"><li><a href="/story" class="text-foreground/80 hover:text-foreground">Founder Story</a></li><li><a href="/process" class="text-foreground/80 hover:text-foreground">Process</a></li><li><a href="/pricing" class="text-foreground/80 hover:text-foreground">Pricing</a></li><li><a href="/contact" class="text-foreground/80 hover:text-foreground">Contact</a></li></ul></div><div><p class="text-xs uppercase tracking-[0.25em] text-muted-foreground">Legal</p><ul class="mt-4 space-y-2 text-sm text-foreground/80"><li>Privacy Policy</li><li>Terms &amp; Conditions</li><li>Refund Policy</li><li>Cookie Policy</li></ul></div></div><div class="mx-auto mt-12 flex max-w-7xl flex-col items-start justify-between gap-4 border-t border-border/60 pt-8 text-xs text-muted-foreground sm:flex-row"><p>© <!-- -->2026<!-- --> CodeFuser. All rights reserved.</p><div class="flex gap-5"><a href="https://instagram.com/codefuser" class="hover:text-foreground">Instagram</a><a href="https://www.linkedin.com/company/codefuser" class="hover:text-foreground">LinkedIn</a><a href="https://twitter.com/codefuser" class="hover:text-foreground">Twitter</a></div></div></footer></div><script>(function(t){let s;try{s=JSON.parse(sessionStorage.getItem(t.storageKey)||"{}")}catch(e){console.error(e);return}const c=t.key||window.history.state?.__TSR_key,r=c?s[c]:void 0;if(t.shouldScrollRestoration&&r&&typeof r=="object"&&Object.keys(r).length>0){for(const e in r){const o=r[e];if(!o||typeof o!="object")continue;const l=o.scrollX,i=o.scrollY;if(!(!Number.isFinite(l)||!Number.isFinite(i))){if(e==="window")window.scrollTo({top:i,left:l,behavior:t.behavior});else if(e){let n;try{n=document.querySelector(e)}catch{continue}n&&(n.scrollLeft=l,n.scrollTop=i)}}}return}const a=window.location.hash.split("#",2)[1];if(a){const e=window.history.state?.__hashScrollIntoViewOptions??!0;if(e){const o=document.getElementById(a);o&&o.scrollIntoView(e)}return}window.scrollTo({top:0,left:0,behavior:t.behavior})})({"storageKey":"tsr-scroll-restoration-v1_3","shouldScrollRestoration":true});document.currentScript.remove()</script><!--/$--><script class="$tsr" id="$tsr-stream-barrier">(self.$R=self.$R||{})["tsr"]=[];self.$_TSR={h(){this.hydrated=!0,this.c()},e(){this.streamEnded=!0,this.c()},c(){this.hydrated&&this.streamEnded&&(delete self.$_TSR,delete self.$R.tsr)},p(e){this.initialized?e():this.buffer.push(e)},buffer:[]};$_TSR.router=($R=>$R[0]={manifest:$R[1]={routes:$R[2]={__root__:$R[3]={preloads:$R[4]=["/assets/index-BFx6-xU-.js"],assets:$R[5]=[$R[6]={tag:"script",attrs:$R[7]={type:"module",async:!0},children:"import(\"/assets/index-BFx6-xU-.js\")"}]},"/faq":$R[8]={preloads:$R[9]=["/assets/faq-C99FlKue.js","/assets/Reveal-CS6IUd4w.js","/assets/Faq-CJ_zZ8Rd.js","/assets/FinalCta-D21Xhhf6.js"]}}},matches:$R[10]=[$R[11]={i:"__root__ ",u:1781087574086,s:"success",ssr:!0},$R[12]={i:" faq faq",u:1781087574086,s:"success",ssr:!0}],lastMatchId:" faq faq"})($R["tsr"]);$_TSR.e();document.currentScript.remove()</script><script type="module" async="">import("/assets/index-BFx6-xU-.js")</script><script src="https://cdn.gpteng.co/lovable.js" type="module"></script>
+<aside 
+	id="lovable-badge" 
+	role="complementary"
+	dir="ltr"
+	lang="en"
+	aria-label="Edit with Lovable">
+	<a 
+		id="lovable-badge-cta" 
+		target="_blank" 
+		href="https://lovable.dev/projects/941859f0-3d29-4013-a9b9-f6b61756e42d?utm_source=lovable-badge"
+		rel="noopener nofollow"
+		aria-label="Edit with Lovable">
+		<span id="lovable-badge-text">Edit with</span>
+		<svg xmlns="http://www.w3.org/2000/svg" width="52" height="16" fill="none" viewBox="0 0 52 16">
+  <path fill="#FCFBF8" fill-rule="evenodd" d="M20.318 5.25c.643 0 1.206.14 1.69.418a2.81 2.81 0 0 1 1.118 1.191c.266.513.4 1.115.4 1.807s-.134 1.296-.4 1.812a2.81 2.81 0 0 1-1.118 1.193c-.484.278-1.047.418-1.69.418s-1.208-.14-1.695-.418a2.85 2.85 0 0 1-1.125-1.193c-.262-.516-.393-1.12-.393-1.812s.131-1.294.393-1.807a2.848 2.848 0 0 1 1.125-1.191c.487-.279 1.052-.418 1.695-.418Zm0 1.425c-.27 0-.504.076-.7.228-.193.147-.34.37-.443.67-.102.295-.153.66-.153 1.093 0 .435.05.801.153 1.1.102.3.25.524.443.676.196.147.43.22.7.22.27 0 .502-.073.694-.22.193-.152.341-.375.443-.67.103-.299.153-.667.153-1.106 0-.65-.112-1.145-.337-1.481a1.08 1.08 0 0 0-.953-.51ZM32.7 5.25c.61 0 1.127.1 1.549.3.422.197.74.48.953.849.217.368.325.809.325 1.32v2.704c0 .29.02.562.062.812.044.245.108.4.19.466V12h-1.935a5.895 5.895 0 0 1-.105-.684 7.745 7.745 0 0 1-.02-.228 2.293 2.293 0 0 1-.151.203c-.205.242-.47.437-.793.584-.32.143-.685.215-1.094.215-.406 0-.77-.08-1.094-.24a1.845 1.845 0 0 1-.756-.682 1.984 1.984 0 0 1-.27-1.045c0-.606.178-1.069.535-1.388.356-.324.87-.534 1.542-.633l1.125-.16c.225-.032.403-.074.534-.123a.622.622 0 0 0 .288-.196.549.549 0 0 0 .093-.327.65.65 0 0 0-.11-.367.702.702 0 0 0-.32-.27c-.14-.07-.31-.105-.51-.105-.32 0-.576.083-.768.251-.193.164-.298.39-.314.676h-1.923c.016-.434.147-.82.393-1.155.25-.34.596-.604 1.039-.792.442-.189.954-.283 1.535-.283Zm.99 3.498a.98.98 0 0 1-.215.14 2.49 2.49 0 0 1-.584.178l-.473.092c-.315.061-.553.156-.713.283-.155.127-.233.305-.233.534 0 .23.084.412.252.547.168.135.383.203.645.203s.494-.058.694-.173c.201-.118.355-.282.461-.49.11-.21.166-.448.166-.714v-.6Zm4.526-2.375c.065-.125.138-.243.221-.349.197-.25.437-.44.719-.571.282-.135.6-.203.952-.203.528 0 .988.138 1.377.412.389.275.688.67.896 1.186.21.512.314 1.12.314 1.824 0 .7-.107 1.309-.32 1.825-.213.512-.518.906-.915 1.18-.393.275-.854.412-1.383.412-.352 0-.667-.062-.946-.184a1.832 1.832 0 0 1-.7-.554 2.2 2.2 0 0 1-.234-.383V12h-1.843V3h1.862v3.373Zm1.284.296c-.274 0-.51.085-.707.253-.192.163-.338.397-.436.7a3.376 3.376 0 0 0-.148 1.05c0 .406.05.759.148 1.058.098.299.243.53.436.694.197.164.433.246.707.246.279 0 .512-.082.7-.246.193-.164.336-.395.43-.694.099-.3.148-.652.148-1.058 0-.405-.05-.757-.147-1.056-.095-.299-.238-.53-.43-.694a1.015 1.015 0 0 0-.7-.253Zm9.416-1.419c.602 0 1.136.131 1.604.393.466.262.829.643 1.086 1.143.263.5.394 1.097.394 1.794 0 .25-.002.449-.006.596H47.51c.018.288.071.538.164.75a1.3 1.3 0 0 0 .491.596c.214.13.465.196.757.196.319 0 .583-.082.792-.246.209-.167.34-.403.393-.706h1.862a2.48 2.48 0 0 1-.485 1.235 2.54 2.54 0 0 1-1.051.805c-.439.188-.949.283-1.53.283-.655 0-1.225-.125-1.708-.375a2.672 2.672 0 0 1-1.13-1.143c-.267-.508-.4-1.137-.4-1.887 0-.712.14-1.327.418-1.843a2.86 2.86 0 0 1 1.155-1.186c.491-.27 1.051-.405 1.678-.405Zm-.044 1.345c-.274 0-.516.068-.725.203a1.29 1.29 0 0 0-.479.59 2.045 2.045 0 0 0-.132.498h2.562a1.873 1.873 0 0 0-.138-.602 1.061 1.061 0 0 0-.418-.516 1.243 1.243 0 0 0-.67-.173Z" clip-rule="evenodd"/>
+  <path fill="#FCFBF8" d="m26.605 9.995 1.342-4.566h1.924L27.628 12h-2.07l-2.33-6.57h1.98l1.397 4.565Zm-13.013.143h2.256c1.632 0 1.421 1.837 1.418 1.861h-5.603V3h1.93v7.138Zm31.516 1.861h-1.862V3h1.862v8.999Z"/>
+  <path fill="url(#a)" fill-rule="evenodd" d="M2.7 3c1.492 0 2.7 1.192 2.7 2.663v1.012h.9c1.49 0 2.7 1.192 2.7 2.662S7.791 12 6.3 12H0V5.663C0 4.193 1.209 3 2.7 3Z" clip-rule="evenodd"/>
+  <defs>
+    <radialGradient id="a" cx="0" cy="0" r="1" gradientTransform="matrix(-1.54236 7.07838 -10.231 -2.15602 4.627 5.022)" gradientUnits="userSpaceOnUse">
+      <stop offset=".106" stop-color="#FE7B02"/>
+      <stop offset=".394" stop-color="#FE3F21"/>
+      <stop offset=".608" stop-color="#F858BC"/>
+      <stop offset=".929" stop-color="#575ECF"/>
+    </radialGradient>
+  </defs>
+</svg>
+
+
+	</a>
+	
+	<span id="lovable-badge-divider" aria-hidden="true"></span>
+	
+	<button 
+		id="lovable-badge-close"
+		aria-label="Dismiss"
+		title="Dismiss"
+		type="button">
+		<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16" aria-hidden="true">
+			<path d="M10.646 4.646a.5.5 0 1 1 .707.708L8.707 8l2.646 2.646a.5.5 0 1 1-.707.707L8 8.707l-2.646 2.646a.5.5 0 1 1-.708-.707L7.293 8 4.646 5.354a.5.5 0 1 1 .708-.708L8 7.293l2.646-2.647Z"/>
+		</svg>
+	</button>
+</aside>
+<script>
+	// Don't show the lovable-badge if the page is in an iframe or if it's being rendered by puppeteer (screenshot service)
+	if (window.self !== window.top || navigator.userAgent.includes('puppeteer')) {
+		// the page is in an iframe
+		var badge = document.getElementById('lovable-badge');
+		if (badge) {
+			badge.style.display = 'none';
+		}
+	}
+
+	// Add click event listener to close button with animation
+	var closeButton = document.getElementById('lovable-badge-close');
+	if (closeButton) {
+		closeButton.addEventListener('click', function(event) {
+			event.preventDefault();
+			event.stopPropagation();
+			var badge = document.getElementById('lovable-badge');
+			if (badge) {
+				badge.classList.add('closing');
+				setTimeout(function() {
+					if (badge) {
+						badge.style.display = 'none';
+					}
+				}, 240);
+			}
+		});
+	}
+</script>
+</body></html>
