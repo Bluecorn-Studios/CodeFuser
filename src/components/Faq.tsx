@@ -13,7 +13,7 @@ export const faqItems: FAQItem[] = [
   },
   {
     question: "How long does it take?",
-    answer: "Foundation typically delivers in 5–7 days. Growth in 10–14 days. Dominance in 3–4 weeks. Timelines start once we have your content and brand assets."
+    answer: "Obsidian typically delivers in 5–7 days. Titanium in 10–14 days. White Gold in 3–4 weeks. Timelines start once we have your content and brand assets."
   },
   {
     question: "Can AI help my business?",
@@ -40,10 +40,10 @@ const FAQAccordionItem: React.FC<FAQAccordionItemProps> = ({ item, isOpen, onTog
     <div className="border-b border-border/80">
       <button
         onClick={onToggle}
-        className="flex w-full items-center justify-between py-6 text-left focus:outline-none focus-visible:text-platinum group"
+        className="flex w-full items-center justify-between py-5 text-left focus:outline-none focus-visible:text-platinum group"
         aria-expanded={isOpen}
       >
-        <span className="font-display text-lg text-foreground/90 transition-colors group-hover:text-foreground sm:text-xl">
+        <span className="font-display text-base text-foreground/90 transition-colors group-hover:text-foreground sm:text-lg">
           {item.question}
         </span>
         <span className="ml-4 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border/60 transition-colors group-hover:border-foreground/30">
@@ -67,10 +67,10 @@ const FAQAccordionItem: React.FC<FAQAccordionItemProps> = ({ item, isOpen, onTog
       
       <div
         className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          isOpen ? 'max-h-60 pb-8 opacity-100' : 'max-h-0 opacity-0'
+          isOpen ? 'max-h-60 pb-6 opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
-        <p className="text-base leading-relaxed text-muted-foreground max-w-2xl">
+        <p className="text-sm leading-relaxed text-muted-foreground max-w-2xl">
           {item.answer}
         </p>
       </div>
@@ -86,16 +86,16 @@ export const Faq: React.FC = () => {
   };
 
   return (
-    <section id="faq" className="relative overflow-hidden px-5 py-40 sm:px-8">
+    <section id="faq" className="relative overflow-hidden px-5 py-28 lg:py-32 sm:px-8">
       <div className="mx-auto max-w-5xl">
         <div className="grid gap-16 lg:grid-cols-[1fr_1.5fr]">
           <Reveal>
             <Eyebrow>10 — FAQ</Eyebrow>
-            <h2 className="font-display mt-8 text-balance text-4xl leading-[1.05] text-foreground text-glow sm:text-5xl md:text-6xl">
+            <h2 className="font-display mt-8 text-balance text-3.5xl leading-[1.05] text-foreground text-glow sm:text-4.5xl md:text-5.5xl">
               Quiet Answers<br />
               <span className="text-platinum">To Loud Questions.</span>
             </h2>
-            <p className="mt-6 text-base text-muted-foreground leading-relaxed">
+            <p className="mt-6 text-sm text-muted-foreground leading-relaxed">
               Answers to the basic questions every founder asks before starting.
             </p>
           </Reveal>

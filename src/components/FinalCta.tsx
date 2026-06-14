@@ -94,27 +94,27 @@ export const Ring: React.FC<RingProps> = ({
 
 export const FinalCta: React.FC = () => {
   return (
-    <section className="relative overflow-hidden px-5 py-44 sm:px-8">
+    <section className="relative overflow-hidden px-5 py-32 sm:py-36 sm:px-8">
       {/* Centered drawing ring */}
       <div className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2">
-        <Ring size={760} progress={0.55} completeOnView={true} />
+        <Ring size={680} progress={0.55} completeOnView={true} />
       </div>
 
       <div className="mx-auto max-w-4xl text-center">
         <Reveal>
           <Eyebrow>11 — Final Step</Eyebrow>
           
-          <h2 className="font-display mt-8 text-balance text-[clamp(2.5rem,6vw,5rem)] leading-[1.0] text-foreground text-glow-strong">
+          <h2 className="font-display mt-8 text-balance text-[clamp(2.25rem,5.5vw,4.5rem)] leading-[1.0] text-foreground text-glow-strong">
             Ready To Break<br />
             <span className="text-platinum">The Invisible Ceiling?</span>
           </h2>
 
-          <div className="mx-auto mt-10 max-w-xl space-y-3 text-lg text-muted-foreground leading-relaxed">
+          <div className="mx-auto mt-8 max-w-xl space-y-2 text-base text-muted-foreground leading-relaxed">
             <p>The opportunity already exists.</p>
             <p>The question is whether people can see it.</p>
           </div>
 
-          <div className="mt-12 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button as="a" href={getMailtoLink()}>
               Book A Strategy Session
             </Button>
@@ -125,8 +125,8 @@ export const FinalCta: React.FC = () => {
         </Reveal>
 
         {/* Closing philosophical quote */}
-        <Reveal delay={250} className="mt-24">
-          <p className="font-display text-balance text-xl leading-snug text-foreground/85 sm:text-2xl">
+        <Reveal delay={250} className="mt-16 sm:mt-20">
+          <p className="font-display text-balance text-lg leading-snug text-foreground/85 sm:text-xl">
             Visibility changes attention.<br />
             Attention changes decisions.<br />
             <span className="text-platinum">Decisions change businesses.</span>

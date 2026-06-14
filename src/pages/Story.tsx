@@ -4,19 +4,19 @@ import { FinalCta } from '../components/FinalCta';
 
 function FounderStoryDetail() {
   return (
-    <section className="relative px-5 py-32 sm:px-8">
+    <section className="relative px-5 py-24 sm:px-8 sm:py-28">
       <div className="mx-auto max-w-3xl">
         <Reveal className="text-center">
           <Eyebrow>Founder Story</Eyebrow>
-          <h2 className="font-display mt-6 text-4xl text-foreground sm:text-5xl md:text-6xl font-semibold">
+          <h2 className="font-display mt-6 text-3.5xl text-foreground sm:text-4.5xl md:text-5.5xl font-semibold">
             Why I started CodeFuser.
           </h2>
-          <p className="mt-4 text-sm uppercase tracking-[0.3em] text-muted-foreground font-medium">
+          <p className="mt-4 text-xs uppercase tracking-[0.3em] text-muted-foreground font-medium">
             David Jonathan
           </p>
         </Reveal>
 
-        <Reveal className="mt-14 space-y-6 text-lg leading-relaxed text-foreground/85">
+        <Reveal className="mt-10 space-y-5 text-base leading-relaxed text-foreground/85">
           <p>I became obsessed with one question.</p>
           <p>Why do great businesses remain small?</p>
           <p>The answer wasn't quality. The answer wasn't pricing. The answer wasn't effort.</p>
@@ -24,7 +24,7 @@ function FounderStoryDetail() {
         </Reveal>
 
         {/* Big stylized quote block */}
-        <Reveal className="my-20" delay={120}>
+        <Reveal className="my-14" delay={120}>
           <figure className="relative mx-auto max-w-2xl text-center">
             <span 
               aria-hidden="true" 
@@ -32,7 +32,7 @@ function FounderStoryDetail() {
             >
               “
             </span>
-            <blockquote className="font-display text-balance text-3xl leading-[1.15] text-foreground sm:text-4xl md:text-5xl font-medium">
+            <blockquote className="font-display text-balance text-2.5xl leading-[1.15] text-foreground sm:text-3.5xl md:text-4.5xl font-medium">
               Potential isn't the problem.<br />
               <span className="text-platinum">Visibility is.</span>
             </blockquote>
@@ -46,7 +46,7 @@ function FounderStoryDetail() {
           </figure>
         </Reveal>
 
-        <Reveal className="space-y-6 text-lg leading-relaxed text-foreground/85">
+        <Reveal className="space-y-5 text-base leading-relaxed text-foreground/85">
           <p>
             I realized businesses weren't losing because they lacked skill. They weren't losing because they lacked effort. They were losing because they lacked visibility.
           </p>

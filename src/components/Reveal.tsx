@@ -192,6 +192,7 @@ export const R: React.FC<RevealProps> = ({ children, className = '', delay = 0, 
 };
 
 const Fo = [
+  { to: '/' as PagePath, label: "Home" },
   { to: '/story' as PagePath, label: "Story" },
   { to: '/process' as PagePath, label: "Process" },
   { to: '/pricing' as PagePath, label: "Pricing" },
@@ -353,7 +354,7 @@ export const P: React.FC<PageContainerProps> = ({ children }) => {
     <div className="relative min-h-screen bg-background text-foreground flex flex-col justify-between">
       <div className="flex flex-col w-full">
         <Eo />
-        <main className="pt-16 pb-20 w-full">
+        <main className="pt-14 pb-16 w-full">
           {children}
         </main>
       </div>

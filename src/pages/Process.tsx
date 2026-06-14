@@ -30,23 +30,23 @@ const trustEngineSteps = ["Visibility", "Trust", "Attention", "Leads", "Growth"]
 
 function WorkMethodSection() {
   return (
-    <section className="relative px-5 py-32 sm:px-8">
+    <section className="relative px-5 py-24 sm:px-8 sm:py-28">
       <SectionHeader 
         eyebrow="How CodeFuser Works" 
         title="A quiet, deliberate process — designed to compound." 
       />
       
-      <div className="mx-auto mt-16 grid max-w-6xl gap-5 md:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto mt-12 sm:mt-14 grid max-w-6xl gap-5 md:grid-cols-2 lg:grid-cols-4">
         {processCards.map((card, index) => (
           <Reveal key={card.index} delay={index * 80}>
-            <article className="card-lift h-full rounded-2xl border border-border bg-card/40 p-8 flex flex-col">
-              <span className="font-display text-4xl text-platinum font-bold">
+            <article className="card-lift h-full rounded-2xl border border-border bg-card/40 p-7 flex flex-col">
+              <span className="font-display text-3xl text-platinum font-bold">
                 {card.index}
               </span>
-              <h3 className="font-display mt-6 text-2xl text-foreground font-semibold">
+              <h3 className="font-display mt-5 text-xl text-foreground font-semibold">
                 {card.title}
               </h3>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">
                 {card.description}
               </p>
             </article>
@@ -59,24 +59,24 @@ function WorkMethodSection() {
 
 function TrustEngineSection() {
   return (
-    <section className="relative px-5 py-32 sm:px-8">
+    <section className="relative px-5 py-24 sm:px-8 sm:py-28">
       <SectionHeader 
         eyebrow="The Trust Engine" 
         title="Trust is built before the first conversation." 
         description="Every step of the journey compounds the next. Visibility earns attention. Attention earns trust. Trust earns growth."
       />
 
-      <Reveal className="mx-auto mt-16 max-w-md">
+      <Reveal className="mx-auto mt-12 sm:mt-14 max-w-md">
         <ol className="relative space-y-3">
           {trustEngineSteps.map((step, index) => (
             <li 
               key={step} 
-              className="card-lift relative flex items-center justify-between rounded-xl border border-border bg-card/40 px-6 py-5"
+              className="card-lift relative flex items-center justify-between rounded-xl border border-border bg-card/40 px-5 py-4"
             >
               <span className="text-eyebrow">
                 Step {String(index + 1).padStart(2, "0")}
               </span>
-              <span className="font-display text-2xl text-foreground font-semibold">
+              <span className="font-display text-xl text-foreground font-semibold">
                 {step}
               </span>
             </li>

@@ -17,7 +17,7 @@ export const S: React.FC<SectionHeaderProps> = ({ eyebrow, title, description, a
           {eyebrow}
         </Eyebrow>
       ) : null}
-      <h2 className="font-display text-balance text-4xl leading-[1.05] text-foreground sm:text-5xl md:text-6xl">
+      <h2 className="font-display text-balance text-3.5xl leading-[1.05] text-foreground sm:text-4.5xl md:text-5.5xl">
         {title}
       </h2>
       {description ? (
