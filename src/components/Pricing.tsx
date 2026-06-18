@@ -5,7 +5,7 @@ import { PricingPlan } from '../types';
 export const pricingPlans: PricingPlan[] = [
   {
     id: "foundation",
-    name: "Obsidian",
+    name: "Ignite",
     price: "₹9,999",
     tagline: "Remove The Ceiling",
     level: 1,
@@ -26,13 +26,13 @@ export const pricingPlans: PricingPlan[] = [
   },
   {
     id: "growth",
-    name: "Titanium",
-    price: "₹16,999",
+    name: "Fusion",
+    price: "₹24,999",
     tagline: "Expand Visibility",
     level: 2,
     capacity: "■■■□□",
     features: [
-      "Everything in Obsidian",
+      "Everything in Ignite",
       "Portfolio / Gallery",
       "Testimonials Section",
       "FAQ Section",
@@ -43,17 +43,18 @@ export const pricingPlans: PricingPlan[] = [
       "Conversion Focused Layout",
       "Two Revision Rounds"
     ],
-    bestFor: "Businesses wanting more visibility and inquiries."
+    bestFor: "Businesses wanting more visibility and inquiries.",
+    highlight: true
   },
   {
     id: "dominance",
-    name: "White Gold",
-    price: "₹35,999",
+    name: "Catalyst",
+    price: "₹49,999",
     tagline: "Automate Growth",
     level: 3,
     capacity: "■■■■■",
     features: [
-      "Everything in Titanium",
+      "Everything in Fusion",
       "AI Receptionist Integration",
       "Lead Capture System",
       "CRM Ready Structure",
@@ -64,8 +65,7 @@ export const pricingPlans: PricingPlan[] = [
       "Priority Delivery",
       "Three Revision Rounds"
     ],
-    bestFor: "Businesses ready to automate and scale.",
-    highlight: true
+    bestFor: "Businesses ready to automate and scale."
   }
 ];
 
@@ -450,11 +450,16 @@ export function TierCard({ tier }: TierCardProps) {
       <CapacityBar level={tier.level} highlight={tier.highlight} tierId={tier.id} />
       
       <div className="mt-6 text-center relative z-10">
+        {tier.highlight && (
+          <div className="mb-3.5 inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-0.5 text-[10px] font-mono font-bold tracking-wider text-amber-400 shadow-sm uppercase">
+            ⭐ Most Popular
+          </div>
+        )}
         <p className={taglineClass}>{tier.tagline}</p>
         <h3 className={cn("font-display mt-2.5 text-3xl tracking-tight transition-all duration-300", headingClass)}>
           {tier.name}
         </h3>
-        <p className={cn("font-display mt-5 text-4.5xl tracking-tight transition-all duration-300", priceClass)}>
+        <p className={cn("font-display mt-5 text-5xl tracking-tight transition-all duration-300", priceClass)}>
           {tier.price}
         </p>
       </div>

@@ -7,12 +7,13 @@ import Process from './pages/Process';
 import PricingPage from './pages/PricingPage';
 import FAQPage from './pages/FAQPage';
 import ContactPage from './pages/ContactPage';
+import Portfolio from './pages/Portfolio';
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState<PagePath>('/');
 
   useEffect(() => {
-    const validPaths: PagePath[] = ['/', '/story', '/process', '/pricing', '/faq', '/contact'];
+    const validPaths: PagePath[] = ['/', '/story', '/process', '/portfolio', '/pricing', '/faq', '/contact'];
     
     // Parse path and state on start
     const path = window.location.pathname as PagePath;
@@ -74,6 +75,8 @@ export default function App() {
         return <FAQPage />;
       case '/contact':
         return <ContactPage />;
+      case '/portfolio':
+        return <Portfolio />;
       case '/':
       default:
         return <Home />;

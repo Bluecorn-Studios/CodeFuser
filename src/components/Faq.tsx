@@ -26,6 +26,30 @@ export const faqItems: FAQItem[] = [
   {
     question: "Why CodeFuser?",
     answer: "Because we don't build websites — we remove invisible ceilings. Every decision is made to expand your visibility, your trust, and your growth."
+  },
+  {
+    question: "Why should I choose CodeFuser?",
+    answer: "CodeFuser focuses on more than just building websites. We help businesses improve visibility, strengthen trust, and create opportunities for growth online. Every project is approached with a strategy-first mindset, ensuring that your website is designed to support your business goals rather than simply exist online."
+  },
+  {
+    question: "How does payment work?",
+    answer: "Projects begin with a 50% upfront deposit to reserve development time and initiate the project. The remaining balance is paid before the final website launch. Clients may also choose a full upfront payment option if preferred."
+  },
+  {
+    question: "How long does development take?",
+    answer: "Most projects are completed within 5 business days once all required content, assets, and project information have been provided. Larger or more complex projects may require additional time depending on scope and requirements."
+  },
+  {
+    question: "What if I need changes?",
+    answer: "CodeFuser provides unlimited revisions during the development phase to ensure the final website aligns with your expectations and business goals. Additional requests outside the agreed project scope may require separate discussion."
+  },
+  {
+    question: "Do I own the website?",
+    answer: "Yes. Clients can choose full ownership, which includes access to project files, source code, hosting setup, and related assets. Alternatively, clients may choose a managed option where CodeFuser handles hosting, maintenance, and technical management."
+  },
+  {
+    question: "What happens after launch?",
+    answer: "After launch, clients may either take full ownership of the website or continue with a CodeFuser managed plan. Managed plans include hosting, security, maintenance, and ongoing support options depending on the selected package."
   }
 ];
 
@@ -67,7 +91,7 @@ const FAQAccordionItem: React.FC<FAQAccordionItemProps> = ({ item, isOpen, onTog
       
       <div
         className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          isOpen ? 'max-h-60 pb-6 opacity-100' : 'max-h-0 opacity-0'
+          isOpen ? 'max-h-[500px] pb-6 opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
         <p className="text-sm leading-relaxed text-muted-foreground max-w-2xl">

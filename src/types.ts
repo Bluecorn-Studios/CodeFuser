@@ -1,4 +1,4 @@
-export type PagePath = '/' | '/story' | '/process' | '/pricing' | '/faq' | '/contact';
+export type PagePath = '/' | '/story' | '/process' | '/pricing' | '/faq' | '/contact' | '/portfolio';
 
 export interface PostContactData {
   email: string;
