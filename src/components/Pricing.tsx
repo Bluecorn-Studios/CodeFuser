@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { R as Reveal, E as Eyebrow, G as Button, b as getMailtoLink, cn } from './Reveal';
+import { R as Reveal, E as Eyebrow, G as Button, b as getMailtoLink, cn, useAppRouter } from './Reveal';
 import { PricingPlan } from '../types';
 
 export const pricingPlans: PricingPlan[] = [
@@ -235,6 +235,7 @@ interface TierCardProps {
 }
 
 export function TierCard({ tier }: TierCardProps) {
+  const { navigate } = useAppRouter();
   const cardRef = useRef<HTMLDivElement>(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [shine, setShine] = useState({ x: 50, y: 50 });
@@ -322,10 +323,9 @@ export function TierCard({ tier }: TierCardProps) {
 
     btnMarkup = (
       <Button 
-        as="a" 
-        href={getMailtoLink(`${tier.name} — CodeFuser`)}
+        onClick={() => navigate(`/start-project?plan=${tier.id}`)}
         variant="ghost"
-        className="w-full border-neutral-800 text-neutral-300 hover:border-white hover:text-white"
+        className="w-full border-neutral-800 text-neutral-300 hover:border-white hover:text-white cursor-pointer"
       >
         Choose {tier.name}
       </Button>
@@ -365,10 +365,9 @@ export function TierCard({ tier }: TierCardProps) {
 
     btnMarkup = (
       <Button 
-        as="a" 
-        href={getMailtoLink(`${tier.name} — CodeFuser`)}
+        onClick={() => navigate(`/start-project?plan=${tier.id}`)}
         variant="ghost"
-        className="w-full border-neutral-700 text-[#E2E8F0] hover:border-[#E2E8F0] hover:text-white"
+        className="w-full border-neutral-700 text-[#E2E8F0] hover:border-[#E2E8F0] hover:text-white cursor-pointer"
       >
         Choose {tier.name}
       </Button>
@@ -407,12 +406,12 @@ export function TierCard({ tier }: TierCardProps) {
     );
 
     btnMarkup = (
-      <a 
-        href={getMailtoLink(`${tier.name} — CodeFuser`)}
-        className="btn-pressure inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm tracking-wide transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black/40 w-full bg-[#0A0A0A] text-[#FAF9F5] hover:bg-neutral-900 font-medium shadow-[0_4px_12px_rgba(0,0,0,0.1)] active:scale-[0.98]"
+      <button 
+        onClick={() => navigate(`/start-project?plan=${tier.id}`)}
+        className="btn-pressure inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm tracking-wide transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-black/40 w-full bg-[#0A0A0A] text-[#FAF9F5] hover:bg-neutral-900 font-medium shadow-[0_4px_12px_rgba(0,0,0,0.1)] active:scale-[0.98] cursor-pointer"
       >
         Choose {tier.name}
-      </a>
+      </button>
     );
   }
 

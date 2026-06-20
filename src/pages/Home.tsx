@@ -1,5 +1,5 @@
 import React from 'react';
-import { R as Reveal, E as Eyebrow, G as Button, s as scrollToSection, b as getMailtoLink, cn } from '../components/Reveal';
+import { R as Reveal, E as Eyebrow, G as Button, s as scrollToSection, b as getMailtoLink, cn, useAppRouter } from '../components/Reveal';
 import { Ring } from '../components/FinalCta';
 import { Pricing } from '../components/Pricing';
 import { Faq } from '../components/Faq';
@@ -10,6 +10,7 @@ import { FAQItem, IndustryItem, ProcessStep } from '../types';
 // SECTION 01: HERO SECTION
 // ==========================================
 function HeroSection() {
+  const { navigate } = useAppRouter();
   return (
     <section className="relative overflow-hidden px-5 pb-28 pt-24 sm:px-8 sm:pt-32 lg:pt-36">
       {/* Background Drawing Ring */}
@@ -97,7 +98,14 @@ function HeroSection() {
           <Button onClick={() => scrollToSection("pricing")}>
             See Growth Capacity
           </Button>
-          <Button as="a" href={getMailtoLink()} variant="ghost">
+          <Button 
+            onClick={() => {
+              navigate('/strategy-session');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }} 
+            variant="ghost"
+            className="cursor-pointer"
+          >
             Book Strategy Session
           </Button>
         </Reveal>

@@ -8,12 +8,15 @@ import PricingPage from './pages/PricingPage';
 import FAQPage from './pages/FAQPage';
 import ContactPage from './pages/ContactPage';
 import Portfolio from './pages/Portfolio';
+import StartProjectPage from './pages/StartProjectPage';
+import StrategySessionPage from './pages/StrategySessionPage';
+import MissionControl from './pages/MissionControl';
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState<PagePath>('/');
 
   useEffect(() => {
-    const validPaths: PagePath[] = ['/', '/story', '/process', '/portfolio', '/pricing', '/faq', '/contact'];
+    const validPaths: PagePath[] = ['/', '/story', '/process', '/portfolio', '/pricing', '/faq', '/contact', '/start-project', '/strategy-session', '/mission-control'];
     
     // Parse path and state on start
     const path = window.location.pathname as PagePath;
@@ -64,7 +67,8 @@ export default function App() {
   };
 
   const renderPage = () => {
-    switch (currentPath) {
+    const cleanPath = currentPath.split('?')[0] as PagePath;
+    switch (cleanPath) {
       case '/story':
         return <Story />;
       case '/process':
@@ -77,6 +81,12 @@ export default function App() {
         return <ContactPage />;
       case '/portfolio':
         return <Portfolio />;
+      case '/start-project':
+        return <StartProjectPage />;
+      case '/strategy-session':
+        return <StrategySessionPage />;
+      case '/mission-control':
+        return <MissionControl />;
       case '/':
       default:
         return <Home />;

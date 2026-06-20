@@ -301,7 +301,14 @@ export const Portfolio: React.FC = () => {
             <Button onClick={() => handleScrollToSection("why-exists")}>
               Explore Upcoming Case Studies
             </Button>
-            <Button as="a" href={getMailtoLink()} variant="ghost">
+            <Button 
+              onClick={() => {
+                navigate('/strategy-session');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }} 
+              variant="ghost"
+              className="cursor-pointer"
+            >
               Start Strategic Session
             </Button>
           </Reveal>
@@ -569,7 +576,13 @@ export const Portfolio: React.FC = () => {
             </p>
 
             <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Button as="a" href={getMailtoLink()}>
+              <Button 
+                onClick={() => {
+                  navigate('/strategy-session');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="cursor-pointer"
+              >
                 Start Strategic Session
               </Button>
               <Button onClick={() => navigate('/')} variant="ghost">

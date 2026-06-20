@@ -211,7 +211,7 @@ const Fo = [
 // Primary Navigation Header
 export const Eo: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { currentPath } = useAppRouter();
+  const { currentPath, navigate } = useAppRouter();
 
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -243,8 +243,18 @@ export const Eo: React.FC = () => {
           ))}
         </div>
 
-        <G as="a" href={b()} className="hidden md:inline-flex text-xs px-5 py-2.5">
-          Book Strategy Session
+        <G 
+          onClick={() => {
+            if (currentPath === '/') {
+              s('pricing');
+            } else {
+              navigate('/');
+              setTimeout(() => s('pricing'), 300);
+            }
+          }} 
+          className="hidden md:inline-flex text-xs px-5 py-2.5 cursor-pointer"
+        >
+          Start Project
         </G>
 
         {/* Mobile menu toggle */}
@@ -276,8 +286,19 @@ export const Eo: React.FC = () => {
           </div>
 
           <div className="mt-auto border-t border-border/60 pt-6">
-            <G as="a" href={b()} className="w-full text-center py-3.5">
-              Book Strategy Session
+            <G 
+              onClick={() => {
+                setMobileMenuOpen(false);
+                if (currentPath === '/') {
+                  s('pricing');
+                } else {
+                  navigate('/');
+                  setTimeout(() => s('pricing'), 300);
+                }
+              }} 
+              className="w-full text-center py-3.5 cursor-pointer"
+            >
+              Start Project
             </G>
           </div>
         </div>
