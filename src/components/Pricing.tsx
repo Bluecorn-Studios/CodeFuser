@@ -5,7 +5,7 @@ import { PricingPlan } from '../types';
 export const pricingPlans: PricingPlan[] = [
   {
     id: "foundation",
-    name: "Ignite",
+    name: "⚡ Ignite",
     price: "₹9,999",
     tagline: "Remove The Ceiling",
     level: 1,
@@ -26,13 +26,13 @@ export const pricingPlans: PricingPlan[] = [
   },
   {
     id: "growth",
-    name: "Fusion",
+    name: "✦ Fusion",
     price: "₹24,999",
     tagline: "Expand Visibility",
     level: 2,
     capacity: "■■■□□",
     features: [
-      "Everything in Ignite",
+      "Everything in ⚡ Ignite",
       "Portfolio / Gallery",
       "Testimonials Section",
       "FAQ Section",
@@ -48,13 +48,13 @@ export const pricingPlans: PricingPlan[] = [
   },
   {
     id: "dominance",
-    name: "Catalyst",
+    name: "⬢ Catalyst",
     price: "₹49,999",
     tagline: "Automate Growth",
     level: 3,
     capacity: "■■■■■",
     features: [
-      "Everything in Fusion",
+      "Everything in ✦ Fusion",
       "AI Receptionist Integration",
       "Lead Capture System",
       "CRM Ready Structure",

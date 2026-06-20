@@ -45,6 +45,12 @@ interface ProjectRecord {
 
 export const MissionControl: React.FC = () => {
   const { navigate } = useAppRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return sessionStorage.getItem("fuser_admin_authed") === "true";
+  });
+  const [passwordInput, setPasswordInput] = useState("");
+  const [loginError, setLoginError] = useState<string | null>(null);
+
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorValue, setErrorValue] = useState<string | null>(null);
@@ -80,14 +86,128 @@ export const MissionControl: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchProjects();
-  }, []);
+    if (isAuthenticated) {
+      fetchProjects();
+    }
+  }, [isAuthenticated]);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="relative min-h-[90vh] flex items-center justify-center py-16 px-4">
+        {/* Background ambient decorative spotlights */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-amber-500/[0.02] blur-[140px] pointer-events-none" />
+        <div className="absolute bottom-10 right-10 w-[300px] h-[300px] rounded-full bg-white/[0.01] blur-[100px] pointer-events-none" />
+
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.98, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="relative w-full max-w-md bg-neutral-950/70 border border-neutral-800/80 rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl text-foreground font-sans outline-none"
+        >
+          {/* Logo/Shield Header */}
+          <div className="flex flex-col items-center text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 mb-4 shadow-[0_0_15px_rgba(245,158,11,0.1)]">
+              <Shield size={20} />
+            </div>
+            
+            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-amber-500">
+              Administrative Gateway
+            </span>
+            <h1 className="font-display text-2xl font-black text-white mt-1.5 tracking-tight">
+              Mission Control Log-in
+            </h1>
+            <p className="text-xs text-muted-foreground mt-2 leading-relaxed max-w-xs">
+              This terminal is reserved for internal administrators. Unauthorized entry is strictly logged.
+            </p>
+          </div>
+
+          {/* Form */}
+          <form 
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setLoginError(null);
+              try {
+                const response = await fetch("/api/admin/verify", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ password: passwordInput })
+                });
+                const data = await response.json();
+                if (response.ok && data.success) {
+                  sessionStorage.setItem("fuser_admin_authed", "true");
+                  setIsAuthenticated(true);
+                } else {
+                  setLoginError(data.error || "Access Key is incorrect. Please contact system administrators.");
+                }
+              } catch (err) {
+                console.error("Authentication request failed:", err);
+                setLoginError("Failed to communicate with authentication servers.");
+              }
+            }}
+            className="mt-8 space-y-4"
+          >
+            <div>
+              <label htmlFor="admin-passcode" className="block text-[10px] font-mono font-bold uppercase tracking-widest text-muted-foreground/80 mb-2">
+                ACCESS KEY
+              </label>
+              <div className="relative">
+                <input
+                  id="admin-passcode"
+                  type="password"
+                  required
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  placeholder="••••••••••••••••"
+                  className={`w-full bg-[#050505] border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 transition-all font-mono placeholder-muted-foreground/20 h-11 ${
+                    loginError 
+                      ? 'border-red-500/40 focus:ring-red-500/30' 
+                      : 'border-border/80 focus:ring-amber-500/40'
+                  }`}
+                  autoFocus
+                />
+              </div>
+              
+              <AnimatePresence mode="wait">
+                {loginError && (
+                  <motion.p
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="text-[11px] text-red-400 font-mono mt-2"
+                  >
+                    ⚠️ {loginError}
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full btn-pressure h-11 bg-white text-black font-bold text-xs uppercase tracking-wider rounded-xl hover:-translate-y-0.5 transition-transform flex items-center justify-center gap-2 pointer-events-auto cursor-pointer"
+            >
+              Sign In to Dashboard <ArrowRight size={13} />
+            </button>
+          </form>
+
+          {/* Escape path */}
+          <div className="mt-6 pt-5 border-t border-neutral-900 text-center">
+            <button
+              onClick={() => navigate('/')}
+              className="text-xs text-muted-foreground hover:text-white transition-colors underline underline-offset-4 font-sans tracking-wide cursor-pointer"
+            >
+              Return to Website
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   const formatPlanName = (id: string) => {
     switch (id) {
-      case "foundation": return "Ignite (₹9,999)";
-      case "growth": return "Fusion (₹24,999)";
-      case "dominance": return "Catalyst (₹49,999)";
+      case "foundation": return "⚡ Ignite (₹9,999)";
+      case "growth": return "✦ Fusion (₹24,999)";
+      case "dominance": return "⬢ Catalyst (₹49,999)";
       default: return id;
     }
   };
@@ -175,9 +295,9 @@ export const MissionControl: React.FC = () => {
               className="border border-border bg-[#050505] rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500/50 min-w-[140px]"
             >
               <option value="all">All Packages</option>
-              <option value="foundation">Ignite (₹9,999)</option>
-              <option value="growth">Fusion (₹24,999)</option>
-              <option value="dominance">Catalyst (₹49,999)</option>
+              <option value="foundation">⚡ Ignite (₹9,999)</option>
+              <option value="growth">✦ Fusion (₹24,999)</option>
+              <option value="dominance">⬢ Catalyst (₹49,999)</option>
             </select>
           </div>
         </div>

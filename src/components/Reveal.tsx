@@ -30,7 +30,14 @@ export function s(id: string): void {
   if (typeof document === 'undefined') return;
   const element = document.getElementById(id);
   if (element) {
-    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const headerHeight = 64; // header is h-16 which maps to 64px
+    const elementPosition = element.getBoundingClientRect().top;
+    const offsetPosition = elementPosition + (window.pageYOffset || document.documentElement.scrollTop) - headerHeight - 24; // with comfortable top padding
+
+    window.scrollTo({
+      top: offsetPosition,
+      behavior: 'smooth'
+    });
   } else {
     // If we are on another page, navigate home first and scroll
     window.location.href = `/#${id}`;
@@ -390,7 +397,11 @@ export const Oo: React.FC = () => {
       </div>
 
       <div className="mx-auto mt-12 flex max-w-7xl flex-col items-start justify-between gap-4 border-t border-border/60 pt-8 text-xs text-muted-foreground sm:flex-row">
-        <p>© {new Date().getFullYear()} CodeFuser. All rights reserved.</p>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+          <p>© {new Date().getFullYear()} CodeFuser. All rights reserved.</p>
+          <span className="hidden sm:inline text-muted-foreground/30">•</span>
+          <Link to="/mission-control" className="hover:text-foreground transition-colors text-muted-foreground/60">Admin</Link>
+        </div>
         <div className="flex gap-5">
           <a href={C.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Instagram</a>
           <a href={C.linkedin} target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">LinkedIn</a>

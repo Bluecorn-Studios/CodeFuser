@@ -34,7 +34,14 @@ export default function App() {
         setTimeout(() => {
           const el = document.getElementById(id);
           if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const headerHeight = 64; // header is h-16 which maps to 64px
+            const elementPosition = el.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + (window.pageYOffset || document.documentElement.scrollTop) - headerHeight - 24; // with comfortable top padding
+
+            window.scrollTo({
+              top: offsetPosition,
+              behavior: 'smooth'
+            });
           }
         }, 300);
       }
