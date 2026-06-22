@@ -207,10 +207,8 @@ export const R: React.FC<RevealProps> = ({ children, className = '', delay = 0, 
 
 const Fo = [
   { to: '/' as PagePath, label: "Home" },
-  { to: '/story' as PagePath, label: "Story" },
-  { to: '/process' as PagePath, label: "Process" },
-  { to: '/portfolio' as PagePath, label: "Portfolio" },
   { to: '/pricing' as PagePath, label: "Pricing" },
+  { to: '/portfolio' as PagePath, label: "Portfolio" },
   { to: '/faq' as PagePath, label: "FAQ" },
   { to: '/contact' as PagePath, label: "Contact" }
 ];
@@ -219,10 +217,47 @@ const Fo = [
 export const Eo: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { currentPath, navigate } = useAppRouter();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const checkUser = () => {
+      const u = localStorage.getItem("fuser_user");
+      if (u) {
+        try {
+          setUser(JSON.parse(u));
+        } catch {
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
+    };
+    checkUser();
+    
+    // Check user on popstate/storage events
+    window.addEventListener("storage", checkUser);
+    return () => {
+      window.removeEventListener("storage", checkUser);
+    };
+  }, [currentPath]);
 
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [currentPath]);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (e) {
+      console.warn("Logout failed", e);
+    }
+    localStorage.removeItem("fuser_user");
+    localStorage.removeItem("fuser_token");
+    localStorage.removeItem("fuser_client_project_id");
+    localStorage.removeItem("codefuser_current_project");
+    localStorage.removeItem("codefuser_requests");
+    window.location.reload();
+  };
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-border/60 bg-background/70 backdrop-blur-xl">
@@ -248,6 +283,31 @@ export const Eo: React.FC = () => {
               {nav.label}
             </Link>
           ))}
+          {user ? (
+            <>
+              <Link 
+                to="/dashboard" 
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                activeProps={{ className: "text-foreground font-medium" }}
+              >
+                Dashboard
+              </Link>
+              <button 
+                onClick={handleLogout}
+                className="text-sm font-mono tracking-wider text-neutral-500 hover:text-red-400 transition-colors uppercase cursor-pointer bg-transparent border-none focus:outline-none"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link 
+              to="/login" 
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              activeProps={{ className: "text-foreground font-medium" }}
+            >
+              Login
+            </Link>
+          )}
         </div>
 
         <G 
@@ -290,6 +350,31 @@ export const Eo: React.FC = () => {
                 {nav.label}
               </Link>
             ))}
+            {user ? (
+              <>
+                <Link
+                  to="/dashboard"
+                  className="text-muted-foreground hover:text-foreground transition-colors py-1"
+                  activeProps={{ className: "text-foreground font-semibold" }}
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="text-left py-1 text-neutral-500 hover:text-red-400 font-mono tracking-wider transition-colors uppercase bg-transparent border-none cursor-pointer focus:outline-none text-xl"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/login"
+                className="text-muted-foreground hover:text-foreground transition-colors py-1"
+                activeProps={{ className: "text-foreground font-semibold" }}
+              >
+                Login
+              </Link>
+            )}
           </div>
 
           <div className="mt-auto border-t border-border/60 pt-6">
@@ -399,6 +484,8 @@ export const Oo: React.FC = () => {
       <div className="mx-auto mt-12 flex max-w-7xl flex-col items-start justify-between gap-4 border-t border-border/60 pt-8 text-xs text-muted-foreground sm:flex-row">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
           <p>© {new Date().getFullYear()} CodeFuser. All rights reserved.</p>
+          <span className="hidden sm:inline text-muted-foreground/30">•</span>
+          <Link to="/dashboard" className="hover:text-foreground transition-colors text-muted-foreground/60">Client Portal</Link>
           <span className="hidden sm:inline text-muted-foreground/30">•</span>
           <Link to="/mission-control" className="hover:text-foreground transition-colors text-muted-foreground/60">Admin</Link>
         </div>

@@ -488,12 +488,12 @@ function WhyCodeFuserSection() {
 // SECTION 08: TARGET INDUSTRIES
 // ==========================================
 const targetIndustries: IndustryItem[] = [
-  { title: "Photography Studios", outcome: "Turn portfolios into bookings before the first conversation begins." },
-  { title: "Coaching Centers", outcome: "Become the obvious choice for parents researching their options." },
-  { title: "Clinics", outcome: "Earn trust online so patients arrive already confident in your care." },
-  { title: "Real Estate", outcome: "Capture serious buyers who decide long before they ever call you." },
-  { title: "Gyms", outcome: "Convert hesitant first-time visitors into committed long-term members." },
-  { title: "Local Brands", outcome: "Look bigger than your competitors without behaving like one of them." }
+  { title: "Photography Studios", outcome: "Turn your portfolio into direct client bookings." },
+  { title: "Coaching Centers", outcome: "Become the obvious choice for researching parents." },
+  { title: "Clinics", outcome: "Earn online trust to build patient confidence." },
+  { title: "Real Estate", outcome: "Capture serious home buyers early in their search." },
+  { title: "Gyms", outcome: "Convert first-time visitors into long-term members." },
+  { title: "Local Brands", outcome: "Establish local market authority over competitors." }
 ];
 
 function IndustriesSection() {

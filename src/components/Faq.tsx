@@ -5,51 +5,51 @@ import { FAQItem } from '../types';
 export const faqItems: FAQItem[] = [
   {
     question: "Why do I need a website if I already have social media?",
-    answer: "Social media rents your audience. A website owns it. Serious buyers research before contacting you — and they almost always end up on a website to confirm you are real, professional, and credible."
+    answer: "A website owns your audience. Serious buyers research your website first to confirm you are real, professional, and credible."
   },
   {
     question: "Why isn't Google Reviews enough?",
-    answer: "Reviews validate. A website convinces. Customers use reviews to decide who to consider, then your website to decide who to choose. Without one, you stay in consideration but rarely in conversion."
+    answer: "Reviews help customers find you; your website convinces them to buy. Without a website, you miss out on ready buyers."
   },
   {
     question: "How long does it take?",
-    answer: "Obsidian typically delivers in 5–7 days. Titanium in 10–14 days. White Gold in 3–4 weeks. Timelines start once we have your content and brand assets."
+    answer: "Most projects are completed in 5-14 days. We start immediately once we receive your assets."
   },
   {
     question: "Can AI help my business?",
-    answer: "Yes — when applied surgically. We use AI for lead capture, response automation, and content systems that genuinely save time. We don't bolt AI on for the sake of it."
+    answer: "Yes. We use AI surgically for lead capture, automated responses, and content management."
   },
   {
     question: "Do I own my website?",
-    answer: "Yes. You can choose to have us manage everything, or take full ownership with all files and deployment assets transferred at project completion."
+    answer: "Yes. Choose full ownership with files transferred, or a fully managed plan where we handle everything."
   },
   {
     question: "Why CodeFuser?",
-    answer: "Because we don't build websites — we remove invisible ceilings. Every decision is made to expand your visibility, your trust, and your growth."
+    answer: "We focus on real outcomes: greater visibility, higher trust, and business growth."
   },
   {
     question: "Why should I choose CodeFuser?",
-    answer: "CodeFuser focuses on more than just building websites. We help businesses improve visibility, strengthen trust, and create opportunities for growth online. Every project is approached with a strategy-first mindset, ensuring that your website is designed to support your business goals rather than simply exist online."
+    answer: "We approach every project with a strategy-first mindset to build sites that actively drive leads and growth."
   },
   {
     question: "How does payment work?",
-    answer: "Projects begin with a 50% upfront deposit to reserve development time and initiate the project. The remaining balance is paid before the final website launch. Clients may also choose a full upfront payment option if preferred."
+    answer: "We require a 50% upfront deposit. The final 50% is due prior to launch. Full upfront payment is also available."
   },
   {
     question: "How long does development take?",
-    answer: "Most projects are completed within 5 business days once all required content, assets, and project information have been provided. Larger or more complex projects may require additional time depending on scope and requirements."
+    answer: "Our standard delivery is within 5-12 days once brand files and inputs are received."
   },
   {
     question: "What if I need changes?",
-    answer: "CodeFuser provides unlimited revisions during the development phase to ensure the final website aligns with your expectations and business goals. Additional requests outside the agreed project scope may require separate discussion."
+    answer: "We offer unlimited revisions during development to ensure your layout matches your absolute vision."
   },
   {
     question: "Do I own the website?",
-    answer: "Yes. Clients can choose full ownership, which includes access to project files, source code, hosting setup, and related assets. Alternatively, clients may choose a managed option where CodeFuser handles hosting, maintenance, and technical management."
+    answer: "Yes. Choose full ownership with all files, or a managed plan where we handle hosting and support."
   },
   {
     question: "What happens after launch?",
-    answer: "After launch, clients may either take full ownership of the website or continue with a CodeFuser managed plan. Managed plans include hosting, security, maintenance, and ongoing support options depending on the selected package."
+    answer: "After launch, take full ownership of files or stay on a managed plan with maintenance included."
   }
 ];
 

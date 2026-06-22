@@ -3,15 +3,25 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
-import { addProject, getProjects } from "./server/db";
+import { addProject, getProjects, updateProject, getSupabase } from "./server/db";
+import { getExtraData, updateQuote, addAssetFile } from "./server/extra_store";
+import fs from "fs";
 
 dotenv.config();
 
 const app = express();
 const PORT = 3000;
 
-// Request body parser
-app.use(express.json());
+// Request body parser with 50mb limit for base64 file uploads
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+// Serve uploaded files statically
+const uploadsDir = path.join(process.cwd(), "public", "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+app.use("/uploads", express.static(uploadsDir));
 
 // API: Create new project
 app.post("/api/projects", async (req, res) => {
@@ -29,7 +39,8 @@ app.post("/api/projects", async (req, res) => {
       customGoal,
       hasDomain,
       hasLogo,
-      contentReady
+      contentReady,
+      userId
     } = req.body;
 
     // Validate required fields
@@ -50,7 +61,8 @@ app.post("/api/projects", async (req, res) => {
       customGoal: customGoal || "",
       hasDomain: hasDomain || "",
       hasLogo: hasLogo || "",
-      contentReady: contentReady || ""
+      contentReady: contentReady || "",
+      userId: userId || ""
     };
 
     console.log("Compiling and initializing project in CodeFuser Core architecture style...");
@@ -67,14 +79,237 @@ app.post("/api/projects", async (req, res) => {
   }
 });
 
-// API: Get all active projects
+// API: Get all active projects (with secure authenticated filtering support)
 app.get("/api/projects", async (req, res) => {
   try {
+    const { userId, email } = req.query;
     const projects = await getProjects();
+    
+    if (userId || email) {
+      const filtered = projects.filter(p => {
+        const matchUserId = userId ? p.userId === userId : false;
+        const matchEmail = email ? p.email?.trim().toLowerCase() === String(email).trim().toLowerCase() : false;
+        return matchUserId || matchEmail;
+      });
+      return res.json({ projects: filtered });
+    }
+    
     return res.json({ projects });
   } catch (error: any) {
     console.error("Failed to load project database items:", error);
     return res.status(500).json({ error: error.message || String(error) });
+  }
+});
+
+// API: Customer Registration (SignUp Proxy)
+app.post("/api/auth/signup", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: "Email and password are required." });
+    }
+    const supabase = getSupabase();
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) {
+      return res.status(400).json({ success: false, error: error.message });
+    }
+    return res.json({ success: true, user: data.user, session: data.session });
+  } catch (error: any) {
+    console.error("Auth Signup error:", error);
+    return res.status(500).json({ success: false, error: error.message || "Failed to sign up." });
+  }
+});
+
+// API: Customer Authentication (Login Proxy)
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: "Email and password are required." });
+    }
+    const supabase = getSupabase();
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      return res.status(400).json({ success: false, error: error.message });
+    }
+    return res.json({ success: true, user: data.user, session: data.session });
+  } catch (error: any) {
+    console.error("Auth Login error:", error);
+    return res.status(500).json({ success: false, error: error.message || "Failed to log in." });
+  }
+});
+
+// API: Customer Logout Proxy
+app.post("/api/auth/logout", async (req, res) => {
+  try {
+    const supabase = getSupabase();
+    await supabase.auth.signOut();
+    return res.json({ success: true });
+  } catch (error: any) {
+    console.error("Auth Logout error:", error);
+    return res.status(500).json({ success: false, error: error.message || "Failed to log out." });
+  }
+});
+
+// API: Get Google Auth URL
+app.get("/api/auth/google/url", async (req, res) => {
+  try {
+    const supabase = getSupabase();
+    const appUrl = process.env.APP_URL || "http://localhost:3000";
+    
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${appUrl}/login`
+      }
+    });
+    
+    if (error) {
+      return res.status(400).json({ success: false, error: error.message });
+    }
+    
+    return res.json({ success: true, url: data.url });
+  } catch (error: any) {
+    console.error("Auth Google URL error:", error);
+    return res.status(500).json({ success: false, error: error.message || "Failed to initiate Google authentication" });
+  }
+});
+
+// API: Retrieve User Session by Access Token (Google Sign-In)
+app.post("/api/auth/session-user", async (req, res) => {
+  try {
+    const { accessToken } = req.body;
+    if (!accessToken) {
+      return res.status(400).json({ success: false, error: "Access token is required" });
+    }
+    const supabase = getSupabase();
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+    if (error) {
+      return res.status(400).json({ success: false, error: error.message });
+    }
+    return res.json({ success: true, user });
+  } catch (error: any) {
+    console.error("Retrieve session user error:", error);
+    return res.status(500).json({ success: false, error: error.message || "Failed to retrieve authenticated user" });
+  }
+});
+
+// API: Update a single project state
+app.put("/api/projects/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+    
+    if (!id) {
+      return res.status(400).json({ success: false, error: "Project ID is required." });
+    }
+
+    const updated = await updateProject(id, updates);
+    return res.json({ success: true, data: updated, message: "Project updated successfully in the core database." });
+  } catch (error: any) {
+    console.error("Failed to update project status / elements:", error);
+    return res.status(500).json({ success: false, error: error.message || String(error) });
+  }
+});
+
+// API: Get extra project data (Quote and Uploaded Assets)
+app.get("/api/projects/:id/extra", async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ success: false, error: "Project ID is required." });
+    }
+    const extra = getExtraData(id);
+    return res.json({ success: true, data: extra });
+  } catch (err: any) {
+    console.error("Failed to get extra project data:", err);
+    return res.status(500).json({ success: false, error: err.message || String(err) });
+  }
+});
+
+// API: Save/Lock Official Quote for a project
+app.post("/api/projects/:id/quote", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { packageName, price, discount, features, summary } = req.body;
+    
+    if (!id) {
+      return res.status(400).json({ success: false, error: "Project ID is required." });
+    }
+    if (!packageName || price === undefined) {
+      return res.status(400).json({ success: false, error: "Package name and price are required to lock quote." });
+    }
+
+    const extra = updateQuote(id, {
+      packageName,
+      price: Number(price),
+      discount: Number(discount || 0),
+      features: features || [],
+      summary: summary || ""
+    });
+
+    return res.json({ 
+      success: true, 
+      data: extra, 
+      message: "Official Quote locked successfully. Standard price frozen for 7 days." 
+    });
+  } catch (err: any) {
+    console.error("Failed to update quote:", err);
+    return res.status(500).json({ success: false, error: err.message || String(err) });
+  }
+});
+
+// API: Unlock/Reset Quote for generating new recommendation
+app.post("/api/projects/:id/quote/reset", async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ success: false, error: "Project ID is required." });
+    }
+    const extra = updateQuote(id, null);
+    return res.json({ success: true, data: extra, message: "Existing quotation has been unlocked." });
+  } catch (err: any) {
+    console.error("Failed to reset quote:", err);
+    return res.status(500).json({ success: false, error: err.message || String(err) });
+  }
+});
+
+// API: Upload Assets to the Asset Center (Base64)
+app.post("/api/projects/:id/upload", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, type, size, content } = req.body;
+    
+    if (!id) {
+      return res.status(400).json({ success: false, error: "Project ID is required." });
+    }
+    if (!name || !content) {
+      return res.status(400).json({ success: false, error: "File name and file content are required." });
+    }
+
+    // Direct write base64 file to disk
+    const safeName = Date.now() + "_" + name.replace(/[^a-zA-Z0-9.\-_]/g, "");
+    const filePath = path.join(process.cwd(), "public", "uploads", safeName);
+    
+    const buffer = Buffer.from(content, "base64");
+    fs.writeFileSync(filePath, buffer);
+    
+    const fileUrl = `/uploads/${safeName}`;
+    const extra = addAssetFile(id, {
+      name,
+      type,
+      size: Number(size || buffer.length),
+      url: fileUrl
+    });
+
+    return res.json({ 
+      success: true, 
+      data: extra, 
+      message: "Asset uploaded successfully and pinned to target project workspace." 
+    });
+  } catch (err: any) {
+    console.error("Failed to upload asset:", err);
+    return res.status(500).json({ success: false, error: err.message || "Failed to process asset upload." });
   }
 });
 
@@ -248,7 +483,7 @@ Ensure absolutely ZERO developer-jargon, confidence scores, technical metrics, A
 // API: Start Project Package Upgrade Options (Strategic Pricing Consultant Engine)
 app.post("/api/start-project/package-upgrade-options", async (req, res) => {
   try {
-    const { packageId, businessName, ownerName, industry, goal } = req.body;
+    const { packageId, businessName, ownerName, industry, goal, aiPrompt } = req.body;
     
     // Choose base, upgrade 1, and upgrade 2 prices and names realistically
     let baseName = "✦ Fusion";
@@ -312,6 +547,7 @@ app.post("/api/start-project/package-upgrade-options", async (req, res) => {
     if (!apiKey) {
       console.warn("GEMINI_API_KEY is not defined. Falling back to deterministic upgrade recommendations.");
       return res.json({
+        summary: getFallbackSummary(packageId, businessName, industry, goal, aiPrompt),
         options: getFallbackUpgrades(packageId, businessName, ownerName, industry, goal)
       });
     }
@@ -326,46 +562,86 @@ app.post("/api/start-project/package-upgrade-options", async (req, res) => {
     });
 
     const systemPrompt = `You are an elite pricing strategist and senior business consultant at CodeFuser.
-Your task is to generate and write the text for THREE customized card packages to show to a client after they have completed their onboarding form.
+Your task is to generate both:
+1. A diagnostic AI Executive Summary of the client's business ("${businessName}", Industry: "${industry || 'General'}", Goal: "${goal || 'Growth'}").
+2. THREE customized, progressive package recommendation cards.
+
 The customer has selected the package: ${baseName} (${basePrice}).
-Your goal is not to pressure them, but to help them intelligently compare nearby upgrade options and confidently choose the best investment for their business: "${businessName}" (Industry: "${industry || 'General'}", Goal: "${goal || 'Growth'}").
+Your goal is not to pressure them, but to help them intelligently compare nearby upgrade options and confidently choose the best investment for their business.
+
+Strict Rules for the AI Executive Summary:
+The summary must contain:
+- "businessCategory": Broad category (e.g., Retail, Health & Wellness, Food & Beverage, Professional Services, Real Estate, Automotive, Local Services)
+- "specificBusinessType": Highly specific description (e.g. "Tyre Shop", "Multi-Cuisine Restaurant", "Dental Clinic", "Boutique Real Estate Agency")
+- "primaryBusinessGoal": The primary driver (e.g. "Accept online reservations directly", "Generate high-intent contact inquiries", "Boost local walk-ins with search visibility")
+- "customerVision": Brief recap of any design/business notes, ideas, or references left by the client under "${aiPrompt || ''}" (summarize concisely, or use a general vision statement if blank like "Launch a premium digital hub with high-converting mobile layout").
+- "biggestOpportunity": Identify the SINGLE biggest digital opportunity for this SPECIFIC business model. For example:
+  * For a Tyre Shop: "Capturing instant roadside & service requests right on Google Maps with click-to-call direct links"
+  * For a Restaurant: "Establishing immediate visual cravings with a live digital menu and an automated reservation widget"
+  * For a Dental Clinic: "Building absolute patient confidence and scheduling predictability with online appointment slots"
+  * For a Real Estate business: "Unlocking direct lead qualification by routing high-intent property searchers straight to WhatsApp brokers"
+- "recommendedStartingPackage": The exact name of Card 2 or Card 3.
+- "recommendationReason": One single, high-impact, professional paragraph explaining WHY the AI selected this starting recommendation for their specific business. This should sound like a premium business consultant speaking directly to them.
 
 Strict Rules for Card Generation:
 1. Card 1 must match the SELECTED package "${baseName}" at exactly "${basePrice}". It must include:
    - "headline": Short strategic statement why it fits their current business entry parameters.
-   - "benefits": A bullet list of 3-4 items explaining how its standard features will immediately help their business. Focus on OUTCOMES (e.g., "✓ Help more customers contact your business" instead of "Contact Form").
+   - "benefits": A bullet list of 3-4 items explaining how its standard features will immediately help their business. Focus on OUTCOMES (e.g., "✓ Help more customers contact your business" instead of "Contact Form"). Each item must start with "✓ ".
    - "rationale": Clear explanation why this package perfectly fits their selected starting point.
 
-2. Card 2 ("Better Value") must be "${upgrade1Name}" at exactly "${upgrade1Price}". It must include only the features added: ${upgrade1FeaturesAdded.join(', ')}. It must include:
+2. Card 2 ("⭐ Recommended Upgrade") must be "${upgrade1Name}" at exactly "${upgrade1Price}". It must include only features added. It must include:
    - "headline": Explaining why this modest investment unlocks disproportionate value.
-   - "benefits": A list of 2-3 new added outcomes explaining ONLY the newly added value. Must focus on business benefits (e.g. "✓ Build stronger trust with customer reviews" or "✓ Make it easier for customers to book or enquire"). Each item must start with "✓ ".
+   - "benefits": A list of 2-3 new added outcomes explaining ONLY the newly added value. Must focus on business benefits tailored directly to this industry:
+     * For Automotive/Tyre Shop: e.g. "✓ Capture instant local customers with live Google Maps positioning", "✓ Direct click-to-call mobile shortcut links"
+     * For Restaurants: e.g. "✓ Display an engaging full menu listing", "✓ Embed an interactive table reservation ledger"
+     * For Clinics: e.g. "✓ Book direct client appointments with calendar slots", "✓ Feature detailed doctor bios to foster patient safety"
+     * For Real Estate: e.g. "✓ Feature prominent lead-capture forms for property inquiries", "✓ Display responsive interactive maps of current properties"
+     * Others: Tailor closely to their specific specialty.
+     Do NOT repeat Card 1 benefits. Each item must start with "✓ ".
    - "rationale": Strategic explanation of why spending a little more (just ${upgrade1Price}) improves long-term business value.
 
-3. Card 3 ("Most Optimal Choice") must be "${upgrade2Name}" at exactly "${upgrade2Price}". It must include only its additional features: ${upgrade2FeaturesAdded.join(', ')}. It must include:
+3. Card 3 ("👑 Best Long-Term Value") must be "${upgrade2Name}" at exactly "${upgrade2Price}". It must include only its additional features. Compared to Card 2, it must show ONLY newly unlocked outcomes. It must include:
    - "headline": Explaining why this is the strategic pinnacle of investment.
-   - "benefits": A list of 2-3 final added outcomes compared to Card 2. Each item must start with "✓ ".
+   - "benefits": A list of 2-3 final added outcomes compared to Card 2. Never repeat Card 1 or Card 2 benefits. Each item must start with "✓ ".
    - "rationale": Strategic explanation of why this provides the absolute strongest balance between their investment and future brand growth.
 
 Important:
-- NEVER explain recommendations using technical terminology only. Do NOT use terms like "CRM Integration", "API Integration", "Analytics Dashboard". Use clear, helpful, customer-centric business outcomes like:
-  ✓ Help more customers contact your business
-  ✓ Build stronger trust with customer reviews
-  ✓ Improve visibility on Google Search
-  ✓ Reduce manual follow-up work
-  ✓ Make it easier for customers to book or enquire
+- NEVER explain recommendations using technical terminology only. Do NOT use terms like "CRM Integration", "API Integration", "Analytics Dashboard". Use clear, helpful, customer-centric business outcomes.
 - The progression must stay psychologically close to their chosen budget.
 - The outcome list should be tailored specifically to ${businessName} operating in the ${industry || 'general'} space.
-- The language must be professional, warm, insightful, and strictly outcomes-focused.`;
+- The language must be professional, warm, insightful, and strictly outcomes-focused.
+- Do not repeat elements between cards.`;
 
     const response = await ai.models.generateContent({
       model: "gemini-3.5-flash",
-      contents: "Generate the three strategic package cards as requested.",
+      contents: "Generate the three strategic package cards and AI diagnostic summary as requested.",
       config: {
         systemInstruction: systemPrompt,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
+            summary: {
+              type: Type.OBJECT,
+              properties: {
+                businessCategory: { type: Type.STRING },
+                specificBusinessType: { type: Type.STRING },
+                primaryBusinessGoal: { type: Type.STRING },
+                customerVision: { type: Type.STRING },
+                biggestOpportunity: { type: Type.STRING },
+                recommendedStartingPackage: { type: Type.STRING },
+                recommendationReason: { type: Type.STRING }
+              },
+              required: [
+                "businessCategory",
+                "specificBusinessType",
+                "primaryBusinessGoal",
+                "customerVision",
+                "biggestOpportunity",
+                "recommendedStartingPackage",
+                "recommendationReason"
+              ]
+            },
             options: {
               type: Type.ARRAY,
               description: "Must contain exactly 3 strategic card options: Card 1, Card 2, and Card 3",
@@ -387,14 +663,14 @@ Important:
               }
             }
           },
-          required: ["options"]
+          required: ["options", "summary"]
         }
       }
     });
 
     if (response && response.text) {
       const data = JSON.parse(response.text);
-      if (data.options && data.options.length === 3) {
+      if (data.options && data.options.length === 3 && data.summary) {
         return res.json(data);
       }
     }
@@ -404,11 +680,67 @@ Important:
   } catch (err: any) {
     console.error("Failed to generate package upgrade recommendations:", err);
     // Fallback response:
-    const { packageId, businessName, ownerName, industry, goal } = req.body;
-    const fallback = getFallbackUpgrades(packageId, businessName, ownerName, industry, goal);
-    return res.json({ options: fallback });
+    const { packageId, businessName, ownerName, industry, goal, aiPrompt } = req.body;
+    return res.json({
+      summary: getFallbackSummary(packageId, businessName, industry, goal, aiPrompt),
+      options: getFallbackUpgrades(packageId, businessName, ownerName, industry, goal)
+    });
   }
 });
+
+function getFallbackSummary(
+  packageId: string,
+  businessName: string,
+  industry: string,
+  goal: string,
+  aiPrompt: string
+) {
+  let recommendedPkg = "✦ Fusion+";
+  if (packageId === "foundation") {
+    recommendedPkg = "⚡ Ignite+";
+  } else if (packageId === "dominance") {
+    recommendedPkg = "⬢ Catalyst+";
+  }
+
+  const normalized = (industry || "").toLowerCase();
+  
+  let specificType = "Strategic Business Outlet";
+  let opportunity = "Establishing a modern conversion layout customized for digital inquiry traffic.";
+  let businessCat = "Professional Services";
+
+  if (normalized.includes("food") || normalized.includes("restaurant") || normalized.includes("cafe")) {
+    specificType = "Exclusive Dine-In/Cafe Space";
+    opportunity = "Establishing immediate visual cravings with a live digital menu and an automated reservation ledger.";
+    businessCat = "Food & Beverage";
+  } else if (normalized.includes("medical") || normalized.includes("clinic") || normalized.includes("dental") || normalized.includes("doctor")) {
+    specificType = "High-Quality Dental/Medical Practice";
+    opportunity = "Building absolute patient confidence and booking predictability with online appointment slots.";
+    businessCat = "Health & Wellness";
+  } else if (normalized.includes("tyre") || normalized.includes("tire") || normalized.includes("car") || normalized.includes("automotive") || normalized.includes("garage")) {
+    specificType = "Specialized Tyre & Service Shop";
+    opportunity = "Automating emergency service calls and Google Maps routing to secure roadside breakdown leads.";
+    businessCat = "Automotive & Local Services";
+  } else if (normalized.includes("estate") || normalized.includes("real") || normalized.includes("property")) {
+    specificType = "Modern Real Estate Agency";
+    opportunity = "Filtering prime home queries instantly and routing ready buyers directly to agent chat threads.";
+    businessCat = "Real Estate Services";
+  }
+
+  let goalLabel = "Elevate digital authority and direct client scheduling";
+  if (goal === "leads") goalLabel = "Accelerate hot sales leads and calls";
+  else if (goal === "portfolio") goalLabel = "Display pristine project portfolios";
+  else if (goal === "products") goalLabel = "Initiate instant digital catalog purchases";
+
+  return {
+    businessCategory: businessCat,
+    specificBusinessType: specificType,
+    primaryBusinessGoal: goalLabel,
+    customerVision: aiPrompt || "Setup premium design systems with swift micro-animations.",
+    biggestOpportunity: opportunity,
+    recommendedStartingPackage: recommendedPkg,
+    recommendationReason: `For ${businessName || "your brand"}, our analytics indicate that ${recommendedPkg} is the ideal launching platform. It bypasses basic layouts to integrate custom high-converting outcome features, allowing you to establish immediate authority in the ${businessCat} sector while keeping your initial milestone commitments perfectly balanced.`
+  };
+}
 
 function getFallbackUpgrades(
   packageId: string,
@@ -426,12 +758,7 @@ function getFallbackUpgrades(
         name: "⚡ Ignite",
         price: "₹9,999",
         headline: "High-impact digital hub to secure your online presence.",
-        benefits: [
-          "✓ Set up a professional, modern landing page for your brand.",
-          "✓ Create a direct and convenient WhatsApp channel for clients.",
-          "✓ Easily display essential details, location, and services.",
-          "✓ Fast speed optimization to maximize user retention."
-        ],
+        benefits: getDynamicIndustryBenefits(industry, 'base'),
         rationale: "This package maps perfectly to your starting budget and secures all operational foundations with zero ongoing maintenance friction."
       },
       {
@@ -439,11 +766,7 @@ function getFallbackUpgrades(
         name: "⚡ Ignite+",
         price: "₹12,999",
         headline: "Maximize first impressions and increase customer action.",
-        benefits: [
-          "✓ Showcase your premium past projects in an elegant interactive gallery.",
-          "✓ Capture high-intent customers with tailored custom enquiry forms.",
-          "✓ Build unique interactive layouts with responsive micro-animations."
-        ],
+        benefits: getDynamicIndustryBenefits(industry, 'upgrade_1'),
         rationale: "Investing just a little more allows you to showcase physical proof of your work, making it significantly easier to convert cold visitors into inquiries."
       },
       {
@@ -451,11 +774,7 @@ function getFallbackUpgrades(
         name: "⚡ Ignite Pro",
         price: "₹14,999",
         headline: "The ultimate marketing launchpad for high-performing lead generation.",
-        benefits: [
-          "✓ Build stronger customer trust by displaying local Google Reviews live.",
-          "✓ Acquire repeat visitors effortlessly with a clean newsletter setup.",
-          "✓ Rank higher on Google Search for prospective local customers looking for your help."
-        ],
+        benefits: getDynamicIndustryBenefits(industry, 'upgrade_2'),
         rationale: "This provides the absolute strongest balance between your initial investment and long-term search visibility, laying a rock-solid foundation for future marketing efforts without a heavy price jump."
       }
     ];
@@ -468,11 +787,7 @@ function getFallbackUpgrades(
         name: "⬢ Catalyst",
         price: "₹49,999",
         headline: "Complete enterprise capability featuring deep automated solutions.",
-        benefits: [
-          "✓ Launch full-scale multi-section customized layouts highlighting your brand.",
-          "✓ Automate initial response flows to minimize manual client management.",
-          "✓ Complete lead capturing system with robust customer storage setups."
-        ],
+        benefits: getDynamicIndustryBenefits(industry, 'base'),
         rationale: "Our elite tier delivers ultimate code autonomy, advanced layout configurations, and high-velocity workflow automation optimized for high-ticket acquisition."
       },
       {
@@ -480,11 +795,7 @@ function getFallbackUpgrades(
         name: "⬢ Catalyst+",
         price: "₹54,999",
         headline: "Empower your customer journeys with interactive AI automation.",
-        benefits: [
-          "✓ Answer queries 24/7 with a conversational smart AI assistant customized for your services.",
-          "✓ Organize and track your incoming prospects with a centralized lead repository.",
-          "✓ Map interactive customer routing to simplify on-site booking visits."
-        ],
+        benefits: getDynamicIndustryBenefits(industry, 'upgrade_1'),
         rationale: "By making a modest incremental investment, your website transforms into an active virtual employee that autonomously handles introductory chats and organizes customer records."
       },
       {
@@ -492,11 +803,7 @@ function getFallbackUpgrades(
         name: "⬢ Catalyst Pro",
         price: "₹59,999",
         headline: "The complete self-contained digital business ecosystem.",
-        benefits: [
-          "✓ Give clients safe, dedicated portal accounts to manage their own requirements.",
-          "✓ Seamlessly synchronize your scheduling and inquiry records with all native productivity tools.",
-          "✓ Spot new growth opportunities using customized strategic data charts."
-        ],
+        benefits: getDynamicIndustryBenefits(industry, 'upgrade_2'),
         rationale: "This provides the ultimate configuration for high-velocity operations, merging customized client interfaces with full automated tools so that your digital setup scales seamlessly handles complex operations."
       }
     ];
@@ -509,11 +816,7 @@ function getFallbackUpgrades(
       name: "✦ Fusion",
       price: "₹24,999",
       headline: "Scalable growth platform to scale local visibility.",
-      benefits: [
-        "✓ Capture higher-quality leads with clean multi-page user journeys.",
-        "✓ Direct client scheduler synchronization to bypass calendar gridlocks.",
-        "✓ Overcome local bottlenecks with optimized FAQ tables and testimonial displays."
-      ],
+      benefits: getDynamicIndustryBenefits(industry, 'base'),
       rationale: "Our most popular core plan equips you with extensive conversion tools, interactive sections, and high-velocity responsiveness to build immediate online authority."
     },
     {
@@ -521,11 +824,7 @@ function getFallbackUpgrades(
       name: "✦ Fusion+",
       price: "₹27,999",
       headline: "Accelerate user trust and elevate operational conversion.",
-      benefits: [
-        "✓ Build rock-solid immediate trust by syncing live Google Reviews directly on your pages.",
-        "✓ Retain premium look with high-fidelity customized transition layout patterns.",
-        "✓ Help more site visitors take immediate action with custom conversion hooks."
-      ],
+      benefits: getDynamicIndustryBenefits(industry, 'upgrade_1'),
       rationale: "A modest improvement lets you leverage existing brand reviews and visual delight, translating directly into a higher booking volume for the exact same ad spend."
     },
     {
@@ -533,15 +832,115 @@ function getFallbackUpgrades(
       name: "✦ Fusion Pro",
       price: "₹29,999",
       headline: "Full-scale marketing engine optimized to nurture target traffic.",
-      benefits: [
-        "✓ Keep prospects warm automatically using a tailored newsletter campaign channel.",
-        "✓ Win local search results over competitors with enhanced semantic search optimization (SEO).",
-        "✓ Simplify operational inquiries with automated confirmation alerts to WhatsApp."
-      ],
+      benefits: getDynamicIndustryBenefits(industry, 'upgrade_2'),
       rationale: "This package provides the optimal balance of initial investment and high-octane growth capabilities, adding active engagement systems that keep your clients hooked and turning back to your services."
     }
   ];
 }
+
+function getDynamicIndustryBenefits(industry: string, level: 'base' | 'upgrade_1' | 'upgrade_2'): string[] {
+  const ind = (industry || "").toLowerCase();
+  
+  if (ind.includes("food") || ind.includes("restaurant") || ind.includes("cafe")) {
+    if (level === 'base') {
+      return [
+        "✓ Showcase an eye-catching online menu designed to amplify guest cravings.",
+        "✓ Integrated direct click-to-book calling to drive weekend table volume.",
+        "✓ Fast performance layout to ensure instant customer load speeds on mobile."
+      ];
+    } else if (level === 'upgrade_1') {
+      return [
+        "✓ Embed interactive table booking slots for scheduling predictability.",
+        "✓ Integrate local Google Reviews live to drive immediate dining confidence."
+      ];
+    } else { // upgrade_2
+      return [
+        "✓ Automated SMS/WhatsApp table confirmation notifications for booked dinners.",
+        "✓ Local search priority schema markup to outrank neighborhood restaurant listings."
+      ];
+    }
+  }
+
+  if (ind.includes("medical") || ind.includes("clinic") || ind.includes("dental") || ind.includes("doctor") || ind.includes("wellness")) {
+    if (level === 'base') {
+      return [
+        "✓ Present patient care specialties with direct click-to-dial accessibility.",
+        "✓ Dedicated trust-building area showcasing medical professional qualifications.",
+        "✓ GDPR-compliant secure form structures for incoming client queries."
+      ];
+    } else if (level === 'upgrade_1') {
+      return [
+        "✓ Appointment scheduling framework so patients can request slots 24/7.",
+        "✓ Patient feedback carousel synced automatically to leverage high local reputation."
+      ];
+    } else {
+      return [
+        "✓ Automated email appointment pre-reminders to reduce slot cancellations.",
+        "✓ Local health authority ranking profile to capture prospective service searches."
+      ];
+    }
+  }
+
+  if (ind.includes("tyre") || ind.includes("tire") || ind.includes("car") || ind.includes("automotive") || ind.includes("garage") || ind.includes("mechanic")) {
+    if (level === 'base') {
+      return [
+        "✓ Click-to-Call emergency service trigger buttons optimized for fast response.",
+        "✓ Direct one-touch Google Maps GPS routing directions to drive physical garage visits.",
+        "✓ Bulleted service lists showing pricing clarity for routine repairs."
+      ];
+    } else if (level === 'upgrade_1') {
+      return [
+        "✓ Custom multi-step roadside repair inquiry structures to pre-diagnose vehicle models.",
+        "✓ Interactive live chat / WhatsApp prompt shortcuts to convert immediate tyre replacements."
+      ];
+    } else {
+      return [
+        "✓ Automated maintenance callback slots linked directly to client calendar databases.",
+        "✓ Hyper-targeted local neighborhood SEO ranking package to capture urgent breakdown searches."
+      ];
+    }
+  }
+
+  if (ind.includes("estate") || ind.includes("real") || ind.includes("property") || ind.includes("prop") || ind.includes("agent") || ind.includes("agency")) {
+    if (level === 'base') {
+      return [
+        "✓ Display active property listings styled with widescreen image galleries.",
+        "✓ Simple click-to-enquire lead capture forms attached below general properties.",
+        "✓ Instant WhatsApp routing button to put pre-qualified buyers in contact with agents."
+      ];
+    } else if (level === 'upgrade_1') {
+      return [
+        "✓ Interactive geographical map markers pinning actual property locations.",
+        "✓ Live scheduling interface for bookings of private property walk-through tours."
+      ];
+    } else {
+      return [
+        "✓ Automated callback booking sync integrated directly with your sales calendar.",
+        "✓ Interactive investment ROI calculator widget to stimulate downpayment decisions."
+      ];
+    }
+  }
+
+  // DEFAULT / GENERAL SERVICES & RETAIL
+  if (level === 'base') {
+    return [
+      "✓ Establish high-conforming web layout showcasing primary service packages.",
+      "✓ Direct inquiry channels for instant lead submissions to your inbox.",
+      "✓ Mobile-optimized customer navigation blocks to minimize visitor bounce rates."
+    ];
+  } else if (level === 'upgrade_1') {
+    return [
+      "✓ Live Google Reviews carousel sync to convert prospect visits using trusted client proof.",
+      "✓ Custom multi-step enquiry layouts designed to pre-qualify caller budgets."
+    ];
+  } else {
+    return [
+      "✓ Automated auto-responder emails keeping incoming leads hot 24/7.",
+      "✓ Hyper-targeted local search keyword optimization to outrank competitor listings."
+    ];
+  }
+}
+
 
 // Resolute dynamic fallback rule so the user is never blocked or shown an error
 function getDeterministicRecommendation(formData: any) {

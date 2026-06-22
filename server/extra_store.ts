@@ -1,0 +1,137 @@
+import fs from "fs";
+import path from "path";
+
+export interface OfficialQuoteRecord {
+  packageName: string;
+  price: number;
+  discount: number;
+  features: string[];
+  summary: string;
+  timestamp: string; // ISO string
+  expiryDate: string; // ISO string (7 days later)
+  status: "active" | "expiring" | "expired";
+}
+
+export interface AssetFileRecord {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  url: string;
+  timestamp: string;
+}
+
+export interface ExtraProjectData {
+  projectId: string;
+  quote: OfficialQuoteRecord | null;
+  assets: AssetFileRecord[];
+}
+
+const STORE_FILE = path.join(process.cwd(), "server", "fuser_extra_store.json");
+
+// Ensure store directory exists
+function ensureFile() {
+  const dir = path.dirname(STORE_FILE);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  if (!fs.existsSync(STORE_FILE)) {
+    fs.writeFileSync(STORE_FILE, JSON.stringify({}), "utf8");
+  }
+}
+
+export function readStore(): Record<string, ExtraProjectData> {
+  ensureFile();
+  try {
+    const content = fs.readFileSync(STORE_FILE, "utf8");
+    return JSON.parse(content || "{}");
+  } catch (err) {
+    console.error("Failed to read fuser_extra_store.json:", err);
+    return {};
+  }
+}
+
+export function writeStore(data: Record<string, ExtraProjectData>) {
+  ensureFile();
+  try {
+    fs.writeFileSync(STORE_FILE, JSON.stringify(data, null, 2), "utf8");
+  } catch (err) {
+    console.error("Failed to write fuser_extra_store.json:", err);
+  }
+}
+
+export function getExtraData(projectId: string): ExtraProjectData {
+  const store = readStore();
+  if (!store[projectId]) {
+    store[projectId] = {
+      projectId,
+      quote: null,
+      assets: []
+    };
+    writeStore(store);
+  }
+  
+  // Dynamically update quote status on retrieval if expired
+  const data = store[projectId];
+  if (data.quote && data.quote.status !== "expired") {
+    const now = new Date();
+    const expiry = new Date(data.quote.expiryDate);
+    if (now > expiry) {
+      data.quote.status = "expired";
+      writeStore(store);
+    } else {
+      // Check if expiring soon (less than 24 hours left)
+      const diffMs = expiry.getTime() - now.getTime();
+      const diffHours = diffMs / (1000 * 60 * 60);
+      if (diffHours <= 24 && data.quote.status !== "expiring") {
+        data.quote.status = "expiring";
+        writeStore(store);
+      }
+    }
+  }
+  
+  return data;
+}
+
+export function updateQuote(projectId: string, quote: Omit<OfficialQuoteRecord, "status" | "expiryDate" | "timestamp"> | null): ExtraProjectData {
+  const store = readStore();
+  if (!store[projectId]) {
+    store[projectId] = { projectId, quote: null, assets: [] };
+  }
+  
+  if (quote === null) {
+    store[projectId].quote = null;
+  } else {
+    const timestamp = new Date().toISOString();
+    // Expiry date is 7 days from now
+    const expiry = new Date();
+    expiry.setDate(expiry.getDate() + 7);
+    
+    store[projectId].quote = {
+      ...quote,
+      timestamp,
+      expiryDate: expiry.toISOString(),
+      status: "active"
+    };
+  }
+  
+  writeStore(store);
+  return store[projectId];
+}
+
+export function addAssetFile(projectId: string, file: Omit<AssetFileRecord, "id" | "timestamp">): ExtraProjectData {
+  const store = readStore();
+  if (!store[projectId]) {
+    store[projectId] = { projectId, quote: null, assets: [] };
+  }
+  
+  const newFile: AssetFileRecord = {
+    ...file,
+    id: `ASSET-${Date.now()}`,
+    timestamp: new Date().toISOString()
+  };
+  
+  store[projectId].assets.push(newFile);
+  writeStore(store);
+  return store[projectId];
+}

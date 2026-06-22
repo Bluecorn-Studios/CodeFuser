@@ -61,6 +61,60 @@ export const MissionControl: React.FC = () => {
   const [selectedPlanFilter, setSelectedPlanFilter] = useState<string>("all");
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
 
+  // Extra project maps (Part 3 requirement)
+  const [extraProjectMap, setExtraProjectMap] = useState<Record<string, any>>({});
+  const [extraLoadingMap, setExtraLoadingMap] = useState<Record<string, boolean>>({});
+
+  const fetchProjectExtra = async (id: string) => {
+    if (extraProjectMap[id] || extraLoadingMap[id]) return;
+    setExtraLoadingMap(prev => ({ ...prev, [id]: true }));
+    try {
+      const res = await fetch(`/api/projects/${id}/extra`);
+      if (res.ok) {
+        const payload = await res.json();
+        if (payload.success && payload.data) {
+          setExtraProjectMap(prev => ({ ...prev, [id]: payload.data }));
+        }
+      }
+    } catch (err) {
+      console.warn("Retrieve project details error:", err);
+    } finally {
+      setExtraLoadingMap(prev => ({ ...prev, [id]: false }));
+    }
+  };
+
+  const handleModifyProject = async (id: string, updates: Partial<ProjectRecord>) => {
+    try {
+      const response = await fetch(`/api/projects/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates)
+      });
+      if (response.ok) {
+        await fetchProjects(); // Refresh lists live
+      }
+    } catch (err) {
+      console.error("Failed to update project configurations inside admin console:", err);
+    }
+  };
+
+  const getQuoteTimeRemaining = (expiryStr?: string) => {
+    if (!expiryStr) return "Expired";
+    const diff = new Date(expiryStr).getTime() - Date.now();
+    if (diff <= 0) return "Expired";
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const mins = Math.floor((diff / (1000 * 60)) % 60);
+    if (days > 0) return `${days}d ${hours}h left`;
+    return `${hours}h ${mins}m left`;
+  };
+
+  useEffect(() => {
+    if (activeProjectId) {
+      fetchProjectExtra(activeProjectId);
+    }
+  }, [activeProjectId]);
+
   const fetchProjects = async () => {
     setIsLoading(true);
     setErrorValue(null);
@@ -82,6 +136,21 @@ export const MissionControl: React.FC = () => {
       setDbSource("Offline");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async (id: string, newStatus: string) => {
+    try {
+      const response = await fetch(`/api/projects/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (response.ok) {
+        await fetchProjects();
+      }
+    } catch (err) {
+      console.error("Failed to update status inside admin console:", err);
     }
   };
 
@@ -508,6 +577,246 @@ export const MissionControl: React.FC = () => {
                             </div>
                           </div>
 
+                          {/* NEW: Admin Override & Extended Workspace Modules (Part 3 & Part 7 Requirements) */}
+                          <div className="mt-6 pt-5 border-t border-neutral-900/60 grid gap-6 md:grid-cols-2">
+                            
+                            {/* Override Settings Box */}
+                            <div className="border border-neutral-900 rounded-2xl p-4 bg-black/35 space-y-4">
+                              <span className="text-[9px] font-mono uppercase text-amber-500 font-extrabold tracking-widest block border-b border-neutral-900 pb-2">
+                                ⚙️ Admin Override Configuration
+                              </span>
+                              
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                  <label className="block text-[10px] text-zinc-400">Core Package Tier</label>
+                                  <select
+                                    value={proj.selectedPackage}
+                                    onChange={(e) => handleModifyProject(proj.id, { selectedPackage: e.target.value })}
+                                    className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-1.5 text-xs text-white uppercase font-mono cursor-pointer"
+                                  >
+                                    <option value="ignite">Ignite Package</option>
+                                    <option value="fusion">Fusion Package</option>
+                                    <option value="catalyst">Catalyst Package</option>
+                                  </select>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                  <label className="block text-[10px] text-zinc-400">Ownership framework Type</label>
+                                  <select
+                                    value={proj.ownershipChoice}
+                                    onChange={(e) => handleModifyProject(proj.id, { ownershipChoice: e.target.value })}
+                                    className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-1.5 text-xs text-white uppercase font-mono cursor-pointer"
+                                  >
+                                    <option value="full">Direct Full License Ownership</option>
+                                    <option value="subscription">Managed Service Agreement</option>
+                                  </select>
+                                </div>
+                              </div>
+
+                              <p className="text-[10px] text-zinc-500 leading-normal">
+                                Modifying these client settings syncs to their workspace instantaneously. Keeps pricing plans aligned standardly.
+                              </p>
+                            </div>
+
+                            {/* Client Registered Attachments Repository */}
+                            <div className="border border-neutral-900 rounded-2xl p-4 bg-black/35 space-y-3">
+                              <span className="text-[9px] font-mono uppercase text-[#cbd5e1] font-bold tracking-widest block border-b border-neutral-900 pb-2">
+                                📁 Client Registered Attachments
+                              </span>
+
+                              {extraProjectMap[proj.id]?.assets && extraProjectMap[proj.id]?.assets.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-2 max-h-[140px] overflow-y-auto pr-1">
+                                  {extraProjectMap[proj.id].assets.map((as: any) => (
+                                    <div key={as.id} className="p-2.5 bg-neutral-950 border border-neutral-900 rounded-xl flex items-center justify-between gap-1.5">
+                                      <div className="truncate shrink min-w-0">
+                                        <span className="text-[11px] font-semibold text-white block truncate">{as.name}</span>
+                                        <span className="text-[8px] font-mono text-neutral-500 block">
+                                          Size: {Math.round(as.size / 1024)} KB • {as.type.split('/')[1]?.toUpperCase() || 'FILE'}
+                                        </span>
+                                      </div>
+                                      <a
+                                        href={as.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="p-1 px-2.5 bg-neutral-900 hover:bg-neutral-800 text-[8.5px] font-mono font-bold text-amber-500 hover:text-white rounded-md transition-colors shrink-0"
+                                      >
+                                        Open
+                                      </a>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-center py-4 bg-neutral-950/20 rounded-xl flex flex-col justify-center items-center h-[90px]">
+                                  <span className="text-[10px] font-mono text-neutral-500 block">Zero uploaded workspace files.</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Official Standards quotation Lock Engine (Part 7: Single Source of Truth Pricing Freezer) */}
+                          <div className="mt-5 pt-5 border-t border-neutral-900/60">
+                            <div className="border border-neutral-900 rounded-2xl p-5 bg-black/35 space-y-4">
+                              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-900 pb-2">
+                                <span className="text-[9px] font-mono uppercase text-amber-500 font-extrabold tracking-widest block">
+                                  🔒 SECURE STANDARDS QUOTE LOCK FORM ENGINE
+                                </span>
+                                {extraProjectMap[proj.id]?.quote && (
+                                  <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 uppercase tracking-widest">
+                                    Frozen Standard Rate Secure
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <form 
+                                  onSubmit={async (e) => {
+                                    e.preventDefault();
+                                    const form = e.currentTarget;
+                                    const data = new FormData(form);
+                                    const pkg = String(data.get("packageName") || "Fusion Enterprise Spec");
+                                    const pPrice = Number(data.get("price") || 24999);
+                                    const pDisc = Number(data.get("discount") || 0);
+                                    const desc = String(data.get("summary") || "Guaranteed custom specs package.");
+                                    
+                                    try {
+                                      const response = await fetch(`/api/projects/${proj.id}/quote`, {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({
+                                          packageName: pkg,
+                                          price: pPrice,
+                                          discount: pDisc,
+                                          features: ["Premium Integrated UI Layout", "Custom Code Engine Map", "Unified DB Architecture"],
+                                          summary: desc
+                                        })
+                                      });
+                                      if (response.ok) {
+                                        const body = await response.json();
+                                        if (body.success && body.data) {
+                                          setExtraProjectMap(prev => ({ ...prev, [proj.id]: body.data }));
+                                          alert("Official standards quotation locked standardly. Frozen rate locks in client dashboard for 7 days.");
+                                        }
+                                      }
+                                    } catch (err) {
+                                      console.error("Encountered standard quotation locks failure:", err);
+                                    }
+                                  }}
+                                  className="space-y-3"
+                                >
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                      <label className="block text-[8.5px] font-mono text-zinc-400 uppercase">Rate spec plan Name</label>
+                                      <input 
+                                        type="text" 
+                                        name="packageName" 
+                                        defaultValue={extraProjectMap[proj.id]?.quote?.packageName || proj.selectedPackage.toUpperCase()} 
+                                        className="w-full bg-neutral-900 border border-neutral-800 text-xs px-2.5 py-1.5 rounded focus:outline-none focus:border-amber-500 text-white"
+                                        required
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="block text-[8.5px] font-mono text-zinc-400 uppercase">Lock price Rate (₹ INR)</label>
+                                      <input 
+                                        type="number" 
+                                        name="price" 
+                                        defaultValue={extraProjectMap[proj.id]?.quote?.price || (proj.selectedPackage.includes("ignite") ? 14999 : proj.selectedPackage.includes("catalyst") ? 49999 : 24999)} 
+                                        className="w-full bg-neutral-900 border border-neutral-800 text-xs px-2.5 py-1.5 rounded focus:outline-none focus:border-amber-500 text-white font-mono"
+                                        required
+                                      />
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                      <label className="block text-[8.5px] font-mono text-zinc-400 uppercase">Lock discount Rate (₹ INR)</label>
+                                      <input 
+                                        type="number" 
+                                        name="discount" 
+                                        defaultValue={extraProjectMap[proj.id]?.quote?.discount || 0} 
+                                        className="w-full bg-neutral-900 border border-neutral-800 text-xs px-2.5 py-1.5 rounded focus:outline-none focus:border-amber-500 text-white font-mono"
+                                        required
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="block text-[8.5px] font-mono text-zinc-400 uppercase">Terms Lock Description</label>
+                                      <input 
+                                        type="text" 
+                                        name="summary" 
+                                        defaultValue={extraProjectMap[proj.id]?.quote?.summary || "AI Recommended specifications locked."} 
+                                        className="w-full bg-neutral-900 border border-neutral-800 text-xs px-2.5 py-1.5 rounded focus:outline-none focus:border-amber-500 text-white"
+                                        required
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <button
+                                    type="submit"
+                                    className="w-full py-2 bg-neutral-900 hover:bg-neutral-850 text-amber-500 hover:text-white border border-neutral-800 hover:border-amber-500/40 text-[9px] font-mono font-bold uppercase rounded-lg transition-all tracking-wider h-9 flex items-center justify-center cursor-pointer"
+                                  >
+                                    🔒 Create / Update Frozen Price Quote lock
+                                  </button>
+                                </form>
+
+                                {/* Right Side: Current Frozen Quoting Diagnostics */}
+                                <div className="bg-[#030303] border border-neutral-900 p-4 rounded-xl flex flex-col justify-between">
+                                  {extraProjectMap[proj.id]?.quote ? (
+                                    <div className="space-y-3 font-sans">
+                                      <span className="block text-[8px] font-mono text-amber-500 uppercase tracking-wider font-extrabold">Active Fixed-Rate Specifications Record</span>
+                                      
+                                      <div className="space-y-2 text-xs">
+                                        <div className="flex justify-between border-b border-neutral-900 pb-1.5">
+                                          <span className="text-neutral-500">Fixed Tier Name:</span>
+                                          <span className="font-bold text-white uppercase font-mono text-[10.5px]">{extraProjectMap[proj.id].quote.packageName}</span>
+                                        </div>
+                                        <div className="flex justify-between border-b border-neutral-900 pb-1.5">
+                                          <span className="text-neutral-500">Guaranteed Amount Rate:</span>
+                                          <span className="font-extrabold text-amber-500 font-mono">₹{extraProjectMap[proj.id].quote.price.toLocaleString("en-IN")}</span>
+                                        </div>
+                                        <div className="flex justify-between border-b border-neutral-900 pb-1.5">
+                                          <span className="text-neutral-500">Secure locks validity:</span>
+                                          <span className="font-extrabold text-neutral-300 font-mono">{getQuoteTimeRemaining(extraProjectMap[proj.id].quote.expiryDate)}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                          <span className="text-neutral-500">Discount Segment:</span>
+                                          <span className="font-medium text-emerald-400 font-mono">₹{(extraProjectMap[proj.id].quote.discount || 0).toLocaleString("en-IN")}</span>
+                                        </div>
+                                      </div>
+
+                                      <button
+                                        onClick={async () => {
+                                          if (!confirm("Are you sure you want to release this secure quotation lock? standard packages will resume.")) return;
+                                          try {
+                                            const res = await fetch(`/api/projects/${proj.id}/quote/reset`, { method: "POST" });
+                                            if (res.ok) {
+                                              const body = await res.json();
+                                              if (body.success) {
+                                                setExtraProjectMap(prev => ({ ...prev, [proj.id]: body.data }));
+                                                alert("Quotation lock has been reset successfully.");
+                                              }
+                                            }
+                                          } catch(err) {
+                                            console.error("Failed to reset standard quotation:", err);
+                                          }
+                                        }}
+                                        className="w-full py-1.5 bg-neutral-900 hover:bg-red-950/40 hover:text-red-300 hover:border-red-950 text-[9px] font-mono font-bold text-neutral-400 uppercase rounded-lg border border-neutral-850 h-8 transition-colors cursor-pointer"
+                                      >
+                                        Unlock Price quote
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <div className="flex flex-col items-center justify-center h-full py-4 text-center space-y-2">
+                                      <span className="text-amber-500 text-lg">⚠️</span>
+                                      <span className="text-[11px] font-semibold text-zinc-300 block">No Active Price Quote Frozen</span>
+                                      <span className="text-[9.5px] text-zinc-500 max-w-[200px] leading-normal">
+                                        Client dashboard is displaying dynamic prices based on standard packages. Enter details on the left to lock.
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
                           {/* Technical Core Action block */}
                           <div className="mt-5 pt-4 border-t border-neutral-900 flex justify-between items-center bg-card/60 rounded-xl p-3.5 border border-border/40">
                             <div>
@@ -518,14 +827,32 @@ export const MissionControl: React.FC = () => {
                                 {proj.id?.toUpperCase()}
                               </p>
                             </div>
-                            <button
-                              onClick={() => {
-                                alert(`Successfully initiated development compiler for project ${proj.id}. CodeFuser systems are mapping the custom database schema layouts...`);
-                              }}
-                              className="px-3.5 py-1.5 bg-neutral-900 border border-neutral-800 text-[10px] font-mono font-bold uppercase rounded-lg text-amber-500 hover:bg-neutral-800 tracking-wider transition-all"
-                            >
-                              🚀 Start Compiler
-                            </button>
+                            <div className="flex items-center gap-2.5">
+                              {/* Real-time Status Dropdown */}
+                              <select
+                                value={proj.status}
+                                onChange={(e) => handleUpdateStatus(proj.id, e.target.value)}
+                                className="bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-1.5 text-[10px] font-mono font-bold uppercase text-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/30 cursor-pointer h-8"
+                              >
+                                <option value="Project Filed">Project Filed</option>
+                                <option value="Specs Audited">Specs Audited</option>
+                                <option value="Assets Pending">Assets Pending</option>
+                                <option value="Designing">Designing</option>
+                                <option value="Development">Development</option>
+                                <option value="Testing">Testing</option>
+                                <option value="Checklist Ready">Checklist Ready</option>
+                                <option value="Launched">Launched</option>
+                              </select>
+
+                              <button
+                                onClick={() => {
+                                  alert(`Successfully initiated development compiler for project ${proj.id}. CodeFuser systems are mapping the custom database schema layouts...`);
+                                }}
+                                className="px-3.5 py-1.5 bg-neutral-900 border border-neutral-800 text-[10px] font-mono font-bold uppercase rounded-lg text-amber-500 hover:bg-neutral-800 tracking-wider transition-all h-8 flex items-center"
+                              >
+                                🚀 Start Compiler
+                              </button>
+                            </div>
                           </div>
                         </motion.div>
                       )}

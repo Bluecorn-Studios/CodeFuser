@@ -11,12 +11,14 @@ import Portfolio from './pages/Portfolio';
 import StartProjectPage from './pages/StartProjectPage';
 import StrategySessionPage from './pages/StrategySessionPage';
 import MissionControl from './pages/MissionControl';
+import CustomerDashboard from './pages/CustomerDashboard';
+import LoginPage from './pages/LoginPage';
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState<PagePath>('/');
 
   useEffect(() => {
-    const validPaths: PagePath[] = ['/', '/story', '/process', '/portfolio', '/pricing', '/faq', '/contact', '/start-project', '/strategy-session', '/mission-control'];
+    const validPaths: PagePath[] = ['/', '/story', '/process', '/portfolio', '/pricing', '/faq', '/contact', '/start-project', '/strategy-session', '/mission-control', '/dashboard', '/login'];
     
     // Parse path and state on start
     const path = window.location.pathname as PagePath;
@@ -94,6 +96,10 @@ export default function App() {
         return <StrategySessionPage />;
       case '/mission-control':
         return <MissionControl />;
+      case '/dashboard':
+        return <CustomerDashboard />;
+      case '/login':
+        return <LoginPage />;
       case '/':
       default:
         return <Home />;

@@ -293,7 +293,7 @@ ${formData.ownerName}
                   Business Diagnostics Consultation
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-                  Provide high-quality business parameters so our specialists can map out a custom growth track.
+                  Provide your business details. We'll map your custom growth plan.
                 </p>
               </div>
 
@@ -371,7 +371,7 @@ ${formData.ownerName}
                           />
                         </div>
                         <p className="text-[10px] text-muted-foreground/50 mt-1.5 font-mono">
-                          Used to share rapid visual mockups and layouts live.
+                          Used to send quick design layouts.
                         </p>
                       </div>
 
@@ -563,7 +563,7 @@ ${formData.ownerName}
 
                   <div className="rounded-2xl border border-neutral-900 bg-[#050505] p-5">
                     <p className="text-xs text-muted-foreground leading-relaxed mb-4">
-                      Reserve a dedicated **30-minute workspace review** with our prime solutions consultant to outline interface parameters and explore growth recommendations.
+                      Book a 30-minute workspace review with our solutions consultant.
                     </p>
 
                     <div className="grid gap-5 sm:grid-cols-2">
@@ -615,7 +615,7 @@ ${formData.ownerName}
                     <div>
                       <span className="text-[10px] uppercase font-mono tracking-widest text-amber-500 font-bold">Session Notice</span>
                       <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">
-                        These calls take place virtually on Google Meet or WhatsApp Video. A conference calendar invite with custom credentials will be dispatched to your email.
+                        Calls take place on Google Meet or WhatsApp. We will email you the calendar invite link.
                       </p>
                     </div>
                   </div>
@@ -753,10 +753,8 @@ ${formData.ownerName}
                 Strategy Session Booked.
               </h2>
               <p className="text-sm text-muted-foreground/90 max-w-lg mx-auto mt-4 leading-relaxed font-sans">
-                Outstanding work, <span className="text-[#FAF9F5] font-semibold">{formData.ownerName}</span>! 
-                Your diagnostics audit is saved. We have successfully reserved 
-                <span className="text-white font-extrabold"> {formData.selectedDate} at {formData.selectedTimeSlot} PST</span> 
-                to analyze the online parameters for <span className="text-white font-bold">{formData.businessName}</span>.
+                Session reserved for <span className="text-white font-extrabold">{formData.selectedDate} at {formData.selectedTimeSlot} PST</span>. 
+                We are excited to help grow <span className="text-white font-bold">{formData.businessName}</span>.
               </p>
 
               {/* AI Strategic Recommendations Section */}
@@ -769,7 +767,7 @@ ${formData.ownerName}
                     Audited Website Package Blueprints
                   </h4>
                   <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                    Based on your target audience profile, roadmap bottlenecks, and requested tone directions, the AI recommendation pipeline maps out the following tailored guides:
+                    Recommended packages matching your target audience and goals:
                   </p>
                 </div>
 
