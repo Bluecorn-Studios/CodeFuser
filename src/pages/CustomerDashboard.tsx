@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useAppRouter } from "../components/Reveal";
 import { getAuthUser, clearAuthSession } from "../utils/auth";
+import { supabase } from "../lib/supabase";
 
 interface ProjectRecord {
   id: string;
@@ -177,7 +178,10 @@ export default function CustomerDashboard() {
 
   const logoutClient = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await Promise.all([
+        fetch("/api/auth/logout", { method: "POST" }),
+        supabase.auth.signOut()
+      ]);
     } catch (e) {
       console.warn("Logout endpoint unreachable", e);
     }

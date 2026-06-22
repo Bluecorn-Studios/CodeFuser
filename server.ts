@@ -151,48 +151,7 @@ app.post("/api/auth/logout", async (req, res) => {
   }
 });
 
-// API: Get Google Auth URL
-app.get("/api/auth/google/url", async (req, res) => {
-  try {
-    const supabase = getSupabase();
-    const appUrl = process.env.APP_URL || "http://localhost:3000";
-    
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${appUrl}/login`
-      }
-    });
-    
-    if (error) {
-      return res.status(400).json({ success: false, error: error.message });
-    }
-    
-    return res.json({ success: true, url: data.url });
-  } catch (error: any) {
-    console.error("Auth Google URL error:", error);
-    return res.status(500).json({ success: false, error: error.message || "Failed to initiate Google authentication" });
-  }
-});
-
-// API: Retrieve User Session by Access Token (Google Sign-In)
-app.post("/api/auth/session-user", async (req, res) => {
-  try {
-    const { accessToken } = req.body;
-    if (!accessToken) {
-      return res.status(400).json({ success: false, error: "Access token is required" });
-    }
-    const supabase = getSupabase();
-    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
-    if (error) {
-      return res.status(400).json({ success: false, error: error.message });
-    }
-    return res.json({ success: true, user });
-  } catch (error: any) {
-    console.error("Retrieve session user error:", error);
-    return res.status(500).json({ success: false, error: error.message || "Failed to retrieve authenticated user" });
-  }
-});
+// (Obsolete server-side OAuth endpoints are replaced by Vercel-compatible direct client-side Supabase authentication flow)
 
 // API: Update a single project state
 app.put("/api/projects/:id", async (req, res) => {

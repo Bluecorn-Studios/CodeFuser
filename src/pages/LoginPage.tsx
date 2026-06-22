@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { useAppRouter } from "../components/Reveal";
 import { setAuthSession, getAuthUser } from "../utils/auth";
+import { supabase } from "../lib/supabase";
+import { logAndMapAuthError } from "../utils/authErrors";
 
 export default function LoginPage() {
   const { navigate } = useAppRouter();
@@ -31,69 +33,56 @@ export default function LoginPage() {
   // Check if they are already logged in when visiting this page
   // Also check if there's an access token in the URL hash (from Google OAuth redirect)
   useEffect(() => {
-    const user = getAuthUser();
-    if (user) {
-      navigate("/dashboard");
-      return;
-    }
-
-    const hash = window.location.hash;
-    if (hash && hash.includes("access_token=")) {
-      const params = new URLSearchParams(hash.replace("#", "?"));
-      const accessToken = params.get("access_token");
-      if (accessToken) {
-        setIsLoading(true);
-        setErrorMsg(null);
-        setSuccessMsg("Verifying authorization...");
+    const handleInitialSession = async () => {
+      setIsLoading(true);
+      setErrorMsg(null);
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
         
-        // Clear the hash from address bar quickly
-        window.history.replaceState(null, "", window.location.pathname);
-        
-        fetch("/api/auth/session-user", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ accessToken }),
-        })
-        .then(res => res.json())
-        .then(async data => {
-          if (data.success && data.user) {
-            const userObj = {
-              id: data.user.id,
-              email: data.user.email,
-              user_metadata: data.user.user_metadata || {}
-            };
-            setAuthSession(userObj, accessToken);
-            setSuccessMsg("Login successful! Redirecting to dashboard...");
-            
-            // Check if they already have an active project
-            try {
-              const projResp = await fetch(`/api/projects?userId=${userObj.id}&email=${userObj.email}`);
-              if (projResp.ok) {
-                const projData = await projResp.json();
-                if (projData.projects && projData.projects.length > 0) {
-                  localStorage.setItem("fuser_client_project_id", projData.projects[0].id);
-                  navigate("/dashboard");
-                } else {
-                  navigate("/start-project");
-                }
-              } else {
-                navigate("/start-project");
-              }
-            } catch {
+        if (session) {
+          const userObj = {
+            id: session.user.id,
+            email: session.user.email || "",
+            user_metadata: session.user.user_metadata || {}
+          };
+          
+          setAuthSession(userObj, session.access_token);
+          setSuccessMsg("Welcome! Redirecting and setting up workspace...");
+          
+          // Clear current hash from URL safely
+          if (window.location.hash && window.location.hash.includes("access_token")) {
+            window.history.replaceState(null, "", window.location.pathname);
+          }
+          
+          const projResp = await fetch(`/api/projects?userId=${userObj.id}&email=${userObj.email}`);
+          if (projResp.ok) {
+            const projData = await projResp.json();
+            if (projData.projects && projData.projects.length > 0) {
+              localStorage.setItem("fuser_client_project_id", projData.projects[0].id);
+              navigate("/dashboard");
+            } else {
               navigate("/start-project");
             }
           } else {
-            setErrorMsg(data.error || "Failed to finalize authentication redirect.");
+            navigate("/start-project");
           }
-        })
-        .catch(() => {
-          setErrorMsg("Failed to synchronize with authorization server.");
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+        } else {
+          // If no active Supabase session is detected, check if we have standard non-Google user already stored locally
+          const user = getAuthUser();
+          if (user) {
+            navigate("/dashboard");
+          }
+        }
+      } catch (err: any) {
+        const friendlyError = logAndMapAuthError(err, "OAuth Callback / Initial Session Load");
+        setErrorMsg(friendlyError);
+      } finally {
+        setIsLoading(false);
       }
-    }
+    };
+
+    handleInitialSession();
   }, []);
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
@@ -189,7 +178,8 @@ export default function LoginPage() {
       }, 1000);
 
     } catch (err: any) {
-      setErrorMsg(err.message || "Login failed. Please check credentials.");
+      const friendlyError = logAndMapAuthError(err, "Manual Credentials Submit");
+      setErrorMsg(friendlyError);
       setIsLoading(false);
     }
   };
@@ -200,16 +190,19 @@ export default function LoginPage() {
     setSuccessMsg(null);
     
     try {
-      const res = await fetch("/api/auth/google/url");
-      const data = await res.json();
-      if (data.success && data.url) {
-        window.location.href = data.url;
-      } else {
-        setErrorMsg(data.error || "Failed to contact Google sign-in server.");
-        setIsLoading(false);
+      const redirectUri = `${window.location.origin}/login`;
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: redirectUri,
+        }
+      });
+      if (error) {
+        throw error;
       }
-    } catch (err) {
-      setErrorMsg("Google authorization server is currently unreachable.");
+    } catch (err: any) {
+      const friendlyError = logAndMapAuthError(err, "Google OAuth Sign-In Client Initiation");
+      setErrorMsg(friendlyError);
       setIsLoading(false);
     }
   };

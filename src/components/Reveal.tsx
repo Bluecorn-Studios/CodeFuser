@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState, createContext, useContext } from 'react';
 import { PagePath } from '../types';
+import { supabase } from '../lib/supabase';
 
 // Company Contact Coordinates
 export const C = {
@@ -247,7 +248,10 @@ export const Eo: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await Promise.all([
+        fetch('/api/auth/logout', { method: 'POST' }),
+        supabase.auth.signOut()
+      ]);
     } catch (e) {
       console.warn("Logout failed", e);
     }
