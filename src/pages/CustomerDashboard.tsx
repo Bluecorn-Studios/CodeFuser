@@ -391,21 +391,45 @@ export default function CustomerDashboard() {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-md bg-neutral-950 border border-neutral-900 rounded-3xl p-8 text-center"
+          className="w-full max-w-md bg-[#050505] border border-neutral-900 rounded-3xl p-8 text-center relative overflow-hidden"
         >
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent" />
+          
           <div className="h-12 w-12 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto mb-6">
             <Lock size={20} />
           </div>
-          <h2 className="text-2xl font-black uppercase tracking-tight">No Active Projects</h2>
-          <p className="text-xs text-neutral-400 mt-3 leading-relaxed">
-            Start a new project now to set up your website timeline.
+          <h2 className="text-xl font-black uppercase tracking-tight text-neutral-100">
+            Client Workspace Not Available
+          </h2>
+          <p className="text-xs text-neutral-450 mt-4 leading-relaxed font-sans">
+            This account is not currently linked to an active CodeFuser client workspace.
           </p>
-          <button
-            onClick={() => navigate("/start-project")}
-            className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-black py-3.5 rounded-xl font-bold uppercase tracking-wider text-xs font-sans mt-8 cursor-pointer hover:shadow-[0_0_15px_rgba(245,158,11,0.2)] transition-all"
-          >
-            Start Project Now
-          </button>
+          <p className="text-xs text-neutral-500 mt-2 leading-relaxed font-sans">
+            If you've recently completed your payment, your workspace may still be under preparation. Otherwise, begin by choosing one of our services.
+          </p>
+
+          <div className="mt-8 space-y-3">
+            <button
+              onClick={() => {
+                navigate("/");
+                setTimeout(() => {
+                  const el = document.getElementById("pricing");
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                }, 300);
+              }}
+              className="w-full bg-white text-black py-3.5 rounded-xl font-bold uppercase tracking-wider text-xs font-sans cursor-pointer hover:bg-neutral-100 transition-all"
+            >
+              Choose Your Journey
+            </button>
+            
+            <button
+              onClick={() => window.open(getWhatsAppLink("Hi CodeFuser, I would like to inquire about my secure client workspace setup status."), "_blank")}
+              className="w-full bg-neutral-900 hover:bg-neutral-850 text-white py-3.5 rounded-xl font-bold uppercase tracking-wider text-xs border border-neutral-800 font-sans cursor-pointer transition-all"
+            >
+              Contact Support
+            </button>
+          </div>
+
           <button 
             onClick={logoutClient}
             className="text-xs text-neutral-500 hover:text-red-400 transition-colors uppercase font-mono tracking-widest mt-6 block mx-auto cursor-pointer"

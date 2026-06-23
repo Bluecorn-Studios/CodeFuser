@@ -28,6 +28,7 @@ import { useAppRouter, b as getMailtoLink, w as getWhatsAppLink } from '../compo
 import { PagePath, PricingPlan } from '../types';
 import { pricingPlans } from '../components/Pricing';
 import { getAuthUser } from '../utils/auth';
+import { supabase } from '../lib/supabase';
 
 interface StartProjectData {
   businessName: string;
@@ -2281,137 +2282,100 @@ ${formData.ownerName}
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4 }}
-              className="rounded-3xl border border-neutral-900 bg-[#050505] p-6 sm:p-10 shadow-[0_30px_70px_rgba(0,0,0,0.9)] relative overflow-hidden"
+              className="rounded-3xl border border-neutral-900 bg-[#050505] p-6 sm:p-10 shadow-[0_30px_70px_rgba(0,0,0,0.9)] relative overflow-hidden text-center max-w-xl mx-auto"
               id="start-project-success"
             >
               {/* Decorative glows */}
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-amber-500/[0.015] blur-[150px] pointer-events-none" />
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-emerald-500/[0.015] blur-[150px] pointer-events-none" />
 
-              <div className="text-center mb-8">
+              <div className="text-center mb-8 font-sans">
                 {/* Status Indicator */}
-                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-mono font-bold tracking-widest text-emerald-400 uppercase mb-4 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
-                  <Check size={10} strokeWidth={3} /> System Initialized
+                <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-mono font-bold tracking-widest text-emerald-400 uppercase mb-5 shadow-[0_0_15px_rgba(16,185,129,0.15)] font-sans">
+                  🎉 Payment Successful
                 </span>
                 
                 <h2 className="font-display text-2xl sm:text-3xl font-black text-white tracking-tight leading-snug">
-                  Blueprint Filed Successfully.
+                  Thank you for choosing CodeFuser.
                 </h2>
-                <p className="text-sm text-muted-foreground/90 max-w-2xl mx-auto mt-3 leading-relaxed font-sans">
-                  Excellent, <span className="text-[#FAF9F5] font-semibold">{formData.ownerName}</span>. 
-                  Your blueprint has been logged in our queue. We mapped out a custom digital track for 
-                  <span className="text-white font-bold"> {formData.businessName}</span>.
+                <p className="text-xs text-neutral-400 max-w-md mx-auto mt-3 leading-relaxed font-sans">
+                  Your payment has been received successfully. Your secure client workspace is now ready. 
+                  Choose an option below to secure your client credentials and access your premium Client Portal.
                 </p>
               </div>
 
-              {/* Summary of finalized specifications */}
-              <div className="rounded-2xl border border-neutral-900 bg-[#070707] p-5 space-y-4 text-xs tracking-wide max-w-md mx-auto mb-8 text-left">
-                <span className="text-neutral-500 block font-mono text-[9px] font-bold uppercase tracking-wider border-b border-neutral-950 pb-2 mb-2">Final Specifications locked</span>
+              {/* Locked details spec block */}
+              <div className="rounded-2xl border border-neutral-900 bg-[#070707] p-5 space-y-4 text-xs tracking-wide text-left mb-8 max-w-sm mx-auto">
+                <span className="text-neutral-500 block font-mono text-[9px] font-bold uppercase tracking-wider border-b border-neutral-950 pb-2 mb-2">Workspace Configuration</span>
                 <div className="grid grid-cols-2 gap-y-3 font-sans">
                   <div>
-                    <span className="text-neutral-500 block text-[9px] font-mono uppercase">LOCKED CONFIGURATION</span>
+                    <span className="text-neutral-500 block text-[9px] font-mono uppercase">BUSINESS MODEL</span>
                     <span className="text-white font-bold text-xs mt-1 block">
+                      {formData.businessName || "Your Brand"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-neutral-500 block text-[9px] font-mono uppercase">BUILD PACKAGE</span>
+                    <span className="text-amber-400 font-bold text-xs mt-1 block">
                       {recommendationCards?.find(c => c.id === selectedCardId)?.name || selectedPlan.name}
                     </span>
                   </div>
-                  <div>
-                    <span className="text-neutral-500 block text-[9px] font-mono uppercase">INDICATIVE VALUE</span>
-                    <span className="text-amber-400 font-bold text-xs mt-1 block">
-                      {recommendationCards?.find(c => c.id === selectedCardId)?.price || selectedPlan.price}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-neutral-500 block text-[9px] font-mono uppercase">FUNDING PREFERENCE</span>
-                    <span className="text-white font-semibold text-xs mt-1 block">
-                      {selectedPaymentTerm === 'upfront' ? '100% Upfront (10% Discount applied)' : '50% Milestone Plan'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-neutral-500 block text-[9px] font-mono uppercase">OPERATIONAL STYLE</span>
-                    <span className="font-semibold text-xs mt-1 block text-neutral-300">
-                      {formData.ownership === 'full' ? 'Full Sovereignty' : 'Managed Partnership'}
-                    </span>
-                  </div>
                 </div>
-              </div>
-
-              {/* Visual Roadmap Card */}
-              <div className="rounded-2xl border border-neutral-900 bg-[#050505] p-5 text-left max-w-lg mx-auto">
-                <div className="text-[10px] font-mono tracking-widest text-[#64748B] uppercase font-bold mb-3">
-                  IMMEDIATE NEXT STEPS
-                </div>
-                <ul className="space-y-4 text-xs">
-                  <li className="flex items-start gap-3">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono text-[10px] font-bold">1</span>
-                    <div>
-                      <p className="font-bold text-white leading-normal font-sans">Book Strategy Session (cal.com)</p>
-                      <p className="text-muted-foreground text-[11px] leading-relaxed mt-0.5">
-                        Reserve a direct 1-on-1 virtual strategy session with a CodeFuser consultant to solidify your design guidelines and technical parameters.
-                      </p>
-                    </div>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-neutral-900 border border-neutral-800 text-muted-foreground font-mono text-[10px]">2</span>
-                    <div>
-                      <p className="font-bold text-neutral-300 leading-normal font-sans">Review Technical Blueprint</p>
-                      <p className="text-muted-foreground text-[11px] leading-relaxed mt-0.5">
-                        During our call, we will load your assets checklist, evaluate domain targets, and authorize prototype construction live.
-                      </p>
-                    </div>
-                  </li>
-                </ul>
               </div>
 
               {/* Actions */}
-              <div className="mt-10 flex flex-col items-center justify-center gap-3.5 max-w-md mx-auto">
+              <div className="mt-8 flex flex-col items-center justify-center gap-3.5 max-w-md mx-auto font-sans">
                 <button
                   type="button"
                   onClick={() => {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
-                    navigate('/dashboard');
+                    navigate('/login?signup=true');
                   }}
-                  className="btn-pressure inline-flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-black text-xs uppercase tracking-wider px-6 py-3.5 rounded-full w-full shadow-[0_12px_24px_rgba(245,158,11,0.15)] hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:-translate-y-0.5 transition-all cursor-pointer leading-none h-12"
+                  className="btn-pressure inline-flex items-center justify-center gap-2 bg-white text-black hover:bg-neutral-100 font-bold text-xs uppercase tracking-wider px-6 py-4 rounded-xl w-full shadow-lg active:scale-95 transition-all cursor-pointer leading-none h-12"
                 >
-                  🚀 Enter Client Headquarters Dashboard
+                  Create Client Account <ArrowRight size={14} />
                 </button>
 
-                <div className="flex flex-col sm:flex-row gap-3 w-full">
-                  {/* Official Strategy Call */}
-                  <a 
-                    href={getPrefilledComposeMail(
-                      recommendationCards?.find(c => c.id === selectedCardId)?.name,
-                      recommendationCards?.find(c => c.id === selectedCardId)?.price
-                    )}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-pressure inline-flex items-center justify-center gap-2 bg-white text-black font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-full w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white h-12 shadow-[0_12px_24px_rgba(255,255,255,0.06)] hover:-translate-y-0.5 pointer-events-auto cursor-pointer leading-none"
-                  >
-                    <Calendar size={14} /> Schedule Call
-                  </a>
-
-                  {/* WhatsApp Chat pre-filled link */}
-                  <a 
-                    href={getWhatsAppLink(
-                      `Hi CodeFuser, I just submitted the Start Project onboarding form for ${formData.businessName}! I selected the customized ${
-                        recommendationCards?.find(c => c.id === selectedCardId)?.name || selectedPlan.name
-                      } (${
-                        recommendationCards?.find(c => c.id === selectedCardId)?.price || selectedPlan.price
-                      }) package configuration. My funding preference is ${selectedPaymentTerm === 'upfront' ? '100% upfront (10% Discount applied)' : '50% milestone payments'}. I'm ready to schedule our strategy session!`
-                    )}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-pressure inline-flex items-center justify-center gap-2 border border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-400 px-6 py-3.5 rounded-full w-full text-xs font-bold uppercase tracking-wider h-12 select-none hover:shadow-[0_0_15px_rgba(16,185,129,0.15)] focus:outline-none focus:ring-1 focus:ring-emerald-500/20 active:scale-95 cursor-pointer leading-none"
-                  >
-                    WhatsApp Chat
-                  </a>
+                <div className="relative flex py-1 w-full items-center">
+                  <div className="flex-grow border-t border-neutral-900/65"></div>
+                  <span className="flex-shrink mx-3 text-[9px] text-neutral-600 uppercase font-mono tracking-widest">or</span>
+                  <div className="flex-grow border-t border-neutral-900/65"></div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const rUri = `${window.location.origin}/login`;
+                      const { error } = await supabase.auth.signInWithOAuth({
+                        provider: "google",
+                        options: {
+                          redirectTo: rUri,
+                        },
+                      });
+                      if (error) throw error;
+                    } catch (e: any) {
+                      console.warn("OAuth sign in failed:", e);
+                      navigate('/login');
+                    }
+                  }}
+                  className="inline-flex items-center justify-center gap-2 bg-neutral-950 hover:bg-neutral-900 text-white font-semibold text-xs border border-neutral-800 py-3.5 rounded-xl w-full transition-all h-12 cursor-pointer"
+                >
+                  <svg className="h-4 w-4 mr-1.5" viewBox="0 0 24 24">
+                    <path
+                      fill="white"
+                      d="M12.24 10.285V13.4h6.887C18.2 15.614 15.645 18 12.24 18c-3.86 0-7-3.14-7-7s3.14-7 7-7c1.71 0 3.27.61 4.5 1.643l2.425-2.424C17.275 1.682 14.89 1 12.24 1 6.58 1 2 5.58 2 11.24s4.58 10.24 10.24 10.24c5.915 0 9.83-4.16 9.83-10 0-.673-.06-1.196-.184-1.196h-9.646z"
+                    />
+                  </svg>
+                  <span>Continue with Google</span>
+                </button>
               </div>
 
               <div className="mt-8 flex items-center justify-center gap-4">
                 <button
                   type="button"
                   onClick={() => navigate('/')}
-                  className="text-xs text-muted-foreground hover:text-white underline underline-offset-4 cursor-pointer transition-colors"
+                  className="text-xs text-neutral-500 hover:text-white underline underline-offset-4 cursor-pointer transition-all"
                 >
                   Return Home
                 </button>

@@ -30,6 +30,16 @@ export default function LoginPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
+  // Read ?signup=true URL parameter to pre-toggle sign-up mode
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("signup") === "true") {
+      setIsSignUp(true);
+    } else {
+      setIsSignUp(false);
+    }
+  }, []);
+
   // Check if they are already logged in when visiting this page
   // Also check if there's an access token in the URL hash (from Google OAuth redirect)
   useEffect(() => {
@@ -60,13 +70,9 @@ export default function LoginPage() {
             const projData = await projResp.json();
             if (projData.projects && projData.projects.length > 0) {
               localStorage.setItem("fuser_client_project_id", projData.projects[0].id);
-              navigate("/dashboard");
-            } else {
-              navigate("/start-project");
             }
-          } else {
-            navigate("/start-project");
           }
+          navigate("/dashboard");
         } else {
           // If no active Supabase session is detected, check if we have standard non-Google user already stored locally
           const user = getAuthUser();
@@ -163,16 +169,12 @@ export default function LoginPage() {
             const projData = await projResp.json();
             if (projData.projects && projData.projects.length > 0) {
               localStorage.setItem("fuser_client_project_id", projData.projects[0].id);
-              navigate("/dashboard");
-            } else {
-              navigate("/start-project");
             }
-          } else {
-            navigate("/start-project");
           }
         } catch {
-          navigate("/start-project");
+          // ignore error
         } finally {
+          navigate("/dashboard");
           setIsLoading(false);
         }
       }, 1000);
@@ -409,22 +411,22 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Toggle Block */}
-          <div className="mt-6 pt-6 border-t border-neutral-800/60 text-center">
-            <button
-              onClick={() => {
-                setIsSignUp(!isSignUp);
-                setErrorMsg(null);
-                setSuccessMsg(null);
-              }}
-              className="text-xs text-neutral-400 hover:text-amber-500 transition-colors bg-transparent border-none cursor-pointer"
-              disabled={isLoading}
-            >
-              {isSignUp 
-                ? "Already have an account? Login" 
-                : "Don't have an account? Create Account"}
-            </button>
-          </div>
+          {/* Toggle Block: Only show toggle to login if currently in signup mode */}
+          {isSignUp && (
+            <div className="mt-6 pt-6 border-t border-neutral-800/60 text-center">
+              <button
+                onClick={() => {
+                  setIsSignUp(false);
+                  setErrorMsg(null);
+                  setSuccessMsg(null);
+                }}
+                className="text-xs text-neutral-400 hover:text-amber-500 transition-colors bg-transparent border-none cursor-pointer"
+                disabled={isLoading}
+              >
+                Already have a client account? Login
+              </button>
+            </div>
+          )}
         </motion.div>
 
         {/* Footer info line */}

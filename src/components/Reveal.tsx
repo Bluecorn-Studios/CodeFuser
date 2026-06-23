@@ -270,6 +270,10 @@ export const Eo: React.FC = () => {
           <img 
             src="/logo.svg" 
             alt="CodeFuser" 
+            width={170}
+            height={23}
+            fetchPriority="high"
+            loading="eager"
             className="h-[21px] w-auto sm:h-[23px] block select-none" 
             referrerPolicy="no-referrer" 
           />
@@ -291,14 +295,14 @@ export const Eo: React.FC = () => {
             <>
               <Link 
                 to="/dashboard" 
-                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                className="text-sm text-neutral-500 hover:text-neutral-100 transition-colors font-sans"
                 activeProps={{ className: "text-foreground font-medium" }}
               >
-                Dashboard
+                Client Portal
               </Link>
               <button 
                 onClick={handleLogout}
-                className="text-sm font-mono tracking-wider text-neutral-500 hover:text-red-400 transition-colors uppercase cursor-pointer bg-transparent border-none focus:outline-none"
+                className="text-[11px] font-mono tracking-wider text-neutral-600 hover:text-red-400 transition-colors uppercase cursor-pointer bg-transparent border-none focus:outline-none"
               >
                 Logout
               </button>
@@ -306,10 +310,10 @@ export const Eo: React.FC = () => {
           ) : (
             <Link 
               to="/login" 
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              className="text-sm text-neutral-500 hover:text-neutral-100 transition-colors font-sans"
               activeProps={{ className: "text-foreground font-medium" }}
             >
-              Login
+              Client Portal
             </Link>
           )}
         </div>
@@ -358,14 +362,18 @@ export const Eo: React.FC = () => {
               <>
                 <Link
                   to="/dashboard"
-                  className="text-muted-foreground hover:text-foreground transition-colors py-1"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-muted-foreground hover:text-foreground transition-colors py-1 text-xl font-sans"
                   activeProps={{ className: "text-foreground font-semibold" }}
                 >
-                  Dashboard
+                  Client Portal
                 </Link>
                 <button
-                  onClick={handleLogout}
-                  className="text-left py-1 text-neutral-500 hover:text-red-400 font-mono tracking-wider transition-colors uppercase bg-transparent border-none cursor-pointer focus:outline-none text-xl"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleLogout();
+                  }}
+                  className="text-left py-1 text-neutral-500 hover:text-red-400 font-mono tracking-wider transition-colors uppercase bg-transparent border-none cursor-pointer focus:outline-none text-lg"
                 >
                   Logout
                 </button>
@@ -373,10 +381,11 @@ export const Eo: React.FC = () => {
             ) : (
               <Link
                 to="/login"
-                className="text-muted-foreground hover:text-foreground transition-colors py-1"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors py-1 text-xl font-sans"
                 activeProps={{ className: "text-foreground font-semibold" }}
               >
-                Login
+                Client Portal
               </Link>
             )}
           </div>
