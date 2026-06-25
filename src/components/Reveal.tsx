@@ -274,6 +274,7 @@ export const Eo: React.FC = () => {
             width={170}
             height={23}
             loading="eager"
+            decoding="async"
             className="h-[21px] w-auto sm:h-[23px] block select-none" 
             referrerPolicy="no-referrer" 
           />

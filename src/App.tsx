@@ -1,18 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { PagePath } from './types';
 import { RouterContext, P as PageContainer } from './components/Reveal';
 import Home from './pages/Home';
-import Story from './pages/Story';
-import Process from './pages/Process';
-import PricingPage from './pages/PricingPage';
-import FAQPage from './pages/FAQPage';
-import ContactPage from './pages/ContactPage';
-import Portfolio from './pages/Portfolio';
-import StartProjectPage from './pages/StartProjectPage';
-import StrategySessionPage from './pages/StrategySessionPage';
-import MissionControl from './pages/MissionControl';
-import CustomerDashboard from './pages/CustomerDashboard';
-import LoginPage from './pages/LoginPage';
+
+// Lazy load secondary pages to optimize initial bundle size and speed up first paint
+const Story = lazy(() => import('./pages/Story'));
+const Process = lazy(() => import('./pages/Process'));
+const PricingPage = lazy(() => import('./pages/PricingPage'));
+const FAQPage = lazy(() => import('./pages/FAQPage'));
+const ContactPage = lazy(() => import('./pages/ContactPage'));
+const Portfolio = lazy(() => import('./pages/Portfolio'));
+const StartProjectPage = lazy(() => import('./pages/StartProjectPage'));
+const StrategySessionPage = lazy(() => import('./pages/StrategySessionPage'));
+const MissionControl = lazy(() => import('./pages/MissionControl'));
+const CustomerDashboard = lazy(() => import('./pages/CustomerDashboard'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-[60vh] w-full" id="page-loader">
+      <div className="w-8 h-8 border-2 border-zinc-800 border-t-zinc-400 rounded-full animate-spin" />
+    </div>
+  );
+}
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState<PagePath>('/');
@@ -109,7 +119,9 @@ export default function App() {
   return (
     <RouterContext.Provider value={{ currentPath, navigate }}>
       <PageContainer>
-        {renderPage()}
+        <Suspense fallback={<PageLoader />}>
+          {renderPage()}
+        </Suspense>
       </PageContainer>
     </RouterContext.Provider>
   );
