@@ -1,3 +1,5 @@
+import { safeLocalStorage } from "./safeStorage";
+
 export interface SupabaseUser {
   id: string;
   email: string;
@@ -12,7 +14,7 @@ export interface AuthSession {
 }
 
 export function getAuthUser(): SupabaseUser | null {
-  const userStr = localStorage.getItem("fuser_user");
+  const userStr = safeLocalStorage.getItem("fuser_user");
   if (!userStr) return null;
   try {
     return JSON.parse(userStr);
@@ -22,17 +24,17 @@ export function getAuthUser(): SupabaseUser | null {
 }
 
 export function getAuthToken(): string | null {
-  return localStorage.getItem("fuser_token");
+  return safeLocalStorage.getItem("fuser_token");
 }
 
 export function setAuthSession(user: SupabaseUser, token: string) {
-  localStorage.setItem("fuser_user", JSON.stringify(user));
-  localStorage.setItem("fuser_token", token);
+  safeLocalStorage.setItem("fuser_user", JSON.stringify(user));
+  safeLocalStorage.setItem("fuser_token", token);
 }
 
 export function clearAuthSession() {
-  localStorage.removeItem("fuser_user");
-  localStorage.removeItem("fuser_token");
-  localStorage.removeItem("fuser_client_project_id");
-  localStorage.removeItem("codefuser_current_project");
+  safeLocalStorage.removeItem("fuser_user");
+  safeLocalStorage.removeItem("fuser_token");
+  safeLocalStorage.removeItem("fuser_client_project_id");
+  safeLocalStorage.removeItem("codefuser_current_project");
 }

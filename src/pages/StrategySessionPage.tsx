@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useAppRouter, b as getMailtoLink, w as getWhatsAppLink } from '../components/Reveal';
 import { PagePath } from '../types';
+import { safeLocalStorage } from '../utils/safeStorage';
 
 interface StrategySessionData {
   ownerName: string;
@@ -182,7 +183,7 @@ export const StrategySessionPage: React.FC = () => {
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     // Persist locally for next step lookup (AI recommendation engine in step 3)
-    const savedConsultations = JSON.parse(localStorage.getItem('codefuser_consultations') || '[]');
+    const savedConsultations = JSON.parse(safeLocalStorage.getItem('codefuser_consultations') || '[]');
     const newConsultation = {
       id: `STRAT-${Date.now()}`,
       timestamp: new Date().toISOString(),
@@ -190,8 +191,8 @@ export const StrategySessionPage: React.FC = () => {
       status: 'scheduled'
     };
     savedConsultations.push(newConsultation);
-    localStorage.setItem('codefuser_consultations', JSON.stringify(savedConsultations));
-    localStorage.setItem('codefuser_active_consultation', JSON.stringify(newConsultation));
+    safeLocalStorage.setItem('codefuser_consultations', JSON.stringify(savedConsultations));
+    safeLocalStorage.setItem('codefuser_active_consultation', JSON.stringify(newConsultation));
 
     setIsSubmitting(false);
     setIsSubmitted(true);

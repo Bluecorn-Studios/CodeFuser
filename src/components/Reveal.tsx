@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState, createContext, useContext } from 'react';
 import { PagePath } from '../types';
 import { supabase } from '../lib/supabase';
+import { safeLocalStorage } from '../utils/safeStorage';
 
 // Company Contact Coordinates
 export const C = {
@@ -222,7 +223,7 @@ export const Eo: React.FC = () => {
 
   useEffect(() => {
     const checkUser = () => {
-      const u = localStorage.getItem("fuser_user");
+      const u = safeLocalStorage.getItem("fuser_user");
       if (u) {
         try {
           setUser(JSON.parse(u));
@@ -255,11 +256,11 @@ export const Eo: React.FC = () => {
     } catch (e) {
       console.warn("Logout failed", e);
     }
-    localStorage.removeItem("fuser_user");
-    localStorage.removeItem("fuser_token");
-    localStorage.removeItem("fuser_client_project_id");
-    localStorage.removeItem("codefuser_current_project");
-    localStorage.removeItem("codefuser_requests");
+    safeLocalStorage.removeItem("fuser_user");
+    safeLocalStorage.removeItem("fuser_token");
+    safeLocalStorage.removeItem("fuser_client_project_id");
+    safeLocalStorage.removeItem("codefuser_current_project");
+    safeLocalStorage.removeItem("codefuser_requests");
     window.location.reload();
   };
 
@@ -272,7 +273,6 @@ export const Eo: React.FC = () => {
             alt="CodeFuser" 
             width={170}
             height={23}
-            fetchPriority="high"
             loading="eager"
             className="h-[21px] w-auto sm:h-[23px] block select-none" 
             referrerPolicy="no-referrer" 

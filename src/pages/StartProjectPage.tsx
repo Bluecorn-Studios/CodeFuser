@@ -29,6 +29,7 @@ import { PagePath, PricingPlan } from '../types';
 import { pricingPlans } from '../components/Pricing';
 import { getAuthUser } from '../utils/auth';
 import { supabase } from '../lib/supabase';
+import { safeLocalStorage } from '../utils/safeStorage';
 
 interface StartProjectData {
   businessName: string;
@@ -368,7 +369,7 @@ export const StartProjectPage: React.FC = () => {
     }
 
     // Restore saved draft
-    const savedDraft = localStorage.getItem("codefuser_start_project_draft");
+    const savedDraft = safeLocalStorage.getItem("codefuser_start_project_draft");
     if (savedDraft) {
       try {
         const parsed = JSON.parse(savedDraft);
@@ -402,7 +403,7 @@ export const StartProjectPage: React.FC = () => {
         localPhone,
         selectedCountryCode: selectedCountry.code
       };
-      localStorage.setItem("codefuser_start_project_draft", JSON.stringify(draftData));
+      safeLocalStorage.setItem("codefuser_start_project_draft", JSON.stringify(draftData));
       
       setDraftSavedMessage(true);
       const timer = setTimeout(() => {
@@ -591,10 +592,10 @@ export const StartProjectPage: React.FC = () => {
       }
 
       // Clear automatic draft persistence (Part 1 requirement)
-      localStorage.removeItem("codefuser_start_project_draft");
+      safeLocalStorage.removeItem("codefuser_start_project_draft");
 
       // Save submission locally for future dashboard lookup & offline redundancy
-      const savedRequests = JSON.parse(localStorage.getItem('codefuser_requests') || '[]');
+      const savedRequests = JSON.parse(safeLocalStorage.getItem('codefuser_requests') || '[]');
       const newRequest = {
         ...formData,
         id: savedProject?.id || `REQ-${Date.now()}`,
@@ -602,9 +603,9 @@ export const StartProjectPage: React.FC = () => {
         status: savedProject?.status || 'Assets Pending'
       };
       savedRequests.push(newRequest);
-      localStorage.setItem('codefuser_requests', JSON.stringify(savedRequests));
-      localStorage.setItem('codefuser_current_project', JSON.stringify(newRequest));
-      localStorage.setItem('fuser_client_project_id', newRequest.id);
+      safeLocalStorage.setItem('codefuser_requests', JSON.stringify(savedRequests));
+      safeLocalStorage.setItem('codefuser_current_project', JSON.stringify(newRequest));
+      safeLocalStorage.setItem('fuser_client_project_id', newRequest.id);
 
       // Reset loading progressive states
       setActiveStepIndex(0);
@@ -2061,7 +2062,7 @@ ${formData.ownerName}
                 <button
                   type="button"
                   onClick={async () => {
-                    const projId = createdProjectId || localStorage.getItem('fuser_client_project_id');
+                    const projId = createdProjectId || safeLocalStorage.getItem('fuser_client_project_id');
                     if (projId) {
                       const finalPrice = selectedPaymentTerm === 'upfront' ? upfrontTotal : numericPriceForPayment;
                       const discount = selectedPaymentTerm === 'upfront' ? discountVal : 0;

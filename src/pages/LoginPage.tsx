@@ -15,6 +15,7 @@ import { useAppRouter } from "../components/Reveal";
 import { setAuthSession, getAuthUser } from "../utils/auth";
 import { supabase } from "../lib/supabase";
 import { logAndMapAuthError } from "../utils/authErrors";
+import { safeLocalStorage } from "../utils/safeStorage";
 
 export default function LoginPage() {
   const { navigate } = useAppRouter();
@@ -69,7 +70,7 @@ export default function LoginPage() {
           if (projResp.ok) {
             const projData = await projResp.json();
             if (projData.projects && projData.projects.length > 0) {
-              localStorage.setItem("fuser_client_project_id", projData.projects[0].id);
+              safeLocalStorage.setItem("fuser_client_project_id", projData.projects[0].id);
             }
           }
           navigate("/dashboard");
@@ -168,7 +169,7 @@ export default function LoginPage() {
           if (projResp.ok) {
             const projData = await projResp.json();
             if (projData.projects && projData.projects.length > 0) {
-              localStorage.setItem("fuser_client_project_id", projData.projects[0].id);
+              safeLocalStorage.setItem("fuser_client_project_id", projData.projects[0].id);
             }
           }
         } catch {

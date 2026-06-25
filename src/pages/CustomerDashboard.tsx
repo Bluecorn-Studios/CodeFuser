@@ -28,6 +28,7 @@ import {
 import { useAppRouter } from "../components/Reveal";
 import { getAuthUser, clearAuthSession } from "../utils/auth";
 import { supabase } from "../lib/supabase";
+import { safeLocalStorage } from "../utils/safeStorage";
 
 interface ProjectRecord {
   id: string;
@@ -123,20 +124,20 @@ export default function CustomerDashboard() {
           setProject(found);
           setProjectId(found.id);
           activeId = found.id;
-          localStorage.setItem("fuser_client_project_id", found.id);
+          safeLocalStorage.setItem("fuser_client_project_id", found.id);
           setDomainInput(found.hasDomain || "");
           setLogoInput(found.hasLogo || "");
           setCopyInput(found.contentReady || "");
         } else {
           // Fallback to local backup standard
-          const localBackup = localStorage.getItem("codefuser_current_project");
+          const localBackup = safeLocalStorage.getItem("codefuser_current_project");
           if (localBackup) {
             const parsed = JSON.parse(localBackup);
             if (parsed.email?.trim().toLowerCase() === user.email?.trim().toLowerCase()) {
               setProject(parsed);
               setProjectId(parsed.id);
               activeId = parsed.id;
-              localStorage.setItem("fuser_client_project_id", parsed.id);
+              safeLocalStorage.setItem("fuser_client_project_id", parsed.id);
               setDomainInput(parsed.hasDomain || "");
               setLogoInput(parsed.hasLogo || "");
               setCopyInput(parsed.contentReady || "");
@@ -289,7 +290,7 @@ export default function CustomerDashboard() {
       if (result.success) {
         setProject(result.data);
         setSuccessIndicator(`${field === "domain" ? "Domain address" : field === "logo" ? "Brand logo" : "Copywriting docs"} updated live!`);
-        localStorage.setItem("codefuser_current_project", JSON.stringify(result.data));
+        safeLocalStorage.setItem("codefuser_current_project", JSON.stringify(result.data));
       }
     } catch (err) {
       console.warn("Server unavailable, updating local client state gracefully.", err);
@@ -300,7 +301,7 @@ export default function CustomerDashboard() {
         contentReady: field === "copy" ? value : project.contentReady
       };
       setProject(mockUpdated);
-      localStorage.setItem("codefuser_current_project", JSON.stringify(mockUpdated));
+      safeLocalStorage.setItem("codefuser_current_project", JSON.stringify(mockUpdated));
       setSuccessIndicator(`Offline fallback state updated successfully.`);
     } finally {
       setIsUpdatingField(null);
