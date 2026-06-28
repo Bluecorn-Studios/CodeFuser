@@ -1,6 +1,5 @@
 import express from "express";
 import path from "path";
-import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
 import { addProject, getProjects, updateProject, getSupabase, getProjectById } from "./server/db.js";
@@ -1234,6 +1233,7 @@ function getDeterministicRecommendation(formData: any) {
 // Server bootstrap with Vite integration
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
