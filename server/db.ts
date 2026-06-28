@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { getExtraData, readStore, writeStore } from "./extra_store";
+import { getExtraData, readStore, writeStore } from "./extra_store.js";
 
 export interface ProjectRecord {
   id: string;

@@ -3,9 +3,9 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
-import { addProject, getProjects, updateProject, getSupabase, getProjectById } from "./server/db";
-import { getExtraData, updateQuote, addAssetFile } from "./server/extra_store";
-import { verifyPaymentSignature, verifyWebhookSignature, getRazorpayInstance } from "./server/razorpay";
+import { addProject, getProjects, updateProject, getSupabase, getProjectById } from "./server/db.js";
+import { getExtraData, updateQuote, addAssetFile } from "./server/extra_store.js";
+import { verifyPaymentSignature, verifyWebhookSignature, getRazorpayInstance } from "./server/razorpay.js";
 import fs from "fs";
 
 dotenv.config();
