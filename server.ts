@@ -3,8 +3,9 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
-import { addProject, getProjects, updateProject, getSupabase } from "./server/db";
+import { addProject, getProjects, updateProject, getSupabase, getProjectById } from "./server/db";
 import { getExtraData, updateQuote, addAssetFile } from "./server/extra_store";
+import { verifyPaymentSignature, verifyWebhookSignature, getRazorpayInstance } from "./server/razorpay";
 import fs from "fs";
 
 dotenv.config();
@@ -12,8 +13,13 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
-// Request body parser with 50mb limit for base64 file uploads
-app.use(express.json({ limit: "50mb" }));
+// Request body parser with 50mb limit for base64 file uploads and raw body capture for webhook signature verification
+app.use(express.json({
+  limit: "50mb",
+  verify: (req: any, res, buf) => {
+    req.rawBody = buf;
+  }
+}));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Serve uploaded files statically
@@ -163,6 +169,30 @@ app.put("/api/projects/:id", async (req, res) => {
       return res.status(400).json({ success: false, error: "Project ID is required." });
     }
 
+    const restrictedFields = [
+      "paymentStatus",
+      "portalAccess",
+      "portalAccessSource",
+      "paymentId",
+      "orderId",
+      "paymentProvider",
+      "purchaseDate",
+      "purchasedPlan"
+    ];
+
+    const hasRestrictedField = Object.keys(updates || {}).some(key => restrictedFields.includes(key));
+    if (hasRestrictedField) {
+      const adminPassword = req.headers["x-admin-password"];
+      const actualPassword = process.env.ADMIN_PASSWORD;
+      
+      if (!actualPassword || adminPassword !== actualPassword) {
+        return res.status(403).json({ 
+          success: false, 
+          error: "Unauthorized: Modifying payment status or authorization parameters is restricted to authenticated administrators." 
+        });
+      }
+    }
+
     const updated = await updateProject(id, updates);
     return res.json({ success: true, data: updated, message: "Project updated successfully in the core database." });
   } catch (error: any) {
@@ -230,6 +260,235 @@ app.post("/api/projects/:id/quote/reset", async (req, res) => {
   } catch (err: any) {
     console.error("Failed to reset quote:", err);
     return res.status(500).json({ success: false, error: err.message || String(err) });
+  }
+});
+
+// API: Expose Razorpay Public Key ID
+app.get("/api/config/razorpay", (req, res) => {
+  return res.json({
+    keyId: process.env.RAZORPAY_KEY_ID || ""
+  });
+});
+
+// API: Create Razorpay Order
+app.post("/api/projects/:id/razorpay-order", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { term } = req.body; // 'milestone' | 'upfront'
+    
+    if (!id) {
+      return res.status(400).json({ success: false, error: "Project ID is required." });
+    }
+    if (term !== "milestone" && term !== "upfront") {
+      return res.status(400).json({ success: false, error: "Payment term must be 'milestone' or 'upfront'." });
+    }
+
+    // Retrieve project by ID from database
+    const project = await getProjectById(id);
+    if (!project) {
+      return res.status(404).json({ success: false, error: "Project not found in core database." });
+    }
+
+    // Retrieve extra details (locked price)
+    const extra = getExtraData(id);
+    let amountInRupees = 24999; // Default fallback
+    let planName = "Fusion Package";
+
+    if (extra && extra.quote) {
+      planName = extra.quote.packageName || "Standard Package";
+      const totalPrice = extra.quote.price;
+      if (term === "upfront") {
+        amountInRupees = totalPrice; // 100% upfront
+      } else {
+        amountInRupees = Math.round(totalPrice * 0.5); // 50% upfront milestone
+      }
+    } else {
+      // Fallback manual price calculation if quote is missing
+      const packageId = project.selectedPackage || "growth";
+      let basePrice = 24999;
+      if (packageId === "foundation") basePrice = 9999;
+      if (packageId === "dominance") basePrice = 49999;
+      
+      if (term === "upfront") {
+        amountInRupees = Math.round(basePrice * 0.9); // 10% discount
+      } else {
+        amountInRupees = Math.round(basePrice * 0.5); // 50% milestone
+      }
+    }
+
+    const amountInPaise = amountInRupees * 100;
+
+    // Initialize lazy client and generate order
+    const rzp = getRazorpayInstance();
+    const options = {
+      amount: amountInPaise,
+      currency: "INR",
+      receipt: `receipt_${id.substring(0, 15)}_${Date.now().toString().substring(5)}`,
+      notes: {
+        projectId: id,
+        planName,
+        term,
+        clientName: project.clientName || "",
+        email: project.email || ""
+      }
+    };
+
+    const order = await rzp.orders.create(options);
+
+    return res.json({
+      success: true,
+      order: {
+        id: order.id,
+        amount: order.amount,
+        currency: order.currency,
+        receipt: order.receipt
+      },
+      term,
+      amountInRupees
+    });
+  } catch (error: any) {
+    console.error("Failed to create Razorpay order:", error);
+    return res.status(500).json({ success: false, error: error.message || "Failed to create payment order." });
+  }
+});
+
+// API: Verify Razorpay Payment Signature (Client-side fast checkout verification)
+app.post("/api/projects/:id/verify-payment", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, term } = req.body;
+    
+    if (!id || !razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ success: false, error: "Missing required payment verification fields." });
+    }
+
+    // Validate Signature
+    const isValid = verifyPaymentSignature(razorpay_order_id, razorpay_payment_id, razorpay_signature);
+    if (!isValid) {
+      console.warn(`Payment signature verification failed for project ${id}`);
+      return res.status(400).json({ success: false, error: "Invalid payment signature." });
+    }
+
+    // Retrieve project by ID
+    const project = await getProjectById(id);
+    if (!project) {
+      return res.status(404).json({ success: false, error: "Project not found." });
+    }
+
+    const extra = getExtraData(id);
+    const planName = extra?.quote?.packageName || "Standard Package";
+    
+    // Check if project was already updated
+    if (project.paymentStatus === "paid" && project.paymentId === razorpay_payment_id) {
+      return res.json({
+        success: true,
+        message: "Payment already verified.",
+        project
+      });
+    }
+
+    const portalAccessSource = project.portalAccessSource || "automatic";
+    const shouldGrantAccess = portalAccessSource === "manual" ? project.portalAccess : true;
+
+    // Update project state in Supabase & Extra store
+    const updates = {
+      paymentStatus: "paid",
+      portalAccess: shouldGrantAccess,
+      paymentProvider: "razorpay",
+      paymentId: razorpay_payment_id,
+      orderId: razorpay_order_id,
+      purchasedPlan: `${planName} (${term || "milestone"})`,
+      purchaseDate: new Date().toISOString(),
+      portalAccessSource
+    };
+
+    const updatedProject = await updateProject(id, updates);
+
+    return res.json({
+      success: true,
+      message: "Payment verified successfully. Portal access granted.",
+      project: updatedProject
+    });
+  } catch (error: any) {
+    console.error("Failed to verify payment:", error);
+    return res.status(500).json({ success: false, error: error.message || "Failed to verify payment." });
+  }
+});
+
+// API: Razorpay Webhook Endpoint (Primary source-of-truth asynchronous processor)
+app.post("/api/webhooks/razorpay", async (req: any, res) => {
+  try {
+    const signature = req.headers["x-razorpay-signature"];
+    if (!signature) {
+      return res.status(400).json({ success: false, error: "Missing x-razorpay-signature header." });
+    }
+
+    const rawBody = req.rawBody ? req.rawBody.toString("utf-8") : "";
+    
+    // Verify Webhook Signature
+    const isValid = verifyWebhookSignature(rawBody, String(signature));
+    if (!isValid) {
+      console.warn("Razorpay Webhook signature verification failed.");
+      return res.status(400).json({ success: false, error: "Invalid webhook signature." });
+    }
+
+    const event = JSON.parse(rawBody);
+    console.log(`Razorpay webhook event received: ${event.event}`);
+
+    // Support payment.captured and order.paid
+    if (event.event === "payment.captured" || event.event === "order.paid") {
+      const payload = event.payload;
+      const orderData = payload.order?.entity;
+      const paymentData = payload.payment?.entity;
+
+      const notes = orderData?.notes || paymentData?.notes || {};
+      const projectId = notes.projectId || notes.project_id;
+
+      if (!projectId) {
+        console.warn("No projectId found in webhook notes.");
+        return res.json({ success: true, message: "Ignored: No project ID linked in notes." });
+      }
+
+      const project = await getProjectById(projectId);
+      if (!project) {
+        console.warn(`Project not found for webhook ID: ${projectId}`);
+        return res.status(404).json({ success: false, error: "Project not found." });
+      }
+
+      const paymentId = paymentData?.id || orderData?.payment_id || "";
+      const orderId = orderData?.id || paymentData?.order_id || "";
+      const term = notes.term || "milestone";
+      const planName = notes.planName || "Standard Package";
+
+      // Idempotency: Check if already paid with this payment ID or order ID
+      if (project.paymentStatus === "paid" && (project.paymentId === paymentId || project.orderId === orderId)) {
+        console.log(`Idempotency: Webhook already processed for payment ${paymentId} / order ${orderId}.`);
+        return res.json({ success: true, message: "Webhook already processed (Idempotency)." });
+      }
+
+      const portalAccessSource = project.portalAccessSource || "automatic";
+      const shouldGrantAccess = portalAccessSource === "manual" ? project.portalAccess : true;
+
+      // Update project status
+      const updates = {
+        paymentStatus: "paid",
+        portalAccess: shouldGrantAccess,
+        paymentProvider: "razorpay",
+        paymentId: paymentId || project.paymentId,
+        orderId: orderId || project.orderId,
+        purchasedPlan: `${planName} (${term})`,
+        purchaseDate: new Date().toISOString(),
+        portalAccessSource
+      };
+
+      await updateProject(projectId, updates);
+      console.log(`Successfully verified and updated project payment status from Webhook for ID: ${projectId}`);
+    }
+
+    return res.json({ success: true, message: "Webhook event processed." });
+  } catch (err: any) {
+    console.error("Razorpay webhook processing error:", err);
+    return res.status(500).json({ success: false, error: err.message || "Webhook processing failed." });
   }
 });
 

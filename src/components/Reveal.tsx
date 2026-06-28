@@ -292,30 +292,13 @@ export const Eo: React.FC = () => {
               {nav.label}
             </Link>
           ))}
-          {user ? (
-            <>
-              <Link 
-                to="/dashboard" 
-                className="text-sm text-neutral-500 hover:text-neutral-100 transition-colors font-sans"
-                activeProps={{ className: "text-foreground font-medium" }}
-              >
-                Client Portal
-              </Link>
-              <button 
-                onClick={handleLogout}
-                className="text-[11px] font-mono tracking-wider text-neutral-600 hover:text-red-400 transition-colors uppercase cursor-pointer bg-transparent border-none focus:outline-none"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <Link 
-              to="/login" 
-              className="text-sm text-neutral-500 hover:text-neutral-100 transition-colors font-sans"
-              activeProps={{ className: "text-foreground font-medium" }}
+          {user && (
+            <button 
+              onClick={handleLogout}
+              className="text-[11px] font-mono tracking-wider text-neutral-600 hover:text-red-400 transition-colors uppercase cursor-pointer bg-transparent border-none focus:outline-none"
             >
-              Client Portal
-            </Link>
+              Logout
+            </button>
           )}
         </div>
 
@@ -359,35 +342,16 @@ export const Eo: React.FC = () => {
                 {nav.label}
               </Link>
             ))}
-            {user ? (
-              <>
-                <Link
-                  to="/dashboard"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-muted-foreground hover:text-foreground transition-colors py-1 text-xl font-sans"
-                  activeProps={{ className: "text-foreground font-semibold" }}
-                >
-                  Client Portal
-                </Link>
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    handleLogout();
-                  }}
-                  className="text-left py-1 text-neutral-500 hover:text-red-400 font-mono tracking-wider transition-colors uppercase bg-transparent border-none cursor-pointer focus:outline-none text-lg"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <Link
-                to="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-muted-foreground hover:text-foreground transition-colors py-1 text-xl font-sans"
-                activeProps={{ className: "text-foreground font-semibold" }}
+            {user && (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleLogout();
+                }}
+                className="text-left py-1 text-neutral-500 hover:text-red-400 font-mono tracking-wider transition-colors uppercase bg-transparent border-none cursor-pointer focus:outline-none text-lg"
               >
-                Client Portal
-              </Link>
+                Logout
+              </button>
             )}
           </div>
 

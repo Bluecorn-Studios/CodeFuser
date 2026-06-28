@@ -41,6 +41,14 @@ interface ProjectRecord {
   contentReady: string;
   timestamp: string;
   status: string;
+  paymentStatus?: string;
+  portalAccess?: boolean;
+  paymentProvider?: string;
+  paymentId?: string;
+  orderId?: string;
+  purchasedPlan?: string;
+  purchaseDate?: string;
+  portalAccessSource?: "automatic" | "manual";
 }
 
 export const MissionControl: React.FC = () => {
@@ -87,7 +95,10 @@ export const MissionControl: React.FC = () => {
     try {
       const response = await fetch(`/api/projects/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-admin-password": sessionStorage.getItem("fuser_admin_password") || ""
+        },
         body: JSON.stringify(updates)
       });
       if (response.ok) {
@@ -143,7 +154,10 @@ export const MissionControl: React.FC = () => {
     try {
       const response = await fetch(`/api/projects/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-admin-password": sessionStorage.getItem("fuser_admin_password") || ""
+        },
         body: JSON.stringify({ status: newStatus })
       });
       if (response.ok) {
@@ -204,6 +218,7 @@ export const MissionControl: React.FC = () => {
                 const data = await response.json();
                 if (response.ok && data.success) {
                   sessionStorage.setItem("fuser_admin_authed", "true");
+                  sessionStorage.setItem("fuser_admin_password", passwordInput);
                   setIsAuthenticated(true);
                 } else {
                   setLoginError(data.error || "Access Key is incorrect. Please contact system administrators.");
@@ -610,6 +625,151 @@ export const MissionControl: React.FC = () => {
                                     <option value="full">Direct Full License Ownership</option>
                                     <option value="subscription">Managed Service Agreement</option>
                                   </select>
+                                </div>
+
+                                <div className="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-neutral-900">
+                                  {/* Payment Source Section */}
+                                  <div className="space-y-3 bg-neutral-950/50 p-3 rounded-xl border border-neutral-900">
+                                    <div className="flex items-center justify-between border-b border-neutral-900 pb-1.5">
+                                      <span className="text-[10px] font-mono uppercase text-amber-500 font-bold">💳 Razorpay Source Verification</span>
+                                      <span className="text-[9px] font-mono text-neutral-500 uppercase">Primary Source</span>
+                                    </div>
+                                    
+                                    <div className="space-y-1.5">
+                                      <label className="block text-[9px] uppercase font-mono tracking-wider text-zinc-400">Payment Status</label>
+                                      <select
+                                        value={proj.paymentStatus || "unpaid"}
+                                        onChange={(e) => handleModifyProject(proj.id, { paymentStatus: e.target.value })}
+                                        className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-1.5 text-xs text-white uppercase font-mono cursor-pointer font-bold text-amber-500"
+                                      >
+                                        <option value="unpaid">Unpaid / Inactive</option>
+                                        <option value="paid">Paid / Active</option>
+                                      </select>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <div className="space-y-1">
+                                        <label className="block text-[9px] uppercase font-mono tracking-wider text-zinc-500">Provider</label>
+                                        <input
+                                          type="text"
+                                          defaultValue={proj.paymentProvider || ""}
+                                          placeholder="e.g. razorpay"
+                                          onBlur={(e) => handleModifyProject(proj.id, { paymentProvider: e.target.value })}
+                                          className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono placeholder:text-neutral-700 focus:outline-none focus:border-amber-500/40"
+                                        />
+                                      </div>
+                                      <div className="space-y-1">
+                                        <label className="block text-[9px] uppercase font-mono tracking-wider text-zinc-500">Purchased Plan</label>
+                                        <input
+                                          type="text"
+                                          defaultValue={proj.purchasedPlan || ""}
+                                          placeholder="e.g. Ignite Package"
+                                          onBlur={(e) => handleModifyProject(proj.id, { purchasedPlan: e.target.value })}
+                                          className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono placeholder:text-neutral-700 focus:outline-none focus:border-amber-500/40"
+                                        />
+                                      </div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                      <label className="block text-[9px] uppercase font-mono tracking-wider text-zinc-500">Payment ID</label>
+                                      <input
+                                        type="text"
+                                        defaultValue={proj.paymentId || ""}
+                                        placeholder="e.g. pay_O1kH78X"
+                                        onBlur={(e) => handleModifyProject(proj.id, { paymentId: e.target.value })}
+                                        className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono placeholder:text-neutral-700 focus:outline-none focus:border-amber-500/40"
+                                      />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <div className="space-y-1">
+                                        <label className="block text-[9px] uppercase font-mono tracking-wider text-zinc-500">Order ID</label>
+                                        <input
+                                          type="text"
+                                          defaultValue={proj.orderId || ""}
+                                          placeholder="e.g. order_O1jS23B"
+                                          onBlur={(e) => handleModifyProject(proj.id, { orderId: e.target.value })}
+                                          className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono placeholder:text-neutral-700 focus:outline-none focus:border-amber-500/40"
+                                        />
+                                      </div>
+                                      <div className="space-y-1">
+                                        <label className="block text-[9px] uppercase font-mono tracking-wider text-zinc-500">Purchase Date</label>
+                                        <input
+                                          type="text"
+                                          defaultValue={proj.purchaseDate || ""}
+                                          placeholder="YYYY-MM-DD"
+                                          onBlur={(e) => handleModifyProject(proj.id, { purchaseDate: e.target.value })}
+                                          className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono placeholder:text-neutral-700 focus:outline-none focus:border-amber-500/40"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Portal Access Mode & Override Section */}
+                                  <div className="space-y-3 bg-neutral-950/50 p-3 rounded-xl border border-neutral-900 flex flex-col justify-between">
+                                    <div>
+                                      <div className="flex items-center justify-between border-b border-neutral-900 pb-1.5 mb-3">
+                                        <span className="text-[10px] font-mono uppercase text-amber-500 font-bold">🛡️ Portal Access & Override</span>
+                                        <span className="text-[9px] font-mono text-neutral-500 uppercase">Override Panel</span>
+                                      </div>
+
+                                      <div className="space-y-3">
+                                        <div className="space-y-1.5">
+                                          <label className="block text-[9px] uppercase font-mono tracking-wider text-zinc-400">Portal Access Source Mode</label>
+                                          <select
+                                            value={proj.portalAccessSource || "automatic"}
+                                            onChange={(e) => handleModifyProject(proj.id, { portalAccessSource: e.target.value as any })}
+                                            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-1.5 text-xs text-white uppercase font-mono cursor-pointer font-bold"
+                                          >
+                                            <option value="automatic">Automatic (Follows Payment)</option>
+                                            <option value="manual">Manual Override (Force Set)</option>
+                                          </select>
+                                        </div>
+
+                                        <div className="space-y-1.5">
+                                          <label className="block text-[9px] uppercase font-mono tracking-wider text-zinc-400">Manual Override Value</label>
+                                          <select
+                                            value={proj.portalAccess ? "granted" : "denied"}
+                                            onChange={(e) => handleModifyProject(proj.id, { portalAccess: e.target.value === "granted" })}
+                                            className={`w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-1.5 text-xs text-white uppercase font-mono cursor-pointer font-bold ${
+                                              proj.portalAccessSource === "manual" ? "opacity-100" : "opacity-40"
+                                            }`}
+                                          >
+                                            <option value="denied">Force Suspended (Block Access)</option>
+                                            <option value="granted">Force Granted (Approve Access)</option>
+                                          </select>
+                                          {proj.portalAccessSource !== "manual" && (
+                                            <span className="text-[8px] font-mono text-zinc-500 italic mt-1 block">
+                                              * Only active when Source Mode is set to Manual Override.
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Live Effective Status indicator */}
+                                    {(() => {
+                                      const isManual = proj.portalAccessSource === "manual";
+                                      const effectiveAccess = isManual ? proj.portalAccess === true : proj.paymentStatus === "paid";
+                                      return (
+                                        <div className={`p-2.5 rounded-lg border ${
+                                          effectiveAccess 
+                                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
+                                            : "bg-red-500/10 border-red-500/20 text-red-400"
+                                        } font-sans mt-3`}>
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-[9px] uppercase font-mono tracking-wider opacity-60">Live Effective Access:</span>
+                                            <span className="text-[9px] font-mono uppercase bg-black/40 px-1.5 py-0.5 rounded">
+                                              {isManual ? "Manual Override" : "Automated Flow"}
+                                            </span>
+                                          </div>
+                                          <div className="text-xs font-bold uppercase tracking-tight mt-1">
+                                            {effectiveAccess ? "✓ AUTHORIZED & LIVE" : "✗ SUSPENDED / BLOCKED"}
+                                          </div>
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
                                 </div>
                               </div>
 

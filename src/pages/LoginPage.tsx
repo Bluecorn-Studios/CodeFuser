@@ -234,15 +234,21 @@ export default function LoginPage() {
             animate={{ opacity: 1, scale: 1 }}
             className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-500 text-[10px] font-mono uppercase tracking-widest mb-4"
           >
-            <Shield size={10} className="animate-pulse" /> CodeFuser Account
+            <Shield size={10} className="animate-pulse" /> Client Portal
           </motion.div>
           <h2 className="text-2xl sm:text-3xl font-bold uppercase tracking-tight text-neutral-100 font-sans">
-            {isSignUp ? "Create Your Account" : "Welcome Back"}
+            {isSignUp ? "Create Your Account" : "Client Portal"}
           </h2>
-          <p className="text-xs text-neutral-500 max-w-xs mx-auto mt-2 tracking-wide font-sans">
-            {isSignUp 
-              ? "Sign up to start and track your project." 
-              : "Continue to your CodeFuser Dashboard."}
+          <p className="text-xs text-neutral-500 max-w-xs mx-auto mt-2 tracking-wide font-sans leading-relaxed">
+            {isSignUp ? (
+              "Sign up to start and track your project."
+            ) : (
+              <>
+                This portal is reserved for approved CodeFuser clients.
+                <br />
+                <span className="text-neutral-400">Already working with CodeFuser? Sign in below.</span>
+              </>
+            )}
           </p>
         </div>
 

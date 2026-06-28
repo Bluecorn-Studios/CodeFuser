@@ -215,6 +215,20 @@ const GOALS = [
   { id: 'profile', label: 'Just a Trusted Profile Page' },
 ];
 
+function loadRazorpayScript(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (typeof window !== "undefined" && (window as any).Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+
 export const StartProjectPage: React.FC = () => {
   const { navigate } = useAppRouter();
   const [step, setStep] = useState(1);
@@ -238,6 +252,9 @@ export const StartProjectPage: React.FC = () => {
   // Stages: 'form' | 'ai_loading' | 'recommendations' | 'payment' | 'calendly' | 'asset_center' | 'success'
   const [onboardingStage, setOnboardingStage] = useState<'form' | 'ai_loading' | 'recommendations' | 'payment' | 'calendly' | 'asset_center' | 'success'>('form');
   const [selectedPaymentTerm, setSelectedPaymentTerm] = useState<'milestone' | 'upfront'>('milestone');
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentErrorMsg, setPaymentErrorMsg] = useState<string | null>(null);
+  const [showSandboxFallback, setShowSandboxFallback] = useState(false);
 
   const finalSelCardForPayment = (recommendationCards)
     ? (recommendationCards.find(c => c.id === selectedCardId) || { name: 'Ignite Baseline', price: '₹14,999' })
@@ -2051,43 +2068,271 @@ ${formData.ownerName}
                 </div>
               </div>
 
+              {/* Payment Loading or Error / Sandbox Fallback Panel */}
+              {(paymentLoading || paymentErrorMsg) && (
+                <div className="mt-6 p-5 rounded-2xl border border-neutral-900 bg-[#080808]/80 font-sans text-xs space-y-4">
+                  {paymentLoading && (
+                    <div className="flex items-center gap-3 text-neutral-300 animate-pulse">
+                      <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-amber-500 animate-spin" />
+                      <span className="font-mono tracking-wide uppercase text-[10px]">Processing Secure Order Request...</span>
+                    </div>
+                  )}
+
+                  {paymentErrorMsg && (
+                    <div className="space-y-3">
+                      <div className="p-3.5 rounded-xl bg-red-500/5 border border-red-500/20 text-red-400">
+                        <div className="font-bold flex items-center gap-2">
+                          <X size={14} className="cursor-pointer" onClick={() => setPaymentErrorMsg(null)} /> Payment Initialization Alert
+                        </div>
+                        <p className="mt-1 text-[11px] leading-relaxed opacity-90">{paymentErrorMsg}</p>
+                      </div>
+
+                      {showSandboxFallback && (
+                        <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 text-amber-400 space-y-3">
+                          <div className="font-bold flex items-center gap-2">
+                            <Sparkles size={14} /> Developer Sandbox Option
+                          </div>
+                          <p className="text-[11px] leading-relaxed opacity-90">
+                            The Razorpay backend keys are not configured yet. You can bypass this screen with a fully-simulated success response to test client accounts, portals, and dashboards.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              setPaymentLoading(true);
+                              setPaymentErrorMsg(null);
+                              try {
+                                const projId = createdProjectId || safeLocalStorage.getItem('fuser_client_project_id');
+                                if (!projId) {
+                                  alert("Client project session has expired. Please restart registration.");
+                                  setPaymentLoading(false);
+                                  return;
+                                }
+
+                                const finalPrice = selectedPaymentTerm === 'upfront' ? upfrontTotal : numericPriceForPayment;
+                                const discount = selectedPaymentTerm === 'upfront' ? discountVal : 0;
+                                
+                                // Lock quote
+                                await fetch(`/api/projects/${projId}/quote`, {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({
+                                    packageName: finalSelCardForPayment.name || "Selected Package",
+                                    price: finalPrice,
+                                    discount: discount,
+                                    features: finalSelCardForPayment.features || [],
+                                    summary: aiSummary?.recommendationReason || "Custom engineered web application."
+                                  })
+                                });
+
+                                // Bypass verification with simulated payload
+                                const verifyRes = await fetch(`/api/projects/${projId}/verify-payment`, {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({
+                                    razorpay_order_id: "order_mock_" + Math.random().toString(36).substring(2, 9),
+                                    razorpay_payment_id: "pay_mock_" + Math.random().toString(36).substring(2, 9),
+                                    razorpay_signature: "signature_mock_bypass",
+                                    term: selectedPaymentTerm
+                                  })
+                                });
+                                
+                                const verifyData = await verifyRes.json();
+                                if (verifyData.success) {
+                                  setOnboardingStage('calendly');
+                                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                                } else {
+                                  setPaymentErrorMsg("Simulated bypass failed: " + verifyData.error);
+                                }
+                              } catch (err: any) {
+                                setPaymentErrorMsg("Simulated bypass request failed: " + err.message);
+                              } finally {
+                                setPaymentLoading(false);
+                              }
+                            }}
+                            className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-black font-bold uppercase tracking-wider text-[10px] py-2.5 rounded-lg transition-all cursor-pointer active:scale-95"
+                          >
+                            Simulate Sandbox Success <Check size={12} strokeWidth={3} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="mt-8 flex flex-col sm:flex-row gap-4 items-center justify-between border-t border-neutral-900/70 pt-6">
                 <button
                   type="button"
                   onClick={() => setOnboardingStage('recommendations')}
                   className="text-xs text-neutral-400 hover:text-white underline cursor-pointer"
+                  disabled={paymentLoading}
                 >
                   ← Back to Recommendations
                 </button>
                 <button
                   type="button"
+                  disabled={paymentLoading}
                   onClick={async () => {
                     const projId = createdProjectId || safeLocalStorage.getItem('fuser_client_project_id');
-                    if (projId) {
-                      const finalPrice = selectedPaymentTerm === 'upfront' ? upfrontTotal : numericPriceForPayment;
-                      const discount = selectedPaymentTerm === 'upfront' ? discountVal : 0;
-                      try {
-                        await fetch(`/api/projects/${projId}/quote`, {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            packageName: finalSelCardForPayment.name || "Selected Package",
-                            price: finalPrice,
-                            discount: discount,
-                            features: finalSelCardForPayment.features || [],
-                            summary: aiSummary?.recommendationReason || "Custom engineered web application."
-                          })
-                        });
-                      } catch (err) {
-                        console.warn("Failed to lock quotation on server backend:", err);
-                      }
+                    if (!projId) {
+                      alert("Registration session has expired. Please restart the form.");
+                      return;
                     }
-                    setOnboardingStage('calendly');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                    setPaymentLoading(true);
+                    setPaymentErrorMsg(null);
+                    setShowSandboxFallback(false);
+
+                    // 1. Lock/freeze quote price on backend
+                    const finalPrice = selectedPaymentTerm === 'upfront' ? upfrontTotal : numericPriceForPayment;
+                    const discount = selectedPaymentTerm === 'upfront' ? discountVal : 0;
+                    
+                    try {
+                      const quoteRes = await fetch(`/api/projects/${projId}/quote`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          packageName: finalSelCardForPayment.name || "Selected Package",
+                          price: finalPrice,
+                          discount: discount,
+                          features: finalSelCardForPayment.features || [],
+                          summary: aiSummary?.recommendationReason || "Custom engineered web application."
+                        })
+                      });
+                      if (!quoteRes.ok) {
+                        throw new Error("Failed to lock quotation on server.");
+                      }
+                    } catch (err: any) {
+                      console.warn("Quotation lock error:", err);
+                      setPaymentErrorMsg("Failed to lock project details on backend server.");
+                      setPaymentLoading(false);
+                      return;
+                    }
+
+                    // 2. Load Razorpay Checkout Script
+                    try {
+                      const scriptLoaded = await loadRazorpayScript();
+                      if (!scriptLoaded) {
+                        throw new Error("Razorpay SDK script failed to load. Check internet connectivity.");
+                      }
+                    } catch (err: any) {
+                      setPaymentErrorMsg(err.message || "Failed to load payment gateways.");
+                      setPaymentLoading(false);
+                      return;
+                    }
+
+                    // 3. Request Razorpay Order from Backend
+                    let orderData: any;
+                    try {
+                      const orderRes = await fetch(`/api/projects/${projId}/razorpay-order`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ term: selectedPaymentTerm })
+                      });
+                      orderData = await orderRes.json();
+                    } catch (err: any) {
+                      setPaymentErrorMsg("Network failure connecting to payment servers.");
+                      setPaymentLoading(false);
+                      return;
+                    }
+
+                    if (!orderData || !orderData.success) {
+                      const errMsg = orderData?.error || "Payment order creation failed.";
+                      setPaymentErrorMsg(errMsg);
+                      // If keys are not set, enable sandbox fallback option
+                      if (errMsg.includes("API Key ID") || errMsg.includes("Secret") || errMsg.includes("configured") || errMsg.includes("missing")) {
+                        setShowSandboxFallback(true);
+                      }
+                      setPaymentLoading(false);
+                      return;
+                    }
+
+                    const { order, term } = orderData;
+
+                    // 4. Fetch Razorpay Public Config ID
+                    let keyId = "";
+                    try {
+                      const configRes = await fetch("/api/config/razorpay");
+                      const configData = await configRes.json();
+                      keyId = configData.keyId;
+                    } catch (err) {
+                      console.warn("Could not load public key configuration.");
+                    }
+
+                    // 5. Open Checkout Modal
+                    try {
+                      const options = {
+                        key: keyId || "rzp_test_placeholder",
+                        amount: order.amount,
+                        currency: order.currency,
+                        name: "CodeFuser",
+                        description: `${finalSelCardForPayment.name} (${selectedPaymentTerm === 'upfront' ? '100% Upfront' : '50% Milestone'})`,
+                        order_id: order.id,
+                        prefill: {
+                          name: formData.ownerName || "",
+                          email: formData.email || "",
+                          contact: formData.whatsapp || ""
+                        },
+                        theme: {
+                          color: "#F59E0B"
+                        },
+                        handler: async function (response: any) {
+                          setPaymentLoading(true);
+                          try {
+                            const verifyRes = await fetch(`/api/projects/${projId}/verify-payment`, {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature,
+                                term: selectedPaymentTerm
+                              })
+                            });
+                            const verifyData = await verifyRes.json();
+                            if (verifyData.success) {
+                              setOnboardingStage('calendly');
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            } else {
+                              setPaymentErrorMsg("Payment verification failed: " + (verifyData.error || "Please contact support."));
+                            }
+                          } catch (err) {
+                            setPaymentErrorMsg("Could not verify transaction signature.");
+                          } finally {
+                            setPaymentLoading(false);
+                          }
+                        },
+                        modal: {
+                          ondismiss: function () {
+                            setPaymentLoading(false);
+                            setPaymentErrorMsg("Payment cancelled by customer.");
+                          }
+                        }
+                      };
+
+                      const rzp = new (window as any).Razorpay(options);
+                      rzp.on("payment.failed", function (resp: any) {
+                        setPaymentErrorMsg(`Transaction failed: ${resp.error.description || "Action rejected"}`);
+                        setPaymentLoading(false);
+                      });
+                      rzp.open();
+                    } catch (err: any) {
+                      setPaymentErrorMsg("Failed to open payment sheet modal: " + err.message);
+                      setPaymentLoading(false);
+                    }
                   }}
-                  className="btn-pressure flex items-center justify-center gap-2 bg-white text-black hover:bg-neutral-100 font-bold text-xs uppercase tracking-wider px-8 py-3.5 rounded-full shadow-lg active:scale-95 transition-all cursor-pointer leading-none"
+                  className="btn-pressure flex items-center justify-center gap-2 bg-white text-black hover:bg-neutral-100 font-bold text-xs uppercase tracking-wider px-8 py-3.5 rounded-full shadow-lg active:scale-95 transition-all cursor-pointer leading-none disabled:opacity-50"
                 >
-                  Lock Funding Plan & Continue <ArrowRight size={14} />
+                  {paymentLoading ? (
+                    <>
+                      <div className="h-3 w-3 rounded-full border border-t-transparent border-black animate-spin" />
+                      Processing Checkout...
+                    </>
+                  ) : (
+                    <>
+                      Initiate Safe Checkout <ArrowRight size={14} />
+                    </>
+                  )}
                 </button>
               </div>
             </motion.div>

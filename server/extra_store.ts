@@ -25,6 +25,14 @@ export interface ExtraProjectData {
   projectId: string;
   quote: OfficialQuoteRecord | null;
   assets: AssetFileRecord[];
+  paymentStatus?: string; // 'paid' | 'unpaid'
+  portalAccess?: boolean; // true | false
+  paymentProvider?: string; // e.g. "razorpay"
+  paymentId?: string; // e.g. "pay_XYZ"
+  orderId?: string; // e.g. "order_XYZ"
+  purchasedPlan?: string; // e.g. "Track A - custom"
+  purchaseDate?: string; // ISO string
+  portalAccessSource?: "automatic" | "manual"; // "automatic" | "manual"
 }
 
 const STORE_FILE = path.join(process.cwd(), "server", "fuser_extra_store.json");
@@ -66,9 +74,54 @@ export function getExtraData(projectId: string): ExtraProjectData {
     store[projectId] = {
       projectId,
       quote: null,
-      assets: []
+      assets: [],
+      paymentStatus: "unpaid",
+      portalAccess: false,
+      paymentProvider: "",
+      paymentId: "",
+      orderId: "",
+      purchasedPlan: "",
+      purchaseDate: "",
+      portalAccessSource: "automatic"
     };
     writeStore(store);
+  } else {
+    let modified = false;
+    if (store[projectId].paymentStatus === undefined) {
+      store[projectId].paymentStatus = "unpaid";
+      modified = true;
+    }
+    if (store[projectId].portalAccess === undefined) {
+      store[projectId].portalAccess = false;
+      modified = true;
+    }
+    if (store[projectId].paymentProvider === undefined) {
+      store[projectId].paymentProvider = "";
+      modified = true;
+    }
+    if (store[projectId].paymentId === undefined) {
+      store[projectId].paymentId = "";
+      modified = true;
+    }
+    if (store[projectId].orderId === undefined) {
+      store[projectId].orderId = "";
+      modified = true;
+    }
+    if (store[projectId].purchasedPlan === undefined) {
+      store[projectId].purchasedPlan = "";
+      modified = true;
+    }
+    if (store[projectId].purchaseDate === undefined) {
+      store[projectId].purchaseDate = "";
+      modified = true;
+    }
+    if (store[projectId].portalAccessSource === undefined) {
+      store[projectId].portalAccessSource = "automatic";
+      modified = true;
+    }
+    if (modified) {
+      writeStore(store);
+    }
   }
   
   // Dynamically update quote status on retrieval if expired

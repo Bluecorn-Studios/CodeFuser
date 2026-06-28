@@ -47,6 +47,14 @@ interface ProjectRecord {
   contentReady: string;
   timestamp: string;
   status: string;
+  paymentStatus?: string;
+  portalAccess?: boolean;
+  paymentProvider?: string;
+  paymentId?: string;
+  orderId?: string;
+  purchasedPlan?: string;
+  purchaseDate?: string;
+  portalAccessSource?: "automatic" | "manual";
 }
 
 interface AssetFileRecord {
@@ -374,6 +382,17 @@ export default function CustomerDashboard() {
   };
 
   // Safe checks if user is logged out or loading
+  const isApprovedClient = (() => {
+    if (!project) return false;
+    const source = project.portalAccessSource || "automatic";
+    if (source === "manual") {
+      return project.portalAccess === true;
+    } else {
+      // Automatic flow: Payment verification is the primary source of truth
+      return project.paymentStatus === "paid";
+    }
+  })();
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#030303] flex items-center justify-center font-sans">
@@ -385,8 +404,8 @@ export default function CustomerDashboard() {
     );
   }
 
-  // Auth Protection Fallback screen
-  if (!project) {
+  // Auth Protection / Access Denied Fallback screen
+  if (!isApprovedClient) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 font-sans">
         <motion.div 
@@ -394,40 +413,34 @@ export default function CustomerDashboard() {
           animate={{ opacity: 1, scale: 1 }}
           className="w-full max-w-md bg-[#050505] border border-neutral-900 rounded-3xl p-8 text-center relative overflow-hidden"
         >
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-red-500/20 to-transparent" />
           
-          <div className="h-12 w-12 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto mb-6">
+          <div className="h-12 w-12 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center mx-auto mb-6">
             <Lock size={20} />
           </div>
-          <h2 className="text-xl font-black uppercase tracking-tight text-neutral-100">
-            Client Workspace Not Available
+          <h2 className="text-xl font-black uppercase tracking-tight text-neutral-100 font-sans">
+            Access Denied
           </h2>
-          <p className="text-xs text-neutral-450 mt-4 leading-relaxed font-sans">
-            This account is not currently linked to an active CodeFuser client workspace.
+          <p className="text-sm text-neutral-300 mt-4 leading-relaxed font-sans">
+            This account is not linked to an active CodeFuser client workspace.
           </p>
           <p className="text-xs text-neutral-500 mt-2 leading-relaxed font-sans">
-            If you've recently completed your payment, your workspace may still be under preparation. Otherwise, begin by choosing one of our services.
+            If you are an approved CodeFuser client, please ensure you are signed in with your registered email, or contact us to authorize your workspace.
           </p>
 
           <div className="mt-8 space-y-3">
             <button
-              onClick={() => {
-                navigate("/");
-                setTimeout(() => {
-                  const el = document.getElementById("pricing");
-                  if (el) el.scrollIntoView({ behavior: "smooth" });
-                }, 300);
-              }}
-              className="w-full bg-white text-black py-3.5 rounded-xl font-bold uppercase tracking-wider text-xs font-sans cursor-pointer hover:bg-neutral-100 transition-all"
+              onClick={() => navigate("/")}
+              className="w-full bg-white hover:bg-neutral-100 text-black py-3.5 rounded-xl font-bold uppercase tracking-wider text-xs font-sans cursor-pointer transition-all"
             >
-              Choose Your Journey
+              Return Home
             </button>
             
             <button
-              onClick={() => window.open(getWhatsAppLink("Hi CodeFuser, I would like to inquire about my secure client workspace setup status."), "_blank")}
+              onClick={() => window.open(`https://wa.me/917449100307?text=${encodeURIComponent("Hi CodeFuser, I am trying to access my client portal workspace and need authorization support.")}`, "_blank")}
               className="w-full bg-neutral-900 hover:bg-neutral-850 text-white py-3.5 rounded-xl font-bold uppercase tracking-wider text-xs border border-neutral-800 font-sans cursor-pointer transition-all"
             >
-              Contact Support
+              Contact CodeFuser
             </button>
           </div>
 
