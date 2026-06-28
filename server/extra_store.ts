@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import os from "os";
 
 export interface OfficialQuoteRecord {
   packageName: string;
@@ -35,7 +36,10 @@ export interface ExtraProjectData {
   portalAccessSource?: "automatic" | "manual"; // "automatic" | "manual"
 }
 
-const STORE_FILE = path.join(process.cwd(), "server", "fuser_extra_store.json");
+const isVercel = !!process.env.VERCEL;
+const STORE_FILE = isVercel
+  ? path.join(os.tmpdir(), "fuser_extra_store.json")
+  : path.join(process.cwd(), "server", "fuser_extra_store.json");
 
 // Ensure store directory exists
 function ensureFile() {

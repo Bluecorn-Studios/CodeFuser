@@ -6,6 +6,7 @@ import { addProject, getProjects, updateProject, getSupabase, getProjectById } f
 import { getExtraData, updateQuote, addAssetFile } from "./server/extra_store.js";
 import { verifyPaymentSignature, verifyWebhookSignature, getRazorpayInstance } from "./server/razorpay.js";
 import fs from "fs";
+import os from "os";
 
 dotenv.config();
 
@@ -21,11 +22,14 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-// Serve uploaded files statically
-const uploadsDir = path.join(process.cwd(), "public", "uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+// Serve uploaded files statically. On Vercel, process.cwd() is read-only.
+// We use a writable temporary directory in serverless/production to avoid read-only filesystem issues,
+// and local public/uploads for local development. We do NOT mutate the filesystem in /public on startup.
+const isVercel = !!process.env.VERCEL;
+const uploadsDir = isVercel 
+  ? path.join(os.tmpdir(), "uploads")
+  : path.join(process.cwd(), "public", "uploads");
+
 app.use("/uploads", express.static(uploadsDir));
 
 // API: Create new project
@@ -505,8 +509,11 @@ app.post("/api/projects/:id/upload", async (req, res) => {
     }
 
     // Direct write base64 file to disk
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
     const safeName = Date.now() + "_" + name.replace(/[^a-zA-Z0-9.\-_]/g, "");
-    const filePath = path.join(process.cwd(), "public", "uploads", safeName);
+    const filePath = path.join(uploadsDir, safeName);
     
     const buffer = Buffer.from(content, "base64");
     fs.writeFileSync(filePath, buffer);
