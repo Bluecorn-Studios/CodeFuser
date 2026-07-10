@@ -6,6 +6,7 @@ export interface SupabaseUser {
   user_metadata?: any;
   fullName?: string;
   businessName?: string;
+  role?: "super_admin" | "admin" | "client";
 }
 
 export interface AuthSession {

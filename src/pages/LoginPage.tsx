@@ -52,11 +52,38 @@ export default function LoginPage() {
         if (error) throw error;
         
         if (session) {
-          const userObj = {
+          let userObj = {
             id: session.user.id,
             email: session.user.email || "",
+            fullName: session.user.user_metadata?.full_name || "",
+            businessName: session.user.user_metadata?.business_name || "",
+            role: "client" as any,
             user_metadata: session.user.user_metadata || {}
           };
+
+          // Synchronize role and profile details from secure backend
+          try {
+            const meResp = await fetch("/api/auth/me", {
+              headers: {
+                "Authorization": `Bearer ${session.access_token}`
+              }
+            });
+            if (meResp.ok) {
+              const meData = await meResp.json();
+              if (meData.success && meData.user) {
+                userObj = {
+                  id: session.user.id,
+                  email: session.user.email || "",
+                  fullName: meData.user.fullName || userObj.fullName,
+                  businessName: meData.user.businessName || userObj.businessName,
+                  role: meData.user.role || "client",
+                  user_metadata: session.user.user_metadata || {}
+                };
+              }
+            }
+          } catch (err) {
+            console.error("Profile synchronization failed:", err);
+          }
           
           setAuthSession(userObj, session.access_token);
           setSuccessMsg("Welcome! Redirecting and setting up workspace...");
@@ -66,7 +93,11 @@ export default function LoginPage() {
             window.history.replaceState(null, "", window.location.pathname);
           }
           
-          const projResp = await fetch(`/api/projects?userId=${userObj.id}&email=${userObj.email}`);
+          const projResp = await fetch(`/api/projects?userId=${userObj.id}&email=${userObj.email}`, {
+            headers: {
+              "Authorization": `Bearer ${session.access_token}`
+            }
+          });
           if (projResp.ok) {
             const projData = await projResp.json();
             if (projData.projects && projData.projects.length > 0) {
@@ -148,6 +179,9 @@ export default function LoginPage() {
       const userObj = {
         id: data.user.id,
         email: data.user.email,
+        fullName: data.user.fullName || fullName || data.user.user_metadata?.full_name,
+        businessName: data.user.businessName || businessName || data.user.user_metadata?.business_name,
+        role: data.user.role || "client",
         user_metadata: data.user.user_metadata || {
           full_name: fullName,
           business_name: businessName
@@ -165,7 +199,11 @@ export default function LoginPage() {
 
       setTimeout(async () => {
         try {
-          const projResp = await fetch(`/api/projects?userId=${userObj.id}&email=${userObj.email}`);
+          const projResp = await fetch(`/api/projects?userId=${userObj.id}&email=${userObj.email}`, {
+            headers: {
+              "Authorization": `Bearer ${sessionToken}`
+            }
+          });
           if (projResp.ok) {
             const projData = await projResp.json();
             if (projData.projects && projData.projects.length > 0) {

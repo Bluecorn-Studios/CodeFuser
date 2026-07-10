@@ -23,6 +23,7 @@ import {
   Inbox
 } from "lucide-react";
 import { useAppRouter, w as getWhatsAppLink } from "../components/Reveal";
+import { getAuthUser, getAuthToken } from "../utils/auth";
 
 interface ProjectRecord {
   id: string;
@@ -49,12 +50,46 @@ interface ProjectRecord {
   purchasedPlan?: string;
   purchaseDate?: string;
   portalAccessSource?: "automatic" | "manual";
+  quote?: any;
+  assets?: any[];
 }
+
+import { BusinessIntelligenceCRM } from "../components/BusinessIntelligenceCRM";
 
 export const MissionControl: React.FC = () => {
   const { navigate } = useAppRouter();
+
+  const getAdminHeaders = (extraHeaders: Record<string, string> = {}) => {
+    return {
+      "Authorization": `Bearer ${getAuthToken() || ""}`,
+      "x-admin-password": sessionStorage.getItem("fuser_admin_password") || "",
+      ...extraHeaders
+    };
+  };
+  
+  const handleDownloadAsset = async (projId: string, assetId: string, fallbackUrl: string) => {
+    try {
+      const response = await fetch(`/api/projects/${projId}/assets/${assetId}/download-url`, {
+        headers: getAdminHeaders()
+      });
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.url) {
+          window.open(result.url, "_blank");
+          return;
+        }
+      }
+      window.open(fallbackUrl, "_blank");
+    } catch (err) {
+      console.error("Failed to fetch secure download link:", err);
+      window.open(fallbackUrl, "_blank");
+    }
+  };
+
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return sessionStorage.getItem("fuser_admin_authed") === "true";
+    const user = getAuthUser();
+    const isAdminUser = user && (user.role === "admin" || user.role === "super_admin");
+    return !!isAdminUser || sessionStorage.getItem("fuser_admin_authed") === "true";
   });
   const [passwordInput, setPasswordInput] = useState("");
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -65,19 +100,122 @@ export const MissionControl: React.FC = () => {
   const [dbSource, setDbSource] = useState<string>("Supabase");
   
   // Controls
+  const [activeTab, setActiveTab] = useState<"projects" | "users" | "crm">("projects");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPlanFilter, setSelectedPlanFilter] = useState<string>("all");
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
+
+  // Users & RBAC state
+  const [usersList, setUsersList] = useState<any[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
 
   // Extra project maps (Part 3 requirement)
   const [extraProjectMap, setExtraProjectMap] = useState<Record<string, any>>({});
   const [extraLoadingMap, setExtraLoadingMap] = useState<Record<string, boolean>>({});
 
+  // Phase 6 Phase-Specific States
+  const [adminSubTabs, setAdminSubTabs] = useState<Record<string, "proposal" | "checklist" | "deliverables">>({});
+  const [proposalEdits, setProposalEdits] = useState<Record<string, string>>({});
+  const [proposalLoading, setProposalLoading] = useState<Record<string, boolean>>({});
+  const [checklistDrafts, setChecklistDrafts] = useState<Record<string, any[]>>({});
+  const [deliverablesDrafts, setDeliverablesDrafts] = useState<Record<string, any[]>>({});
+  const [newChecklistTask, setNewChecklistTask] = useState<Record<string, string>>({});
+  const [newDeliverableName, setNewDeliverableName] = useState<Record<string, string>>({});
+  const [newDeliverableCategory, setNewDeliverableCategory] = useState<Record<string, string>>({});
+  const [newDeliverableAssetId, setNewDeliverableAssetId] = useState<Record<string, string>>({});
+
+  const [activeAuditProjId, setActiveAuditProjId] = useState<string | null>(null);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [auditLoading, setAuditLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    const user = getAuthUser();
+    if (user && user.role) {
+      setCurrentUserRole(user.role);
+    }
+  }, []);
+
+  const fetchUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const response = await fetch("/api/admin/users", {
+        headers: {
+          "Authorization": `Bearer ${getAuthToken()}`,
+          "x-admin-password": sessionStorage.getItem("fuser_admin_password") || ""
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.users) {
+          setUsersList(data.users);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch user profiles for RBAC management:", err);
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated && activeTab === "users") {
+      fetchUsers();
+    }
+  }, [isAuthenticated, activeTab]);
+
+  const handleUpdateUserRole = async (userId: string, newRole: string) => {
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/role`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${getAuthToken()}`,
+          "x-admin-password": sessionStorage.getItem("fuser_admin_password") || ""
+        },
+        body: JSON.stringify({ role: newRole })
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setUsersList(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
+        alert(`User role successfully updated to '${newRole}'.`);
+      } else {
+        alert(data.error || "Failed to update user role. Super Admin privileges required.");
+      }
+    } catch (err) {
+      console.error("Failed to change user role:", err);
+      alert("Error communicating with servers.");
+    }
+  };
+
+  const handleFetchAuditTrail = async (projId: string) => {
+    setActiveAuditProjId(projId);
+    setAuditLoading(true);
+    try {
+      const response = await fetch(`/api/projects/${projId}/audit-trail`, {
+        headers: getAdminHeaders()
+      });
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          setAuditLogs(result.data);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch project audit trail:", err);
+    } finally {
+      setAuditLoading(false);
+    }
+  };
+
   const fetchProjectExtra = async (id: string) => {
     if (extraProjectMap[id] || extraLoadingMap[id]) return;
     setExtraLoadingMap(prev => ({ ...prev, [id]: true }));
     try {
-      const res = await fetch(`/api/projects/${id}/extra`);
+      const res = await fetch(`/api/projects/${id}/extra`, {
+        headers: getAdminHeaders()
+      });
       if (res.ok) {
         const payload = await res.json();
         if (payload.success && payload.data) {
@@ -95,10 +233,7 @@ export const MissionControl: React.FC = () => {
     try {
       const response = await fetch(`/api/projects/${id}`, {
         method: "PUT",
-        headers: { 
-          "Content-Type": "application/json",
-          "x-admin-password": sessionStorage.getItem("fuser_admin_password") || ""
-        },
+        headers: getAdminHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify(updates)
       });
       if (response.ok) {
@@ -130,7 +265,9 @@ export const MissionControl: React.FC = () => {
     setIsLoading(true);
     setErrorValue(null);
     try {
-      const response = await fetch("/api/projects");
+      const response = await fetch("/api/projects", {
+        headers: getAdminHeaders()
+      });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || `Server returned status ${response.status}`);
@@ -352,8 +489,44 @@ export const MissionControl: React.FC = () => {
           </div>
         </div>
 
-        {/* Filters and Searches Panel */}
-        <div className="bg-card border border-border/80 rounded-2xl p-4 sm:p-5 mb-8 flex flex-col sm:flex-row gap-4 items-center">
+        {/* Tab Selection Segments */}
+        <div className="flex flex-wrap gap-2 mb-8 bg-neutral-950/60 p-1.5 rounded-2xl border border-neutral-900 w-fit">
+          <button
+            onClick={() => setActiveTab("projects")}
+            className={`px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+              activeTab === "projects"
+                ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.05)]"
+                : "text-zinc-500 hover:text-white"
+            }`}
+          >
+            📂 Active Projects
+          </button>
+          <button
+            onClick={() => setActiveTab("crm")}
+            className={`px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+              activeTab === "crm"
+                ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.05)]"
+                : "text-zinc-500 hover:text-white"
+            }`}
+          >
+            📈 BI & CRM Dashboard
+          </button>
+          <button
+            onClick={() => setActiveTab("users")}
+            className={`px-4 py-2.5 text-xs font-mono font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+              activeTab === "users"
+                ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.05)]"
+                : "text-zinc-500 hover:text-white"
+            }`}
+          >
+            🛡️ User Roles & RBAC
+          </button>
+        </div>
+
+        {activeTab === "projects" && (
+          <>
+            {/* Filters and Searches Panel */}
+            <div className="bg-card border border-border/80 rounded-2xl p-4 sm:p-5 mb-8 flex flex-col sm:flex-row gap-4 items-center">
           {/* Search */}
           <div className="relative w-full sm:flex-1">
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/45">
@@ -794,14 +967,12 @@ export const MissionControl: React.FC = () => {
                                           Size: {Math.round(as.size / 1024)} KB • {as.type.split('/')[1]?.toUpperCase() || 'FILE'}
                                         </span>
                                       </div>
-                                      <a
-                                        href={as.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="p-1 px-2.5 bg-neutral-900 hover:bg-neutral-800 text-[8.5px] font-mono font-bold text-amber-500 hover:text-white rounded-md transition-colors shrink-0"
+                                      <button
+                                        onClick={() => handleDownloadAsset(proj.id, as.id, as.url)}
+                                        className="p-1 px-2.5 bg-neutral-900 hover:bg-neutral-800 text-[8.5px] font-mono font-bold text-amber-500 hover:text-white rounded-md transition-colors shrink-0 cursor-pointer"
                                       >
                                         Open
-                                      </a>
+                                      </button>
                                     </div>
                                   ))}
                                 </div>
@@ -841,7 +1012,10 @@ export const MissionControl: React.FC = () => {
                                     try {
                                       const response = await fetch(`/api/projects/${proj.id}/quote`, {
                                         method: "POST",
-                                        headers: { "Content-Type": "application/json" },
+                                        headers: { 
+                                          "Content-Type": "application/json",
+                                          "x-admin-password": sessionStorage.getItem("fuser_admin_password") || ""
+                                        },
                                         body: JSON.stringify({
                                           packageName: pkg,
                                           price: pPrice,
@@ -946,7 +1120,12 @@ export const MissionControl: React.FC = () => {
                                         onClick={async () => {
                                           if (!confirm("Are you sure you want to release this secure quotation lock? standard packages will resume.")) return;
                                           try {
-                                            const res = await fetch(`/api/projects/${proj.id}/quote/reset`, { method: "POST" });
+                                            const res = await fetch(`/api/projects/${proj.id}/quote/reset`, { 
+                                              method: "POST",
+                                              headers: {
+                                                "x-admin-password": sessionStorage.getItem("fuser_admin_password") || ""
+                                              }
+                                            });
                                             if (res.ok) {
                                               const body = await res.json();
                                               if (body.success) {
@@ -977,15 +1156,584 @@ export const MissionControl: React.FC = () => {
                             </div>
                           </div>
 
+                          {/* Phase 6: AI Proposal, Configurable Checklist & Deliverables Vault Management Panel */}
+                          <div className="mt-6 bg-[#030303] border border-neutral-900 rounded-xl p-5 space-y-4">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-neutral-900 pb-3 gap-2">
+                              <div>
+                                <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-amber-500">
+                                  📋 Phase 6 Core Deliverables Manager
+                                </h4>
+                                <p className="text-[10px] text-zinc-500 font-sans mt-0.5">
+                                  Manage strategic AI proposals, launch checklists, and deliverables vault items.
+                                </p>
+                              </div>
+                              <div className="flex gap-1.5 bg-neutral-950 p-1 rounded-lg border border-neutral-900">
+                                {([ "proposal", "checklist", "deliverables" ] as const).map((tab) => (
+                                  <button
+                                    key={tab}
+                                    onClick={() => setAdminSubTabs(prev => ({ ...prev, [proj.id]: tab }))}
+                                    className={`px-3 py-1 rounded-md text-[10px] font-mono uppercase tracking-wider transition-all cursor-pointer ${
+                                      (adminSubTabs[proj.id] || "proposal") === tab
+                                        ? "bg-amber-500/10 text-amber-400 font-bold border border-amber-500/20"
+                                        : "text-zinc-400 hover:text-white border border-transparent"
+                                    }`}
+                                  >
+                                    {tab === "proposal" ? "📑 Proposal" : tab === "checklist" ? "📋 Checklist" : "🔒 Vault"}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* TAB CONTENT: PROPOSAL */}
+                            {(adminSubTabs[proj.id] || "proposal") === "proposal" && (
+                              <div className="space-y-4 font-sans">
+                                {proposalLoading[proj.id] ? (
+                                  <div className="flex flex-col items-center justify-center py-8 space-y-2">
+                                    <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                                    <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest animate-pulse">Running AI Strategy Synthesizer...</span>
+                                  </div>
+                                ) : !extraProjectMap[proj.id]?.quote?.proposal ? (
+                                  <div className="flex flex-col items-center justify-center py-8 text-center bg-neutral-950/40 rounded-xl border border-neutral-900 border-dashed p-4 space-y-3">
+                                    <div className="text-xl">✨</div>
+                                    <div>
+                                      <span className="text-[11px] font-mono font-bold text-zinc-300 block uppercase tracking-wide">Strategic proposal baseline not yet compiled</span>
+                                      <span className="text-[9.5px] text-zinc-500 max-w-sm leading-normal mt-1 block">
+                                        Administrators can manually initiate our consulting-grade AI proposal generator using the custom business diagnostics audit.
+                                      </span>
+                                    </div>
+                                    <button
+                                      onClick={async () => {
+                                        setProposalLoading(prev => ({ ...prev, [proj.id]: true }));
+                                        try {
+                                          const res = await fetch(`/api/projects/${proj.id}/proposal/generate`, {
+                                            method: "POST",
+                                            headers: {
+                                              "Authorization": `Bearer ${getAuthToken()}`,
+                                              "x-admin-password": sessionStorage.getItem("fuser_admin_password") || ""
+                                            }
+                                          });
+                                          const body = await res.json();
+                                          if (body.success) {
+                                            setExtraProjectMap(prev => ({ ...prev, [proj.id]: body.data }));
+                                            setProposalEdits(prev => ({ ...prev, [proj.id]: body.data.quote?.proposal?.content || "" }));
+                                            alert("Strategic AI Proposal baseline compiled successfully!");
+                                          } else {
+                                            alert(body.message || "Failed to generate proposal");
+                                          }
+                                        } catch (err) {
+                                          console.error(err);
+                                          alert("Failed to connect to backend server.");
+                                        } finally {
+                                          setProposalLoading(prev => ({ ...prev, [proj.id]: false }));
+                                        }
+                                      }}
+                                      className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-black text-[10px] font-mono font-bold uppercase tracking-wider rounded-lg transition-all"
+                                    >
+                                      ✨ Initiate AI Proposal baseline
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="space-y-4">
+                                    <div className="flex justify-between items-center bg-neutral-950 px-3 py-2 rounded-lg border border-neutral-900 text-[10px] font-mono uppercase tracking-wide">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-zinc-500">Proposal State:</span>
+                                        <span className={`font-bold px-2 py-0.5 rounded ${
+                                          extraProjectMap[proj.id].quote.proposal.status === "sent"
+                                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                            : extraProjectMap[proj.id].quote.proposal.status === "approved"
+                                            ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                            : "bg-zinc-800 text-zinc-300"
+                                        }`}>
+                                          {extraProjectMap[proj.id].quote.proposal.status}
+                                        </span>
+                                      </div>
+                                      <span className="text-zinc-500 text-[9px]">
+                                        Generated: {new Date(extraProjectMap[proj.id].quote.proposal.timestamp).toLocaleDateString()}
+                                      </span>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                      <label className="block text-[8.5px] font-mono text-zinc-400 uppercase tracking-wider">
+                                        Edit Strategic Proposal Baseline (Markdown Allowed)
+                                      </label>
+                                      <textarea
+                                        value={proposalEdits[proj.id] !== undefined ? proposalEdits[proj.id] : extraProjectMap[proj.id].quote.proposal.content || ""}
+                                        onChange={(e) => setProposalEdits(prev => ({ ...prev, [proj.id]: e.target.value }))}
+                                        rows={10}
+                                        className="w-full bg-neutral-950 border border-neutral-900 text-xs px-3 py-2 rounded-lg focus:outline-none focus:border-amber-500 text-zinc-200 font-mono leading-relaxed"
+                                      />
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-2 pt-1">
+                                      <button
+                                        onClick={async () => {
+                                          const textToSave = proposalEdits[proj.id] !== undefined ? proposalEdits[proj.id] : extraProjectMap[proj.id].quote.proposal.content;
+                                          try {
+                                            const res = await fetch(`/api/projects/${proj.id}/proposal/save`, {
+                                              method: "POST",
+                                              headers: {
+                                                "Content-Type": "application/json",
+                                                "Authorization": `Bearer ${getAuthToken()}`,
+                                                "x-admin-password": sessionStorage.getItem("fuser_admin_password") || ""
+                                              },
+                                              body: JSON.stringify({ content: textToSave })
+                                            });
+                                            const body = await res.json();
+                                            if (body.success) {
+                                              setExtraProjectMap(prev => ({ ...prev, [proj.id]: body.data }));
+                                              alert("Manual edits synchronized and locked inside database!");
+                                            }
+                                          } catch (err) {
+                                            console.error(err);
+                                          }
+                                        }}
+                                        className="px-3.5 py-1.5 bg-neutral-950 hover:bg-neutral-900 text-zinc-300 hover:text-white border border-neutral-850 hover:border-amber-500/20 text-[9px] font-mono font-bold uppercase rounded-md transition-all cursor-pointer"
+                                      >
+                                        💾 Save Manual Edits
+                                      </button>
+
+                                      <button
+                                        onClick={async () => {
+                                          const hasEdits = proposalEdits[proj.id] !== undefined && proposalEdits[proj.id] !== extraProjectMap[proj.id].quote.proposal.content;
+                                          if (hasEdits || extraProjectMap[proj.id].quote.proposal.manualEdits) {
+                                            if (!confirm("⚠️ WARNING: Regenerating will completely overwrite your manual edits. Are you sure you want to proceed?")) {
+                                              return;
+                                            }
+                                          }
+                                          setProposalLoading(prev => ({ ...prev, [proj.id]: true }));
+                                          try {
+                                            const res = await fetch(`/api/projects/${proj.id}/proposal/generate?force=true`, {
+                                              method: "POST",
+                                              headers: {
+                                                "Authorization": `Bearer ${getAuthToken()}`,
+                                                "x-admin-password": sessionStorage.getItem("fuser_admin_password") || ""
+                                              }
+                                            });
+                                            const body = await res.json();
+                                            if (body.success) {
+                                              setExtraProjectMap(prev => ({ ...prev, [proj.id]: body.data }));
+                                              setProposalEdits(prev => ({ ...prev, [proj.id]: body.data.quote?.proposal?.content || "" }));
+                                              alert("AI proposal regenerated successfully.");
+                                            }
+                                          } catch (err) {
+                                            console.error(err);
+                                          } finally {
+                                            setProposalLoading(prev => ({ ...prev, [proj.id]: false }));
+                                          }
+                                        }}
+                                        className="px-3.5 py-1.5 bg-neutral-950 hover:bg-neutral-900 text-amber-500/80 hover:text-amber-400 border border-neutral-850 hover:border-amber-500/20 text-[9px] font-mono font-bold uppercase rounded-md transition-all cursor-pointer"
+                                      >
+                                        🔄 Regenerate AI Proposal
+                                      </button>
+
+                                      {extraProjectMap[proj.id].quote.proposal.status === "draft" && (
+                                        <button
+                                          onClick={async () => {
+                                            try {
+                                              const res = await fetch(`/api/projects/${proj.id}/proposal/approve`, {
+                                                method: "POST",
+                                                headers: {
+                                                  "Authorization": `Bearer ${getAuthToken()}`,
+                                                  "x-admin-password": sessionStorage.getItem("fuser_admin_password") || ""
+                                                }
+                                              });
+                                              const body = await res.json();
+                                              if (body.success) {
+                                                setExtraProjectMap(prev => ({ ...prev, [proj.id]: body.data }));
+                                                alert("Strategic blueprint approved!");
+                                              }
+                                            } catch (err) {
+                                              console.error(err);
+                                            }
+                                          }}
+                                          className="px-3.5 py-1.5 bg-neutral-950 hover:bg-neutral-900 text-emerald-500 hover:text-emerald-400 border border-neutral-850 hover:border-emerald-500/20 text-[9px] font-mono font-bold uppercase rounded-md transition-all cursor-pointer"
+                                        >
+                                          ✅ Approve Blueprint
+                                        </button>
+                                      )}
+
+                                      {extraProjectMap[proj.id].quote.proposal.status !== "sent" && (
+                                        <button
+                                          onClick={async () => {
+                                            try {
+                                              const res = await fetch(`/api/projects/${proj.id}/proposal/send`, {
+                                                method: "POST",
+                                                headers: {
+                                                  "Authorization": `Bearer ${getAuthToken()}`,
+                                                  "x-admin-password": sessionStorage.getItem("fuser_admin_password") || ""
+                                                }
+                                              });
+                                              const body = await res.json();
+                                              if (body.success) {
+                                                setExtraProjectMap(prev => ({ ...prev, [proj.id]: body.data }));
+                                                alert("Strategic blueprint published to Client Portal successfully!");
+                                              }
+                                            } catch (err) {
+                                              console.error(err);
+                                            }
+                                          }}
+                                          className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-black text-[9px] font-mono font-bold uppercase rounded-md transition-all cursor-pointer ml-auto"
+                                        >
+                                          🚀 Publish to Client Hub
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* TAB CONTENT: CHECKLIST */}
+                            {(adminSubTabs[proj.id] || "proposal") === "checklist" && (
+                              <div className="space-y-4 font-sans">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-[8.5px] font-mono text-zinc-400 uppercase tracking-wider">
+                                    Project Launch Milestones Configurator
+                                  </span>
+                                  <button
+                                    onClick={() => {
+                                      const presets = [
+                                        { id: `TASK-1-${Date.now()}`, task: "Configure Custom Domain DNS records & SSL mapping", completed: false },
+                                        { id: `TASK-2-${Date.now()}`, task: "Run PostgreSQL migrations & optimize core schema tables", completed: false },
+                                        { id: `TASK-3-${Date.now()}`, task: "Establish unified design token layouts & verified color specs", completed: false },
+                                        { id: `TASK-4-${Date.now()}`, task: "Audit mobile UX performance checklist and core web vitals", completed: false },
+                                        { id: `TASK-5-${Date.now()}`, task: "Complete secure code bundle compilation and CDN deployment", completed: false }
+                                      ];
+                                      setChecklistDrafts(prev => ({ ...prev, [proj.id]: presets }));
+                                    }}
+                                    className="px-2.5 py-1 bg-neutral-950 hover:bg-neutral-900 border border-neutral-850 text-neutral-300 hover:text-white text-[8px] font-mono uppercase tracking-wider rounded-md cursor-pointer transition-colors"
+                                  >
+                                    📋 Load launch presets
+                                  </button>
+                                </div>
+
+                                <div className="bg-neutral-950 border border-neutral-900 rounded-xl p-3.5 space-y-3">
+                                  {/* Item List */}
+                                  {(() => {
+                                    const currentList = checklistDrafts[proj.id] !== undefined
+                                      ? checklistDrafts[proj.id]
+                                      : extraProjectMap[proj.id]?.quote?.checklist || [];
+
+                                    if (currentList.length === 0) {
+                                      return (
+                                        <p className="text-[10px] text-zinc-500 text-center py-4 italic font-mono">
+                                          No custom checklist loaded yet. Click 'Load launch presets' or add custom tasks below.
+                                        </p>
+                                      );
+                                    }
+
+                                    return (
+                                      <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
+                                        {currentList.map((item: any, idx: number) => (
+                                          <div key={item.id || idx} className="flex items-center justify-between gap-3 bg-[#050505] border border-neutral-900 p-2 rounded-lg">
+                                            <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                                              <input
+                                                type="checkbox"
+                                                checked={item.completed}
+                                                onChange={(e) => {
+                                                  const newList = currentList.map((c: any) =>
+                                                    c.id === item.id ? { ...c, completed: e.target.checked } : c
+                                                  );
+                                                  setChecklistDrafts(prev => ({ ...prev, [proj.id]: newList }));
+                                                }}
+                                                className="rounded border-neutral-800 bg-neutral-950 text-amber-500 focus:ring-amber-500/30 w-3.5 h-3.5 cursor-pointer"
+                                              />
+                                              <span className={`text-[10.5px] leading-relaxed truncate text-zinc-200 ${item.completed ? "line-through text-zinc-500" : ""}`}>
+                                                {item.task}
+                                              </span>
+                                            </div>
+                                            <button
+                                              onClick={() => {
+                                                const newList = currentList.filter((c: any) => c.id !== item.id);
+                                                setChecklistDrafts(prev => ({ ...prev, [proj.id]: newList }));
+                                              }}
+                                              className="text-[9px] font-bold text-red-400/80 hover:text-red-400 hover:bg-red-950/10 p-1 rounded transition-colors cursor-pointer"
+                                            >
+                                              ❌
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    );
+                                  })()}
+
+                                  {/* Add Task Input Block */}
+                                  <div className="flex gap-2 border-t border-neutral-900/60 pt-3">
+                                    <input
+                                      type="text"
+                                      placeholder="Enter custom milestone checklist task..."
+                                      value={newChecklistTask[proj.id] || ""}
+                                      onChange={(e) => setNewChecklistTask(prev => ({ ...prev, [proj.id]: e.target.value }))}
+                                      className="flex-1 bg-neutral-900 border border-neutral-850 text-[10.5px] px-2.5 py-1.5 rounded focus:outline-none focus:border-amber-500 text-white"
+                                    />
+                                    <button
+                                      onClick={() => {
+                                        const taskText = newChecklistTask[proj.id]?.trim();
+                                        if (!taskText) return;
+
+                                        const currentList = checklistDrafts[proj.id] !== undefined
+                                          ? checklistDrafts[proj.id]
+                                          : extraProjectMap[proj.id]?.quote?.checklist || [];
+
+                                        const newItem = {
+                                          id: `TASK-${Date.now()}`,
+                                          task: taskText,
+                                          completed: false
+                                        };
+
+                                        setChecklistDrafts(prev => ({ ...prev, [proj.id]: [...currentList, newItem] }));
+                                        setNewChecklistTask(prev => ({ ...prev, [proj.id]: "" }));
+                                      }}
+                                      className="px-3 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 hover:border-amber-500/40 text-[9px] font-mono font-bold uppercase rounded text-amber-500 transition-all cursor-pointer shrink-0"
+                                    >
+                                      ➕ Add Task
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <button
+                                  onClick={async () => {
+                                    const listToSave = checklistDrafts[proj.id] !== undefined
+                                      ? checklistDrafts[proj.id]
+                                      : extraProjectMap[proj.id]?.quote?.checklist || [];
+
+                                    try {
+                                      const res = await fetch(`/api/projects/${proj.id}/checklist/save`, {
+                                        method: "POST",
+                                        headers: {
+                                          "Content-Type": "application/json",
+                                          "Authorization": `Bearer ${getAuthToken()}`,
+                                          "x-admin-password": sessionStorage.getItem("fuser_admin_password") || ""
+                                        },
+                                        body: JSON.stringify({ checklist: listToSave })
+                                      });
+                                      const body = await res.json();
+                                      if (body.success) {
+                                        setExtraProjectMap(prev => ({ ...prev, [proj.id]: body.data }));
+                                        alert("Launch checklist configuration synchronized successfully!");
+                                      }
+                                    } catch (err) {
+                                      console.error(err);
+                                    }
+                                  }}
+                                  className="w-full py-2 bg-neutral-900 hover:bg-neutral-850 text-amber-500 hover:text-white border border-neutral-800 hover:border-amber-500/40 text-[9px] font-mono font-bold uppercase rounded-lg transition-all tracking-wider flex items-center justify-center cursor-pointer"
+                                >
+                                  💾 Lock Checklist Configuration
+                                </button>
+                              </div>
+                            )}
+
+                            {/* TAB CONTENT: DELIVERABLES VAULT */}
+                            {(adminSubTabs[proj.id] || "proposal") === "deliverables" && (
+                              <div className="space-y-4 font-sans">
+                                <span className="block text-[8.5px] font-mono text-zinc-400 uppercase tracking-wider">
+                                  Secure Deliverables Vault Configurator
+                                </span>
+
+                                <div className="bg-neutral-950 border border-neutral-900 rounded-xl p-4 space-y-4">
+                                  {/* Add Deliverable Form */}
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-3 border-b border-neutral-900/60">
+                                    <div className="space-y-1">
+                                      <label className="block text-[8px] font-mono text-zinc-400 uppercase">Deliverable Category</label>
+                                      <select
+                                        value={newDeliverableCategory[proj.id] || "Brand Assets"}
+                                        onChange={(e) => setNewDeliverableCategory(prev => ({ ...prev, [proj.id]: e.target.value }))}
+                                        className="w-full bg-[#050505] border border-neutral-900 text-xs px-2 py-1.5 rounded focus:outline-none text-zinc-300 font-mono"
+                                      >
+                                        <option value="Brand Assets">Brand Assets</option>
+                                        <option value="Code Bundle">Code Bundle</option>
+                                        <option value="Database Blueprint">Database Blueprint</option>
+                                        <option value="UI Layouts">UI Layouts</option>
+                                      </select>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                      <label className="block text-[8px] font-mono text-zinc-400 uppercase">Select Uploaded Asset File</label>
+                                      <select
+                                        value={newDeliverableAssetId[proj.id] || ""}
+                                        onChange={(e) => {
+                                          const assetId = e.target.value;
+                                          setNewDeliverableAssetId(prev => ({ ...prev, [proj.id]: assetId }));
+                                          // Auto-fill name if empty
+                                          const asset = extraProjectMap[proj.id]?.assets?.find((a: any) => a.id === assetId);
+                                          if (asset && !newDeliverableName[proj.id]) {
+                                            setNewDeliverableName(prev => ({ ...prev, [proj.id]: asset.name }));
+                                          }
+                                        }}
+                                        className="w-full bg-[#050505] border border-neutral-900 text-xs px-2 py-1.5 rounded focus:outline-none text-zinc-300 font-mono"
+                                      >
+                                        <option value="">-- Choose project asset --</option>
+                                        {extraProjectMap[proj.id]?.assets?.map((asset: any) => (
+                                          <option key={asset.id} value={asset.id}>
+                                            {asset.name} ({(asset.size / 1024).toFixed(1)} KB)
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+
+                                    <div className="space-y-1 md:col-span-2 flex gap-2">
+                                      <div className="flex-1 space-y-1">
+                                        <label className="block text-[8px] font-mono text-zinc-400 uppercase">Vault Deliverable Display Name</label>
+                                        <input
+                                          type="text"
+                                          placeholder="e.g. Master Logo Files, Production Build .ZIP..."
+                                          value={newDeliverableName[proj.id] || ""}
+                                          onChange={(e) => setNewDeliverableName(prev => ({ ...prev, [proj.id]: e.target.value }))}
+                                          className="w-full bg-[#050505] border border-neutral-900 text-xs px-3 py-1.5 rounded focus:outline-none text-white font-sans"
+                                        />
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const name = newDeliverableName[proj.id]?.trim();
+                                          const category = newDeliverableCategory[proj.id] || "Brand Assets";
+                                          const assetId = newDeliverableAssetId[proj.id];
+
+                                          if (!name || !assetId) {
+                                            alert("Please choose an uploaded asset and specify a display name.");
+                                            return;
+                                          }
+
+                                          const asset = extraProjectMap[proj.id]?.assets?.find((a: any) => a.id === assetId);
+                                          if (!asset) return;
+
+                                          const currentList = deliverablesDrafts[proj.id] !== undefined
+                                            ? deliverablesDrafts[proj.id]
+                                            : extraProjectMap[proj.id]?.quote?.deliverables || [];
+
+                                          const newItem = {
+                                            id: `DELIV-${Date.now()}`,
+                                            name,
+                                            category,
+                                            url: asset.url,
+                                            size: asset.size,
+                                            timestamp: new Date().toISOString()
+                                          };
+
+                                          setDeliverablesDrafts(prev => ({ ...prev, [proj.id]: [...currentList, newItem] }));
+                                          setNewDeliverableName(prev => ({ ...prev, [proj.id]: "" }));
+                                          setNewDeliverableAssetId(prev => ({ ...prev, [proj.id]: "" }));
+                                        }}
+                                        className="h-9 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 hover:border-amber-500/40 text-[9px] font-mono font-bold uppercase rounded px-3.5 text-amber-500 transition-all cursor-pointer self-end shrink-0"
+                                      >
+                                        ➕ Assign
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* Current Vault Allocations */}
+                                  <div className="space-y-3">
+                                    <span className="block text-[8px] font-mono text-zinc-400 uppercase tracking-widest font-extrabold">
+                                      Current Vault Deliverables
+                                    </span>
+
+                                    {(() => {
+                                      const currentList = deliverablesDrafts[proj.id] !== undefined
+                                        ? deliverablesDrafts[proj.id]
+                                        : extraProjectMap[proj.id]?.quote?.deliverables || [];
+
+                                      if (currentList.length === 0) {
+                                        return (
+                                          <p className="text-[10px] text-zinc-500 text-center py-2 italic font-mono">
+                                            No deliverables assigned to this vault yet. Use the form above to lock assets.
+                                          </p>
+                                        );
+                                      }
+
+                                      // Group by Category
+                                      const categories = ["Brand Assets", "Code Bundle", "Database Blueprint", "UI Layouts"];
+
+                                      return (
+                                        <div className="space-y-3.5 max-h-[250px] overflow-y-auto pr-1">
+                                          {categories.map((cat) => {
+                                            const itemsInCat = currentList.filter((item: any) => item.category === cat);
+                                            if (itemsInCat.length === 0) return null;
+
+                                            return (
+                                              <div key={cat} className="space-y-1.5">
+                                                <span className="block text-[8.5px] font-mono text-amber-500/80 uppercase tracking-wide font-extrabold">
+                                                  🏷️ {cat} ({itemsInCat.length})
+                                                </span>
+                                                <div className="space-y-1.5">
+                                                  {itemsInCat.map((item: any) => (
+                                                    <div key={item.id} className="flex justify-between items-center bg-[#050505] border border-neutral-900 px-2.5 py-1.5 rounded-lg text-xs">
+                                                      <div className="flex flex-col min-w-0">
+                                                        <span className="font-semibold text-zinc-200 truncate">{item.name}</span>
+                                                        <span className="text-[8.5px] text-zinc-500 font-mono mt-0.5">
+                                                          {(item.size / 1024).toFixed(1)} KB • Verified
+                                                        </span>
+                                                      </div>
+                                                      <button
+                                                        onClick={() => {
+                                                          const newList = currentList.filter((c: any) => c.id !== item.id);
+                                                          setDeliverablesDrafts(prev => ({ ...prev, [proj.id]: newList }));
+                                                        }}
+                                                        className="text-[9px] font-bold text-red-400/80 hover:text-red-400 hover:bg-red-950/10 p-1 rounded transition-colors cursor-pointer"
+                                                      >
+                                                        ❌
+                                                      </button>
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
+                                </div>
+
+                                <button
+                                  onClick={async () => {
+                                    const listToSave = deliverablesDrafts[proj.id] !== undefined
+                                      ? deliverablesDrafts[proj.id]
+                                      : extraProjectMap[proj.id]?.quote?.deliverables || [];
+
+                                    try {
+                                      const res = await fetch(`/api/projects/${proj.id}/deliverables/save`, {
+                                        method: "POST",
+                                        headers: {
+                                          "Content-Type": "application/json",
+                                          "Authorization": `Bearer ${getAuthToken()}`,
+                                          "x-admin-password": sessionStorage.getItem("fuser_admin_password") || ""
+                                        },
+                                        body: JSON.stringify({ deliverables: listToSave })
+                                      });
+                                      const body = await res.json();
+                                      if (body.success) {
+                                        setExtraProjectMap(prev => ({ ...prev, [proj.id]: body.data }));
+                                        alert("Deliverables vault successfully saved and encrypted!");
+                                      }
+                                    } catch (err) {
+                                      console.error(err);
+                                    }
+                                  }}
+                                  className="w-full py-2 bg-neutral-900 hover:bg-neutral-850 text-amber-500 hover:text-white border border-neutral-800 hover:border-amber-500/40 text-[9px] font-mono font-bold uppercase rounded-lg transition-all tracking-wider flex items-center justify-center cursor-pointer"
+                                >
+                                  🔒 Secure and Save Deliverables Vault
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
                           {/* Technical Core Action block */}
                           <div className="mt-5 pt-4 border-t border-neutral-900 flex justify-between items-center bg-card/60 rounded-xl p-3.5 border border-border/40">
                             <div>
                               <p className="text-[10px] font-mono text-muted-foreground/75 uppercase tracking-wide">
                                 Compiled under Track ID CodeFuser Core:
                               </p>
-                              <p className="font-mono text-zinc-300 font-semibold mt-0.5 text-[11px]">
-                                {proj.id?.toUpperCase()}
-                              </p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="font-mono text-zinc-300 font-semibold text-[11px]">
+                                  {proj.id?.toUpperCase()}
+                                </span>
+                                <button
+                                  onClick={() => handleFetchAuditTrail(proj.id)}
+                                  className="text-[9px] font-mono font-bold uppercase tracking-wider text-amber-500 hover:text-white bg-neutral-900 border border-neutral-800 px-2 py-0.5 rounded-md cursor-pointer transition-colors"
+                                >
+                                  🔍 View Audit Trail
+                                </button>
+                              </div>
                             </div>
                             <div className="flex items-center gap-2.5">
                               {/* Real-time Status Dropdown */}
@@ -1020,6 +1768,205 @@ export const MissionControl: React.FC = () => {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+          </>
+        )}
+
+        {activeTab === "users" && (
+          <div className="space-y-6">
+            {/* Search/Filter for Users */}
+            <div className="bg-card border border-border/80 rounded-2xl p-4 sm:p-5 mb-8 flex flex-col sm:flex-row gap-4 items-center">
+              <div className="relative w-full flex-1">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/45">
+                  <Search size={14} />
+                </span>
+                <input
+                  type="text"
+                  value={userSearchQuery}
+                  onChange={(e) => setUserSearchQuery(e.target.value)}
+                  placeholder="Search user profiles by email, name, or business brand..."
+                  className="pl-9 pr-4 border border-border bg-[#050505] rounded-xl py-2.5 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-amber-500/50 w-full"
+                />
+              </div>
+              <button
+                onClick={fetchUsers}
+                className="px-4 py-2.5 bg-neutral-950 hover:bg-neutral-900 border border-border/40 text-xs font-semibold rounded-xl text-white flex items-center gap-2 transition-all active:scale-95 shrink-0 cursor-pointer"
+              >
+                <RefreshCw size={12} className={usersLoading ? "animate-spin" : ""} /> Sync Profiles
+              </button>
+            </div>
+
+            {usersLoading ? (
+              <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                <div className="w-8 h-8 border-3 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                <span className="text-xs font-mono text-zinc-500 uppercase tracking-widest">Querying profiles from database...</span>
+              </div>
+            ) : (
+              <div className="bg-card border border-border/80 rounded-2xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-neutral-900 bg-black/40">
+                        <th className="p-4 text-[10px] font-mono uppercase tracking-wider text-neutral-400">User Identity & Brand</th>
+                        <th className="p-4 text-[10px] font-mono uppercase tracking-wider text-neutral-400">Email Address</th>
+                        <th className="p-4 text-[10px] font-mono uppercase tracking-wider text-neutral-400">Role Authority</th>
+                        <th className="p-4 text-[10px] font-mono uppercase tracking-wider text-neutral-400">Database ID</th>
+                        <th className="p-4 text-[10px] font-mono uppercase tracking-wider text-neutral-400 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-neutral-900/60">
+                      {usersList
+                        .filter(u => {
+                          const query = userSearchQuery.toLowerCase();
+                          return (
+                            (u.email || "").toLowerCase().includes(query) ||
+                            (u.fullName || "").toLowerCase().includes(query) ||
+                            (u.businessName || "").toLowerCase().includes(query) ||
+                            (u.id || "").toLowerCase().includes(query)
+                          );
+                        })
+                        .map(user => (
+                          <tr key={user.id} className="hover:bg-white/[0.01] transition-colors">
+                            <td className="p-4">
+                              <div className="flex items-center gap-2.5">
+                                <div className="h-8 w-8 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center font-bold text-xs uppercase font-mono">
+                                  {user.fullName ? user.fullName.substring(0, 2) : "CF"}
+                                </div>
+                                <div>
+                                  <span className="text-xs font-semibold text-white block">{user.fullName || "Unnamed Client"}</span>
+                                  <span className="text-[10px] text-zinc-500 block font-mono">{user.businessName || "No Associated Brand"}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-4 text-xs text-neutral-300 font-mono">
+                              {user.email}
+                            </td>
+                            <td className="p-4">
+                              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-mono uppercase tracking-wider border ${
+                                user.role === "super_admin"
+                                  ? "bg-red-500/10 border-red-500/20 text-red-400"
+                                  : user.role === "admin"
+                                  ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                                  : "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                              }`}>
+                                <Shield size={10} /> {user.role === "super_admin" ? "Super Admin" : user.role === "admin" ? "Administrator" : "Client"}
+                              </span>
+                            </td>
+                            <td className="p-4 text-[10px] text-neutral-600 font-mono">
+                              {user.id}
+                            </td>
+                            <td className="p-4 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <select
+                                  value={user.role}
+                                  onChange={(e) => handleUpdateUserRole(user.id, e.target.value)}
+                                  className="bg-neutral-900 border border-neutral-800 rounded-lg px-2 py-1 text-[10px] font-mono font-bold uppercase text-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/30 cursor-pointer"
+                                >
+                                  <option value="client">Client</option>
+                                  <option value="admin">Admin</option>
+                                  <option value="super_admin">Super Admin</option>
+                                </select>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      {usersList.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="p-8 text-center text-xs text-zinc-500 font-mono uppercase">
+                            No registered user profiles found in database.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "crm" && (
+          <BusinessIntelligenceCRM projects={projects} />
+        )}
+        {activeAuditProjId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+            <div className="bg-[#030303] border border-neutral-800 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+              {/* Modal Header */}
+              <div className="p-5 border-b border-neutral-900 flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-white font-mono uppercase tracking-widest flex items-center gap-2">
+                    <span className="text-amber-500 animate-pulse">●</span> Real-time Audit Trail Activity log
+                  </h3>
+                  <p className="text-[10px] text-zinc-500 font-mono mt-0.5">
+                    PROJECT REF ID: {activeAuditProjId.toUpperCase()}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setActiveAuditProjId(null);
+                    setAuditLogs([]);
+                  }}
+                  className="p-1 px-3 bg-neutral-900 border border-neutral-800 text-[10px] font-mono font-bold uppercase text-neutral-400 hover:text-white rounded-lg transition-colors cursor-pointer"
+                >
+                  Close [ESC]
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-5 overflow-y-auto flex-1 space-y-4">
+                {auditLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12 space-y-3">
+                    <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Compiling activities...</span>
+                  </div>
+                ) : auditLogs.length === 0 ? (
+                  <div className="text-center py-12">
+                    <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block mb-2">No activity logs recorded</span>
+                    <p className="text-xs text-zinc-600 max-w-xs mx-auto leading-relaxed">
+                      Transactions or modifications completed on this project will stream real-time events to this terminal securely.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 font-mono text-left">
+                    {auditLogs.map((log) => (
+                      <div key={log.id} className="p-3 bg-black/45 border border-neutral-900 rounded-2xl space-y-2 text-[11px] leading-relaxed relative hover:border-neutral-800 transition-all">
+                        <div className="flex items-start justify-between gap-2 border-b border-neutral-950 pb-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold uppercase ${
+                              log.status === "Success" 
+                                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" 
+                                : "bg-red-500/10 text-red-400 border border-red-500/20"
+                            }`}>
+                              {log.eventType}
+                            </span>
+                            <span className="text-[9px] text-zinc-500">
+                              By {log.actor}
+                            </span>
+                          </div>
+                          <span className="text-[9px] text-zinc-500 text-right">
+                            {new Date(log.timestamp).toLocaleTimeString()} • {new Date(log.timestamp).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="text-zinc-300">
+                          {log.notes}
+                        </div>
+                        <div className="text-[8px] text-zinc-600 truncate">
+                          Request Ref: {log.requestId}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-4 bg-neutral-950 border-t border-neutral-900 flex justify-between items-center text-[9px] font-mono text-zinc-500">
+                <span>DURABLE CLOUD SYNC: VERIFIED</span>
+                <span className="text-amber-500/80">CodeFuser Stateless System Logs</span>
+              </div>
             </div>
           </div>
         )}

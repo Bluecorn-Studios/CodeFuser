@@ -1,6 +1,4 @@
-import fs from "fs";
-import path from "path";
-import os from "os";
+import { getSupabase } from "./supabase.js";
 
 export interface OfficialQuoteRecord {
   packageName: string;
@@ -36,159 +34,171 @@ export interface ExtraProjectData {
   portalAccessSource?: "automatic" | "manual"; // "automatic" | "manual"
 }
 
-const isVercel = !!process.env.VERCEL;
-const STORE_FILE = isVercel
-  ? path.join(os.tmpdir(), "fuser_extra_store.json")
-  : path.join(process.cwd(), "server", "fuser_extra_store.json");
-
-// Ensure store directory exists
-function ensureFile() {
-  const dir = path.dirname(STORE_FILE);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  if (!fs.existsSync(STORE_FILE)) {
-    fs.writeFileSync(STORE_FILE, JSON.stringify({}), "utf8");
-  }
-}
-
+// virtual readStore / writeStore are no-ops to preserve import patterns or fallback logic if called elsewhere
 export function readStore(): Record<string, ExtraProjectData> {
-  ensureFile();
-  try {
-    const content = fs.readFileSync(STORE_FILE, "utf8");
-    return JSON.parse(content || "{}");
-  } catch (err) {
-    console.error("Failed to read fuser_extra_store.json:", err);
-    return {};
-  }
+  console.warn("fuser_extra_store JSON store is obsolete. Data is now read from Supabase DB.");
+  return {};
 }
 
 export function writeStore(data: Record<string, ExtraProjectData>) {
-  ensureFile();
-  try {
-    fs.writeFileSync(STORE_FILE, JSON.stringify(data, null, 2), "utf8");
-  } catch (err) {
-    console.error("Failed to write fuser_extra_store.json:", err);
-  }
+  console.warn("fuser_extra_store JSON store is obsolete. Data is now written directly to Supabase DB.");
 }
 
-export function getExtraData(projectId: string): ExtraProjectData {
-  const store = readStore();
-  if (!store[projectId]) {
-    store[projectId] = {
+export async function getExtraData(projectId: string): Promise<ExtraProjectData> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("id", projectId)
+    .single();
+
+  if (error || !data) {
+    return {
       projectId,
       quote: null,
-      assets: [],
-      paymentStatus: "unpaid",
-      portalAccess: false,
-      paymentProvider: "",
-      paymentId: "",
-      orderId: "",
-      purchasedPlan: "",
-      purchaseDate: "",
-      portalAccessSource: "automatic"
+      assets: []
     };
-    writeStore(store);
-  } else {
-    let modified = false;
-    if (store[projectId].paymentStatus === undefined) {
-      store[projectId].paymentStatus = "unpaid";
-      modified = true;
-    }
-    if (store[projectId].portalAccess === undefined) {
-      store[projectId].portalAccess = false;
-      modified = true;
-    }
-    if (store[projectId].paymentProvider === undefined) {
-      store[projectId].paymentProvider = "";
-      modified = true;
-    }
-    if (store[projectId].paymentId === undefined) {
-      store[projectId].paymentId = "";
-      modified = true;
-    }
-    if (store[projectId].orderId === undefined) {
-      store[projectId].orderId = "";
-      modified = true;
-    }
-    if (store[projectId].purchasedPlan === undefined) {
-      store[projectId].purchasedPlan = "";
-      modified = true;
-    }
-    if (store[projectId].purchaseDate === undefined) {
-      store[projectId].purchaseDate = "";
-      modified = true;
-    }
-    if (store[projectId].portalAccessSource === undefined) {
-      store[projectId].portalAccessSource = "automatic";
-      modified = true;
-    }
-    if (modified) {
-      writeStore(store);
-    }
   }
-  
+
+  const extra: ExtraProjectData = {
+    projectId,
+    quote: data.quote || null,
+    assets: data.assets || [],
+    paymentStatus: data.payment_status || "unpaid",
+    portalAccess: data.portal_access || false,
+    paymentProvider: data.payment_provider || "",
+    paymentId: data.payment_id || "",
+    orderId: data.order_id || "",
+    purchasedPlan: data.purchased_plan || "",
+    purchaseDate: data.purchase_date || "",
+    portalAccessSource: data.portal_access_source || "automatic"
+  };
+
   // Dynamically update quote status on retrieval if expired
-  const data = store[projectId];
-  if (data.quote && data.quote.status !== "expired") {
+  if (extra.quote && extra.quote.status !== "expired") {
     const now = new Date();
-    const expiry = new Date(data.quote.expiryDate);
+    const expiry = new Date(extra.quote.expiryDate);
     if (now > expiry) {
-      data.quote.status = "expired";
-      writeStore(store);
+      extra.quote.status = "expired";
+      // Save the updated status back to DB asynchronously
+      supabase.from("projects").update({ quote: extra.quote }).eq("id", projectId).then();
     } else {
       // Check if expiring soon (less than 24 hours left)
       const diffMs = expiry.getTime() - now.getTime();
       const diffHours = diffMs / (1000 * 60 * 60);
-      if (diffHours <= 24 && data.quote.status !== "expiring") {
-        data.quote.status = "expiring";
-        writeStore(store);
+      if (diffHours <= 24 && extra.quote.status !== "expiring") {
+        extra.quote.status = "expiring";
+        supabase.from("projects").update({ quote: extra.quote }).eq("id", projectId).then();
       }
     }
   }
-  
-  return data;
+
+  // Generate secure signed URLs for private assets stored in Supabase Storage buckets
+  if (extra.assets && extra.assets.length > 0) {
+    const bucketName = "codefuser-assets";
+    const signedAssets: AssetFileRecord[] = [];
+    
+    for (const asset of extra.assets) {
+      if (asset.url && (asset.url.startsWith("/uploads/") || asset.url.startsWith("http://") || asset.url.startsWith("https://"))) {
+        // Legacy local uploads or already fully-qualified URLs: serve directly to preserve backwards compatibility
+        signedAssets.push(asset);
+      } else if (asset.url) {
+        // This is a private Supabase Storage object path (e.g. "PROJ-123/filename.png")
+        try {
+          const pathKey = asset.url.replace(/^storage:\/\/codefuser-assets\//, "");
+          const { data: signedData, error: signError } = await supabase.storage
+            .from(bucketName)
+            .createSignedUrl(pathKey, 3600); // 1-hour expiration
+
+          if (!signError && signedData) {
+            signedAssets.push({
+              ...asset,
+              url: signedData.signedUrl
+            });
+          } else {
+            console.error(`[Signed URL Error] Failed to generate for path ${pathKey}:`, signError?.message);
+            signedAssets.push(asset);
+          }
+        } catch (err) {
+          console.error("[Signed URL Catch] Failed for asset:", err);
+          signedAssets.push(asset);
+        }
+      } else {
+        signedAssets.push(asset);
+      }
+    }
+    extra.assets = signedAssets;
+  }
+
+  return extra;
 }
 
-export function updateQuote(projectId: string, quote: Omit<OfficialQuoteRecord, "status" | "expiryDate" | "timestamp"> | null): ExtraProjectData {
-  const store = readStore();
-  if (!store[projectId]) {
-    store[projectId] = { projectId, quote: null, assets: [] };
-  }
-  
-  if (quote === null) {
-    store[projectId].quote = null;
-  } else {
+export async function updateQuote(
+  projectId: string,
+  quote: Omit<OfficialQuoteRecord, "status" | "expiryDate" | "timestamp"> | null
+): Promise<ExtraProjectData> {
+  const supabase = getSupabase();
+  let dbQuote: OfficialQuoteRecord | null = null;
+
+  if (quote !== null) {
     const timestamp = new Date().toISOString();
-    // Expiry date is 7 days from now
     const expiry = new Date();
-    expiry.setDate(expiry.getDate() + 7);
-    
-    store[projectId].quote = {
+    expiry.setDate(expiry.getDate() + 7); // Valid for 7 days
+
+    dbQuote = {
       ...quote,
       timestamp,
       expiryDate: expiry.toISOString(),
       status: "active"
     };
   }
-  
-  writeStore(store);
-  return store[projectId];
+
+  const { error } = await supabase
+    .from("projects")
+    .update({ quote: dbQuote })
+    .eq("id", projectId);
+
+  if (error) {
+    throw new Error(`Failed to update quote in Supabase: ${error.message}`);
+  }
+
+  return getExtraData(projectId);
 }
 
-export function addAssetFile(projectId: string, file: Omit<AssetFileRecord, "id" | "timestamp">): ExtraProjectData {
-  const store = readStore();
-  if (!store[projectId]) {
-    store[projectId] = { projectId, quote: null, assets: [] };
+export async function addAssetFile(
+  projectId: string,
+  file: Omit<AssetFileRecord, "id" | "timestamp">
+): Promise<ExtraProjectData> {
+  const supabase = getSupabase();
+
+  // Retrieve current assets array
+  const { data: projData, error: fetchErr } = await supabase
+    .from("projects")
+    .select("assets")
+    .eq("id", projectId)
+    .single();
+
+  if (fetchErr) {
+    throw new Error(`Failed to retrieve project assets for update: ${fetchErr.message}`);
   }
-  
+
+  const existingAssets: AssetFileRecord[] = projData?.assets || [];
   const newFile: AssetFileRecord = {
     ...file,
     id: `ASSET-${Date.now()}`,
     timestamp: new Date().toISOString()
   };
-  
-  store[projectId].assets.push(newFile);
-  writeStore(store);
-  return store[projectId];
+
+  const updatedAssets = [...existingAssets, newFile];
+
+  const { error: updateErr } = await supabase
+    .from("projects")
+    .update({ assets: updatedAssets })
+    .eq("id", projectId);
+
+  if (updateErr) {
+    throw new Error(`Failed to append uploaded asset: ${updateErr.message}`);
+  }
+
+  return getExtraData(projectId);
 }

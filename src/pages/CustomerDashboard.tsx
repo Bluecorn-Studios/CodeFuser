@@ -26,7 +26,7 @@ import {
   ArrowUpRight
 } from "lucide-react";
 import { useAppRouter } from "../components/Reveal";
-import { getAuthUser, clearAuthSession } from "../utils/auth";
+import { getAuthUser, clearAuthSession, getAuthToken } from "../utils/auth";
 import { supabase } from "../lib/supabase";
 import { safeLocalStorage } from "../utils/safeStorage";
 
@@ -75,6 +75,24 @@ interface OfficialQuoteRecord {
   timestamp: string;
   expiryDate: string;
   status: "active" | "expiring" | "expired";
+  proposal?: {
+    content: string;
+    status: "draft" | "sent";
+    timestamp: string;
+  } | null;
+  checklist?: {
+    id: string;
+    task: string;
+    completed: boolean;
+  }[] | null;
+  deliverables?: {
+    id: string;
+    name: string;
+    category: string;
+    size: number;
+    url: string;
+    timestamp: string;
+  }[] | null;
 }
 
 interface ExtraProjectData {
@@ -83,9 +101,61 @@ interface ExtraProjectData {
   assets: AssetFileRecord[];
 }
 
+function parseMarkdown(text: string) {
+  if (!text) return null;
+  const lines = text.split("\n");
+  return lines.map((line, idx) => {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("### ")) {
+      return <h4 key={idx} className="text-xs font-mono font-bold text-amber-500 uppercase tracking-wider mt-4 mb-2">{trimmed.replace("### ", "")}</h4>;
+    }
+    if (trimmed.startsWith("## ")) {
+      return <h3 key={idx} className="text-xs font-mono font-bold text-amber-500 uppercase tracking-widest border-b border-neutral-900 pb-1.5 mt-5 mb-2">{trimmed.replace("## ", "")}</h3>;
+    }
+    if (trimmed.startsWith("# ")) {
+      return <h2 key={idx} className="text-sm font-black text-white uppercase tracking-tight mt-6 mb-3">{trimmed.replace("# ", "")}</h2>;
+    }
+    if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+      return (
+        <div key={idx} className="flex gap-2 text-xs text-neutral-300 leading-relaxed mt-1 pl-2">
+          <span className="text-amber-500">•</span>
+          <span>{trimmed.replace(/^[-*]\s+/, "")}</span>
+        </div>
+      );
+    }
+    if (trimmed === "") {
+      return <div key={idx} className="h-2" />;
+    }
+    return <p key={idx} className="text-xs text-neutral-400 leading-relaxed mt-1">{trimmed}</p>;
+  });
+}
+
 export default function CustomerDashboard() {
   const { navigate } = useAppRouter();
   const [projectId, setProjectId] = useState<string | null>(null);
+  
+  const handleDownloadAsset = async (assetId: string, fallbackUrl: string) => {
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`/api/projects/${projectId}/assets/${assetId}/download-url`, {
+        headers: {
+          "Authorization": `Bearer ${token || ""}`
+        }
+      });
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.url) {
+          window.open(result.url, "_blank");
+          return;
+        }
+      }
+      window.open(fallbackUrl, "_blank");
+    } catch (err) {
+      console.error("Failed to fetch secure download link:", err);
+      window.open(fallbackUrl, "_blank");
+    }
+  };
+
   const [project, setProject] = useState<ProjectRecord | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -124,7 +194,11 @@ export default function CustomerDashboard() {
     setIsLoading(true);
     let activeId: string | null = null;
     try {
-      const response = await fetch(`/api/projects?userId=${user.id}&email=${user.email}`);
+      const response = await fetch(`/api/projects?userId=${user.id}&email=${user.email}`, {
+        headers: {
+          "Authorization": `Bearer ${getAuthToken() || ""}`
+        }
+      });
       if (response.ok) {
         const data = await response.json();
         const found = data.projects && data.projects[0];
@@ -168,7 +242,11 @@ export default function CustomerDashboard() {
     setExtraLoading(true);
     setExtraError(null);
     try {
-      const res = await fetch(`/api/projects/${projId}/extra`);
+      const res = await fetch(`/api/projects/${projId}/extra`, {
+        headers: {
+          "Authorization": `Bearer ${getAuthToken() || ""}`
+        }
+      });
       if (res.ok) {
         const body = await res.json();
         if (body.success && body.data) {
@@ -234,7 +312,10 @@ export default function CustomerDashboard() {
         
         const response = await fetch(`/api/projects/${project.id}/upload`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${getAuthToken() || ""}`
+          },
           body: JSON.stringify({
             name: file.name,
             type: file.type,
@@ -288,7 +369,10 @@ export default function CustomerDashboard() {
     try {
       const response = await fetch(`/api/projects/${project.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${getAuthToken() || ""}`
+        },
         body: JSON.stringify(payload)
       });
 
@@ -601,7 +685,12 @@ export default function CustomerDashboard() {
                 onClick={async () => {
                   if (!confirm("Are you sure you want to release your locked price quote? Standard dynamic packages will resume.")) return;
                   try {
-                    const res = await fetch(`/api/projects/${project.id}/quote/reset`, { method: "POST" });
+                    const res = await fetch(`/api/projects/${project.id}/quote/reset`, { 
+                      method: "POST",
+                      headers: {
+                        "Authorization": `Bearer ${getAuthToken() || ""}`
+                      }
+                    });
                     if (res.ok) {
                       const b = await res.json();
                       if (b.success) {
@@ -657,6 +746,150 @@ export default function CustomerDashboard() {
             {getEstimatedNextStep(project.status)}
           </div>
         </section>
+
+
+        {/* Phase 6: Strategic AI Proposal, Launch Checklist, and Deliverables Vault */}
+        
+        {/* 1. AI STRATEGIC PROPOSAL & BLUEPRINT */}
+        {extraStore.quote?.proposal && extraStore.quote.proposal.status === "sent" && (
+          <section id="ai-proposal-blueprint" className="bg-[#050505] border border-neutral-900 rounded-3xl p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-neutral-900 pb-3">
+              <h3 className="text-xs font-mono font-black uppercase tracking-widest text-amber-500 flex items-center gap-1.5 font-bold">
+                📑 AI Strategy Blueprint & Proposal
+              </h3>
+              <span className="text-[8px] font-mono text-zinc-500 uppercase font-black">Official release</span>
+            </div>
+
+            <div className="bg-[#020202] border border-neutral-900 rounded-2xl p-4 max-h-[350px] overflow-y-auto font-sans text-neutral-300">
+              {parseMarkdown(extraStore.quote.proposal.content)}
+            </div>
+
+            <div className="flex justify-between items-center bg-[#090909] border border-neutral-900 px-3 py-2 rounded-2xl text-[10px] font-mono uppercase tracking-wider text-zinc-500">
+              <span>Status: <span className="text-emerald-400 font-bold">APPROVED & RELEASED</span></span>
+              <span>Released: {new Date(extraStore.quote.proposal.timestamp).toLocaleDateString()}</span>
+            </div>
+          </section>
+        )}
+
+        {/* 2. CONFIGURABLE LAUNCH CHECKLIST */}
+        {extraStore.quote?.checklist && extraStore.quote.checklist.length > 0 && (
+          <section id="launch-checklist" className="bg-[#050505] border border-neutral-900 rounded-3xl p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-neutral-900 pb-3">
+              <h3 className="text-xs font-mono font-black uppercase tracking-widest text-[#94a3b8] flex items-center gap-1.5 font-bold">
+                📋 Live Launch Checklist
+              </h3>
+              <span className="text-[8px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded uppercase font-bold">Real-time Sync</span>
+            </div>
+
+            <p className="text-[11px] text-zinc-400 leading-normal font-sans">
+              Track the final technical milestones for your platform deployment. You can toggle completed items as we finalize setups.
+            </p>
+
+            <div className="bg-neutral-950 border border-neutral-900 rounded-2xl p-3.5 space-y-2.5">
+              {extraStore.quote.checklist.map((item: any) => (
+                <div 
+                  key={item.id} 
+                  onClick={async () => {
+                    const updatedChecklist = extraStore.quote!.checklist!.map((c: any) => 
+                      c.id === item.id ? { ...c, completed: !c.completed } : c
+                    );
+                    const updatedQuote = {
+                      ...extraStore.quote,
+                      checklist: updatedChecklist
+                    };
+                    setExtraStore((prev: any) => ({ ...prev, quote: updatedQuote as any }));
+
+                    try {
+                      await fetch(`/api/projects/${project.id}/checklist/save`, {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          "Authorization": `Bearer ${getAuthToken() || ""}`
+                        },
+                        body: JSON.stringify({ checklist: updatedChecklist })
+                      });
+                    } catch (err) {
+                      console.error("Failed to sync checklist toggle:", err);
+                    }
+                  }}
+                  className="flex items-center gap-3 bg-[#050505] border border-neutral-900/60 p-2.5 rounded-xl hover:border-neutral-800 transition-all cursor-pointer group"
+                >
+                  <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all ${
+                    item.completed 
+                      ? "bg-amber-500 border-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)]" 
+                      : "border-neutral-800 group-hover:border-neutral-600"
+                  }`}>
+                    {item.completed && <Check size={11} className="text-black font-extrabold stroke-[3]" />}
+                  </div>
+                  <span className={`text-[11.5px] font-sans font-medium leading-relaxed transition-all ${
+                    item.completed ? "line-through text-zinc-600" : "text-zinc-200"
+                  }`}>
+                    {item.task}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* 3. DELIVERABLES VAULT */}
+        {extraStore.quote?.deliverables && extraStore.quote.deliverables.length > 0 && (
+          <section id="deliverables-vault" className="bg-[#050505] border border-neutral-900 rounded-3xl p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-neutral-900 pb-3">
+              <h3 className="text-xs font-mono font-black uppercase tracking-widest text-[#94a3b8] flex items-center gap-1.5 font-bold">
+                🔒 Secure Deliverables Vault
+              </h3>
+              <span className="text-[8px] font-mono text-amber-500 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded uppercase font-bold">Encrypted</span>
+            </div>
+
+            <p className="text-[11px] text-zinc-400 leading-normal font-sans">
+              Your official project deliverables have been compiled, verified, and locked inside our encrypted system vault.
+            </p>
+
+            <div className="space-y-4 font-sans">
+              {(() => {
+                const categories = ["Brand Assets", "Code Bundle", "Database Blueprint", "UI Layouts"];
+                return categories.map((cat) => {
+                  const items = extraStore.quote!.deliverables!.filter((item: any) => item.category === cat);
+                  if (items.length === 0) return null;
+
+                  return (
+                    <div key={cat} className="space-y-2">
+                      <span className="block text-[8.5px] font-mono text-amber-500 uppercase tracking-wide font-extrabold">
+                        🏷️ {cat}
+                      </span>
+                      <div className="space-y-2">
+                        {items.map((item: any) => (
+                          <div key={item.id} className="p-3 bg-neutral-950 border border-neutral-900 rounded-2xl flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <span className="text-xs font-bold text-zinc-200 block truncate">{item.name}</span>
+                              <span className="text-[8.5px] font-mono text-zinc-500 mt-0.5 block">
+                                {(item.size / 1024).toFixed(1)} KB • Verified Deliverable
+                              </span>
+                            </div>
+                            <button
+                              onClick={async () => {
+                                const matchingAsset = extraStore.assets?.find((a: any) => a.url === item.url);
+                                if (matchingAsset) {
+                                  handleDownloadAsset(matchingAsset.id, item.url);
+                                } else {
+                                  window.open(item.url, "_blank");
+                                }
+                              }}
+                              className="px-3 py-1.5 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-[10px] font-mono font-bold uppercase rounded-xl text-amber-500 hover:text-white transition-all cursor-pointer"
+                            >
+                              Download
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </section>
+        )}
 
 
         {/* 2. PRIMARY ACTION CARD */}
@@ -1055,14 +1288,12 @@ export default function CustomerDashboard() {
                               {Math.round(asset.size / 1024)} KB • {asset.type.split('/')[1]?.toUpperCase() || 'FILE'}
                             </span>
                           </div>
-                          <a 
-                            href={asset.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="p-1.5 px-3 bg-neutral-900 border border-neutral-800 text-[9px] font-mono font-bold uppercase text-amber-500 tracking-wider hover:bg-neutral-850 hover:text-white rounded-lg shrink-0 transition-colors"
+                          <button 
+                            onClick={() => handleDownloadAsset(asset.id, asset.url)}
+                            className="p-1.5 px-3 bg-neutral-900 border border-neutral-800 text-[9px] font-mono font-bold uppercase text-amber-500 tracking-wider hover:bg-neutral-850 hover:text-white rounded-lg shrink-0 transition-colors cursor-pointer"
                           >
                             View Raw
-                          </a>
+                          </button>
                         </div>
                       ))}
                     </div>

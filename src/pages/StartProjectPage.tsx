@@ -27,7 +27,7 @@ import {
 import { useAppRouter, b as getMailtoLink, w as getWhatsAppLink } from '../components/Reveal';
 import { PagePath, PricingPlan } from '../types';
 import { pricingPlans } from '../components/Pricing';
-import { getAuthUser } from '../utils/auth';
+import { getAuthUser, getAuthToken } from '../utils/auth';
 import { supabase } from '../lib/supabase';
 import { safeLocalStorage } from '../utils/safeStorage';
 
@@ -593,7 +593,10 @@ export const StartProjectPage: React.FC = () => {
 
       const response = await fetch("/api/projects", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${getAuthToken() || ""}`
+        },
         body: JSON.stringify(payload),
       });
 
@@ -2114,7 +2117,10 @@ ${formData.ownerName}
                                 // Lock quote
                                 await fetch(`/api/projects/${projId}/quote`, {
                                   method: "POST",
-                                  headers: { "Content-Type": "application/json" },
+                                  headers: { 
+                                    "Content-Type": "application/json",
+                                    "Authorization": `Bearer ${getAuthToken() || ""}`
+                                  },
                                   body: JSON.stringify({
                                     packageName: finalSelCardForPayment.name || "Selected Package",
                                     price: finalPrice,
@@ -2127,7 +2133,10 @@ ${formData.ownerName}
                                 // Bypass verification with simulated payload
                                 const verifyRes = await fetch(`/api/projects/${projId}/verify-payment`, {
                                   method: "POST",
-                                  headers: { "Content-Type": "application/json" },
+                                  headers: { 
+                                    "Content-Type": "application/json",
+                                    "Authorization": `Bearer ${getAuthToken() || ""}`
+                                  },
                                   body: JSON.stringify({
                                     razorpay_order_id: "order_mock_" + Math.random().toString(36).substring(2, 9),
                                     razorpay_payment_id: "pay_mock_" + Math.random().toString(36).substring(2, 9),
@@ -2190,7 +2199,10 @@ ${formData.ownerName}
                     try {
                       const quoteRes = await fetch(`/api/projects/${projId}/quote`, {
                         method: "POST",
-                        headers: { "Content-Type": "application/json" },
+                        headers: { 
+                          "Content-Type": "application/json",
+                          "Authorization": `Bearer ${getAuthToken() || ""}`
+                        },
                         body: JSON.stringify({
                           packageName: finalSelCardForPayment.name || "Selected Package",
                           price: finalPrice,
@@ -2226,7 +2238,10 @@ ${formData.ownerName}
                     try {
                       const orderRes = await fetch(`/api/projects/${projId}/razorpay-order`, {
                         method: "POST",
-                        headers: { "Content-Type": "application/json" },
+                        headers: { 
+                          "Content-Type": "application/json",
+                          "Authorization": `Bearer ${getAuthToken() || ""}`
+                        },
                         body: JSON.stringify({ term: selectedPaymentTerm })
                       });
                       orderData = await orderRes.json();
@@ -2281,7 +2296,10 @@ ${formData.ownerName}
                           try {
                             const verifyRes = await fetch(`/api/projects/${projId}/verify-payment`, {
                               method: "POST",
-                              headers: { "Content-Type": "application/json" },
+                              headers: { 
+                                "Content-Type": "application/json",
+                                "Authorization": `Bearer ${getAuthToken() || ""}`
+                              },
                               body: JSON.stringify({
                                 razorpay_order_id: response.razorpay_order_id,
                                 razorpay_payment_id: response.razorpay_payment_id,

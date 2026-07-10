@@ -1,5 +1,6 @@
-import { createClient } from "@supabase/supabase-js";
-import { getExtraData, readStore, writeStore } from "./extra_store.js";
+import { getExtraData } from "./extra_store.js";
+import { withRetry } from "./retry.js";
+import { getSupabase } from "./supabase.js";
 
 export interface ProjectRecord {
   id: string;
@@ -27,24 +28,11 @@ export interface ProjectRecord {
   purchasedPlan?: string; // e.g. "Track A - custom"
   purchaseDate?: string; // ISO string
   portalAccessSource?: "automatic" | "manual"; // "automatic" | "manual"
+  quote?: any;
+  assets?: any[];
 }
 
-// Lazy Supabase Client
-let supabaseClient: any = null;
-export function getSupabase() {
-  if (!supabaseClient) {
-    const url = process.env.SUPABASE_URL;
-    const key = process.env.SUPABASE_ANON_KEY;
-    if (!url || !key) {
-      throw new Error("Supabase credentials are not configured in environment (missing SUPABASE_URL or SUPABASE_ANON_KEY).");
-    }
-    console.log("Supabase config detected. Initializing Supabase client.");
-    supabaseClient = createClient(url, key);
-  }
-  return supabaseClient;
-}
-
-export async function addProject(proj: Omit<ProjectRecord, "id" | "timestamp" | "status">): Promise<ProjectRecord> {
+export async function addProject(proj: Omit<ProjectRecord, "id" | "timestamp" | "status">, reqId: string = "N/A"): Promise<ProjectRecord> {
   const newProject: ProjectRecord = {
     id: `PROJ-${Date.now()}`,
     timestamp: new Date().toISOString(),
@@ -65,81 +53,91 @@ export async function addProject(proj: Omit<ProjectRecord, "id" | "timestamp" | 
   
   const payload: any = {
     id: newProject.id,
-    client_name: newProject.clientName,
-    business_name: newProject.businessName,
-    email: newProject.email,
-    whatsapp: newProject.whatsapp,
-    selected_package: newProject.selectedPackage,
-    ownership_choice: newProject.ownershipChoice,
-    industry: newProject.industry,
-    custom_industry: newProject.customIndustry,
-    goal: newProject.goal,
-    custom_goal: newProject.customGoal,
-    has_domain: newProject.hasDomain,
-    has_logo: newProject.hasLogo,
-    content_ready: newProject.contentReady,
+    client_name: newProject.clientName || "",
+    business_name: newProject.businessName || "",
+    email: newProject.email || "",
+    whatsapp: newProject.whatsapp || "",
+    selected_package: newProject.selectedPackage || "growth",
+    ownership_choice: newProject.ownershipChoice || "",
+    industry: newProject.industry || "",
+    custom_industry: newProject.customIndustry || "",
+    goal: newProject.goal || "",
+    custom_goal: newProject.customGoal || "",
+    has_domain: newProject.hasDomain || "",
+    has_logo: newProject.hasLogo || "",
+    content_ready: newProject.contentReady || "",
     timestamp: newProject.timestamp,
-    status: newProject.status,
+    status: newProject.status || "Assets Pending",
+    payment_status: newProject.paymentStatus || "unpaid",
+    portal_access: newProject.portalAccess ?? false,
+    payment_provider: newProject.paymentProvider || "",
+    payment_id: newProject.paymentId || "",
+    order_id: newProject.orderId || "",
+    purchased_plan: newProject.purchasedPlan || "",
+    purchase_date: newProject.purchaseDate || null,
+    portal_access_source: newProject.portalAccessSource || "automatic",
+    quote: null,
+    assets: []
   };
 
   if (newProject.userId) {
     payload.user_id = newProject.userId;
   }
   
-  let { error } = await supabase
-    .from("projects")
-    .insert([payload]);
-
-  // If the user_id column lacks representation in the user's remote schema, gracefully bypass
-  if (error && (error.message.includes("user_id") || error.message.includes("column"))) {
-    console.warn("user_id column is absent or caused a database constraints warning. Retrying insert without user_id.");
-    delete payload.user_id;
-    const retry = await supabase
+  await withRetry(async () => {
+    let { error } = await supabase
       .from("projects")
       .insert([payload]);
-    error = retry.error;
-  }
-  
-  if (error) {
-    throw new Error(`Supabase integration error: ${error.message}`);
-  }
 
-  // Also initialize extra store values for the new project
-  const extra = getExtraData(newProject.id);
-  extra.paymentStatus = newProject.paymentStatus;
-  extra.portalAccess = newProject.portalAccess;
-  extra.paymentProvider = newProject.paymentProvider;
-  extra.paymentId = newProject.paymentId;
-  extra.orderId = newProject.orderId;
-  extra.purchasedPlan = newProject.purchasedPlan;
-  extra.purchaseDate = newProject.purchaseDate;
-  extra.portalAccessSource = newProject.portalAccessSource;
-  const store = readStore();
-  store[newProject.id] = extra;
-  writeStore(store);
+    if (error && (error.message.includes("user_id") || error.message.includes("column"))) {
+      console.warn("user_id column is absent. Retrying insert without user_id.");
+      const payloadNoUserId = { ...payload };
+      delete payloadNoUserId.user_id;
+      const retry = await supabase
+        .from("projects")
+        .insert([payloadNoUserId]);
+      error = retry.error;
+    }
 
-  console.log("Successfully synchronized to Supabase and extra store!");
+    if (error) {
+      throw new Error(`Supabase integration error: ${error.message}`);
+    }
+  }, {
+    reqId,
+    operationName: "Supabase INSERT (addProject)",
+    isIdempotent: true
+  });
+
+  console.log("Successfully synchronized new project to Supabase!");
   return newProject;
 }
 
-export async function getProjects(): Promise<ProjectRecord[]> {
+export async function getProjects(reqId: string = "N/A"): Promise<ProjectRecord[]> {
   const supabase = getSupabase();
   console.log("Retrieving projects from Supabase...");
   
-  const { data, error } = await supabase
-    .from("projects")
-    .select("*")
-    .order("timestamp", { ascending: false });
+  const data = await withRetry(async () => {
+    const { data: resData, error } = await supabase
+      .from("projects")
+      .select("*")
+      .order("timestamp", { ascending: false });
 
-  if (error) {
-    throw new Error(`Supabase query error: ${error.message}`);
-  }
+    if (error) {
+      throw new Error(`Supabase query error: ${error.message}`);
+    }
+    return resData;
+  }, {
+    reqId,
+    operationName: "Supabase SELECT (getProjects)",
+    isIdempotent: true
+  });
 
   if (!data) return [];
 
-  return data.map((item: any) => {
-    const extra = getExtraData(item.id);
-    return {
+  const projects: ProjectRecord[] = [];
+  
+  for (const item of data) {
+    projects.push({
       id: item.id || `PROJ-${Date.now()}`,
       clientName: item.client_name || item.clientName || "",
       businessName: item.business_name || item.businessName || "",
@@ -157,95 +155,68 @@ export async function getProjects(): Promise<ProjectRecord[]> {
       timestamp: item.timestamp || "",
       status: item.status || "Assets Pending",
       userId: item.user_id || item.userId || "",
-      paymentStatus: item.payment_status || item.paymentStatus || extra.paymentStatus || "unpaid",
-      portalAccess: item.portal_access !== undefined ? item.portal_access : (item.portalAccess !== undefined ? item.portalAccess : (extra.portalAccess ?? false)),
-      paymentProvider: item.payment_provider || item.paymentProvider || extra.paymentProvider || "",
-      paymentId: item.payment_id || item.paymentId || extra.paymentId || "",
-      orderId: item.order_id || item.orderId || extra.orderId || "",
-      purchasedPlan: item.purchased_plan || item.purchasedPlan || extra.purchasedPlan || "",
-      purchaseDate: item.purchase_date || item.purchaseDate || extra.purchaseDate || "",
-      portalAccessSource: item.portal_access_source || item.portalAccessSource || extra.portalAccessSource || "automatic",
-    };
-  });
+      paymentStatus: item.payment_status !== null && item.payment_status !== undefined ? item.payment_status : "unpaid",
+      portalAccess: item.portal_access !== null && item.portal_access !== undefined ? item.portal_access : false,
+      paymentProvider: item.payment_provider || "",
+      paymentId: item.payment_id || "",
+      orderId: item.order_id || "",
+      purchasedPlan: item.purchased_plan || "",
+      purchaseDate: item.purchase_date || "",
+      portalAccessSource: item.portal_access_source || "automatic",
+      quote: item.quote || null,
+      assets: item.assets || []
+    });
+  }
+
+  return projects;
 }
 
-export async function updateProject(id: string, updates: Partial<ProjectRecord>): Promise<ProjectRecord> {
+export async function updateProject(id: string, updates: Partial<ProjectRecord>, reqId: string = "N/A"): Promise<ProjectRecord> {
   const supabase = getSupabase();
   console.log(`Updating project ${id} in Supabase...`);
   
-  // Sync with extra store first
-  if (
-    updates.paymentStatus !== undefined ||
-    updates.portalAccess !== undefined ||
-    updates.paymentProvider !== undefined ||
-    updates.paymentId !== undefined ||
-    updates.orderId !== undefined ||
-    updates.purchasedPlan !== undefined ||
-    updates.purchaseDate !== undefined ||
-    updates.portalAccessSource !== undefined
-  ) {
-    const store = readStore();
-    if (!store[id]) {
-      store[id] = { projectId: id, quote: null, assets: [] };
-    }
-    if (updates.paymentStatus !== undefined) store[id].paymentStatus = updates.paymentStatus;
-    if (updates.portalAccess !== undefined) store[id].portalAccess = updates.portalAccess;
-    if (updates.paymentProvider !== undefined) store[id].paymentProvider = updates.paymentProvider;
-    if (updates.paymentId !== undefined) store[id].paymentId = updates.paymentId;
-    if (updates.orderId !== undefined) store[id].orderId = updates.orderId;
-    if (updates.purchasedPlan !== undefined) store[id].purchasedPlan = updates.purchasedPlan;
-    if (updates.purchaseDate !== undefined) store[id].purchaseDate = updates.purchaseDate;
-    if (updates.portalAccessSource !== undefined) store[id].portalAccessSource = updates.portalAccessSource;
-    writeStore(store);
-  }
-
-  // Map our camelCase fields to snake_case table columns
   const dbUpdates: any = {};
   if (updates.status !== undefined) dbUpdates.status = updates.status;
   if (updates.hasDomain !== undefined) dbUpdates.has_domain = updates.hasDomain;
   if (updates.hasLogo !== undefined) dbUpdates.has_logo = updates.hasLogo;
   if (updates.contentReady !== undefined) dbUpdates.content_ready = updates.contentReady;
   
-  // Also support updating general values if passed
   if (updates.clientName !== undefined) dbUpdates.client_name = updates.clientName;
   if (updates.businessName !== undefined) dbUpdates.business_name = updates.businessName;
   if (updates.selectedPackage !== undefined) dbUpdates.selected_package = updates.selectedPackage;
   if (updates.ownershipChoice !== undefined) dbUpdates.ownership_choice = updates.ownershipChoice;
 
-  // Add payment_status and portal_access for forward compatibility
   if (updates.paymentStatus !== undefined) dbUpdates.payment_status = updates.paymentStatus;
   if (updates.portalAccess !== undefined) dbUpdates.portal_access = updates.portalAccess;
+  if (updates.paymentProvider !== undefined) dbUpdates.payment_provider = updates.paymentProvider;
+  if (updates.paymentId !== undefined) dbUpdates.payment_id = updates.paymentId;
+  if (updates.orderId !== undefined) dbUpdates.order_id = updates.orderId;
+  if (updates.purchasedPlan !== undefined) dbUpdates.purchased_plan = updates.purchasedPlan;
+  if (updates.purchaseDate !== undefined) dbUpdates.purchase_date = updates.purchaseDate;
+  if (updates.portalAccessSource !== undefined) dbUpdates.portal_access_source = updates.portalAccessSource;
 
-  let { data, error } = await supabase
-    .from("projects")
-    .update(dbUpdates)
-    .eq("id", id)
-    .select();
-    
-  // If columns don't exist in Supabase schema, retry update without them
-  if (error && (error.message.includes("payment_status") || error.message.includes("portal_access") || error.message.includes("column"))) {
-    console.warn("payment_status or portal_access column is absent. Retrying update without them.");
-    delete dbUpdates.payment_status;
-    delete dbUpdates.portal_access;
-    const retry = await supabase
+  const data = await withRetry(async () => {
+    const { data: resData, error } = await supabase
       .from("projects")
       .update(dbUpdates)
       .eq("id", id)
       .select();
-    data = retry.data;
-    error = retry.error;
-  }
-     
-  if (error) {
-    throw new Error(`Supabase update error: ${error.message}`);
-  }
+       
+    if (error) {
+      throw new Error(`Supabase update error: ${error.message}`);
+    }
+    return resData;
+  }, {
+    reqId,
+    operationName: `Supabase UPDATE (updateProject ${id})`,
+    isIdempotent: true
+  });
   
   if (!data || data.length === 0) {
     throw new Error(`Project with ID ${id} not found.`);
   }
   
   const item = data[0];
-  const extra = getExtraData(item.id);
   return {
     id: item.id,
     clientName: item.client_name || item.clientName || "",
@@ -264,14 +235,14 @@ export async function updateProject(id: string, updates: Partial<ProjectRecord>)
     timestamp: item.timestamp || "",
     status: item.status || "Assets Pending",
     userId: item.user_id || item.userId || "",
-    paymentStatus: item.payment_status || item.paymentStatus || extra.paymentStatus || "unpaid",
-    portalAccess: item.portal_access !== undefined ? item.portal_access : (item.portalAccess !== undefined ? item.portalAccess : (extra.portalAccess ?? false)),
-    paymentProvider: item.payment_provider || item.paymentProvider || extra.paymentProvider || "",
-    paymentId: item.payment_id || item.paymentId || extra.paymentId || "",
-    orderId: item.order_id || item.orderId || extra.orderId || "",
-    purchasedPlan: item.purchased_plan || item.purchasedPlan || extra.purchasedPlan || "",
-    purchaseDate: item.purchase_date || item.purchaseDate || extra.purchaseDate || "",
-    portalAccessSource: item.portal_access_source || item.portalAccessSource || extra.portalAccessSource || "automatic",
+    paymentStatus: item.payment_status !== null && item.payment_status !== undefined ? item.payment_status : "unpaid",
+    portalAccess: item.portal_access !== null && item.portal_access !== undefined ? item.portal_access : false,
+    paymentProvider: item.payment_provider || "",
+    paymentId: item.payment_id || "",
+    orderId: item.order_id || "",
+    purchasedPlan: item.purchased_plan || "",
+    purchaseDate: item.purchase_date || "",
+    portalAccessSource: item.portal_access_source || "automatic",
   };
 }
 
@@ -285,3 +256,168 @@ export async function getProjectById(id: string): Promise<ProjectRecord | null> 
   }
 }
 
+// Durable Cloud Audit Trail
+export async function logAuditEvent(event: {
+  projectId: string;
+  eventType: string;
+  requestId?: string;
+  actor: "Client" | "Admin" | "System";
+  status: "Success" | "Failed" | "Pending";
+  notes?: string;
+}) {
+  const supabase = getSupabase();
+  try {
+    const { error } = await supabase.from("audit_trail").insert([{
+      project_id: event.projectId,
+      event_type: event.eventType,
+      request_id: event.requestId || null,
+      actor: event.actor,
+      status: event.status,
+      notes: event.notes || null,
+    }]);
+    if (error) {
+      console.error("[Audit Trail Error] Failed to write event:", error.message);
+    }
+  } catch (err) {
+    console.error("[Audit Trail Error] Exception logging event:", err);
+  }
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  role: "super_admin" | "admin" | "client";
+  fullName?: string;
+  businessName?: string;
+  createdAt?: string;
+}
+
+export async function getUserProfile(id: string, reqId: string = "N/A"): Promise<UserProfile | null> {
+  const supabase = getSupabase();
+  try {
+    const data = await withRetry(async () => {
+      const { data: resData, error } = await supabase
+        .from("user_profiles")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (error) {
+        throw new Error(`Supabase select profile error: ${error.message}`);
+      }
+      return resData;
+    }, {
+      reqId,
+      operationName: `Supabase SELECT (getUserProfile ${id})`,
+      isIdempotent: true
+    });
+
+    if (!data) return null;
+
+    return {
+      id: data.id,
+      email: data.email,
+      role: data.role as any,
+      fullName: data.full_name || "",
+      businessName: data.business_name || "",
+      createdAt: data.created_at || "",
+    };
+  } catch (err) {
+    console.error(`Failed to retrieve user profile ${id}:`, err);
+    return null;
+  }
+}
+
+export async function createUserProfile(profile: Omit<UserProfile, "createdAt">, reqId: string = "N/A"): Promise<UserProfile> {
+  const supabase = getSupabase();
+  const newProfile = {
+    id: profile.id,
+    email: profile.email,
+    role: profile.role || "client",
+    full_name: profile.fullName || "",
+    business_name: profile.businessName || "",
+    created_at: new Date().toISOString()
+  };
+
+  await withRetry(async () => {
+    const { error } = await supabase
+      .from("user_profiles")
+      .insert([newProfile]);
+
+    if (error) {
+      throw new Error(`Supabase insert profile error: ${error.message}`);
+    }
+  }, {
+    reqId,
+    operationName: "Supabase INSERT (createUserProfile)",
+    isIdempotent: true
+  });
+
+  return {
+    id: newProfile.id,
+    email: newProfile.email,
+    role: newProfile.role as any,
+    fullName: newProfile.full_name,
+    businessName: newProfile.business_name,
+    createdAt: newProfile.created_at
+  };
+}
+
+export async function updateUserProfileRole(id: string, role: string, reqId: string = "N/A"): Promise<UserProfile> {
+  const supabase = getSupabase();
+  const data = await withRetry(async () => {
+    const { data: resData, error } = await supabase
+      .from("user_profiles")
+      .update({ role })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Supabase update profile role error: ${error.message}`);
+    }
+    return resData;
+  }, {
+    reqId,
+    operationName: `Supabase UPDATE (updateUserProfileRole ${id})`,
+    isIdempotent: true
+  });
+
+  return {
+    id: data.id,
+    email: data.email,
+    role: data.role as any,
+    fullName: data.full_name,
+    businessName: data.business_name,
+    createdAt: data.created_at
+  };
+}
+
+export async function getAllUserProfiles(reqId: string = "N/A"): Promise<UserProfile[]> {
+  const supabase = getSupabase();
+  const data = await withRetry(async () => {
+    const { data: resData, error } = await supabase
+      .from("user_profiles")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw new Error(`Supabase select all profiles error: ${error.message}`);
+    }
+    return resData;
+  }, {
+    reqId,
+    operationName: "Supabase SELECT (getAllUserProfiles)",
+    isIdempotent: true
+  });
+
+  if (!data) return [];
+  return data.map((item: any) => ({
+    id: item.id,
+    email: item.email,
+    role: item.role as any,
+    fullName: item.full_name,
+    businessName: item.business_name,
+    createdAt: item.created_at
+  }));
+}

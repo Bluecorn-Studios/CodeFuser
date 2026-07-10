@@ -32,3 +32,26 @@ CREATE POLICY "Enable insert access for all users" ON public.projects
 
 CREATE POLICY "Enable update access for all users" ON public.projects
   FOR UPDATE USING (true);
+
+-- SQL Schema to initialize the user_profiles table in Supabase
+CREATE TABLE IF NOT EXISTS public.user_profiles (
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL UNIQUE,
+  role TEXT DEFAULT 'client' NOT NULL,
+  full_name TEXT,
+  business_name TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable Row Level Security (RLS) on public.user_profiles table
+ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
+
+-- Create Policies to allow users to view/modify profiles, and admins/super-admins to view all profiles
+CREATE POLICY "Enable read access for user_profiles" ON public.user_profiles
+  FOR SELECT USING (true);
+
+CREATE POLICY "Enable insert access for user_profiles" ON public.user_profiles
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Enable update access for user_profiles" ON public.user_profiles
+  FOR UPDATE USING (true);
