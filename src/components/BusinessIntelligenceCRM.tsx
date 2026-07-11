@@ -526,9 +526,9 @@ export const BusinessIntelligenceCRM: React.FC<BusinessIntelligenceCRMProps> = (
               .filter(p => {
                 const query = crmSearchQuery.toLowerCase();
                 return (
-                  p.clientName.toLowerCase().includes(query) ||
-                  p.businessName.toLowerCase().includes(query) ||
-                  p.email.toLowerCase().includes(query)
+                  (p.clientName || "").toLowerCase().includes(query) ||
+                  (p.businessName || "").toLowerCase().includes(query) ||
+                  (p.email || "").toLowerCase().includes(query)
                 );
               })
               .map(p => {

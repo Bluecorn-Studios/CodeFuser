@@ -437,10 +437,10 @@ export const MissionControl: React.FC = () => {
     return projects.filter(proj => {
       const query = searchQuery.toLowerCase();
       const matchesSearch = 
-        proj.businessName.toLowerCase().includes(query) ||
-        proj.clientName.toLowerCase().includes(query) ||
-        proj.email.toLowerCase().includes(query) ||
-        proj.whatsapp.toLowerCase().includes(query);
+        (proj.businessName || "").toLowerCase().includes(query) ||
+        (proj.clientName || "").toLowerCase().includes(query) ||
+        (proj.email || "").toLowerCase().includes(query) ||
+        (proj.whatsapp || "").toLowerCase().includes(query);
 
       const matchesPlan = selectedPlanFilter === "all" || proj.selectedPackage === selectedPlanFilter;
       return matchesSearch && matchesPlan;
