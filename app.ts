@@ -1433,6 +1433,16 @@ app.post("/api/projects/:id/razorpay-order", requestTimeout(15000, "Create Razor
       }
     }
 
+    // Safely apply production-safe verification mode for the specified test account
+    const isVerificationMode = process.env.RAZORPAY_VERIFICATION_MODE === "true";
+    const isTestAccount = (project.email && project.email.toLowerCase() === "aicodefuser@gmail.com") || 
+                          (req.user?.email && req.user.email.toLowerCase() === "aicodefuser@gmail.com");
+
+    if (isVerificationMode && isTestAccount) {
+      amountInRupees = 1; // Temporarily override to ₹1 for safe live verification
+      console.log(`[RAZORPAY_VERIFICATION_MODE] Active for ${project.email || req.user?.email}. Amount overridden to ₹1.`);
+    }
+
     const amountInPaise = amountInRupees * 100;
 
     // Initialize lazy client and generate order
