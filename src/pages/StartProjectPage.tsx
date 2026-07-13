@@ -27,7 +27,7 @@ import {
 import { useAppRouter, b as getMailtoLink, w as getWhatsAppLink } from '../components/Reveal';
 import { PagePath, PricingPlan } from '../types';
 import { pricingPlans } from '../components/Pricing';
-import { getAuthUser, getAuthToken } from '../utils/auth';
+import { getAuthUser, getAuthToken, setAuthSession } from '../utils/auth';
 import { supabase } from '../lib/supabase';
 import { safeLocalStorage } from '../utils/safeStorage';
 
@@ -249,9 +249,130 @@ export const StartProjectPage: React.FC = () => {
   const [recommendationError, setRecommendationError] = useState<string | null>(null);
   const [selectedCardId, setSelectedCardId] = useState<string>('current');
 
-  // Stages: 'form' | 'ai_loading' | 'recommendations' | 'payment' | 'calendly' | 'asset_center' | 'success'
-  const [onboardingStage, setOnboardingStage] = useState<'form' | 'ai_loading' | 'recommendations' | 'payment' | 'calendly' | 'asset_center' | 'success'>('form');
+  // Stages: 'form' | 'ai_loading' | 'recommendations' | 'workspace_signup' | 'payment' | 'calendly' | 'asset_center' | 'success'
+  const [onboardingStage, setOnboardingStage] = useState<'form' | 'ai_loading' | 'recommendations' | 'workspace_signup' | 'payment' | 'calendly' | 'asset_center' | 'success'>('form');
   const [selectedPaymentTerm, setSelectedPaymentTerm] = useState<'milestone' | 'upfront'>('milestone');
+
+  // Secure Client Workspace inline auth states
+  const [authMode, setAuthMode] = useState<'signup' | 'login'>('signup');
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authConfirmPassword, setAuthConfirmPassword] = useState('');
+  const [authFullName, setAuthFullName] = useState('');
+  const [authBusinessName, setAuthBusinessName] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authSuccess, setAuthSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (onboardingStage === 'workspace_signup') {
+      setAuthEmail(formData.email || '');
+      setAuthFullName(formData.ownerName || '');
+      setAuthBusinessName(formData.businessName || '');
+      setAuthError(null);
+      setAuthSuccess(null);
+    }
+  }, [onboardingStage]);
+
+  const handleInlineAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
+    setAuthSuccess(null);
+
+    if (!authEmail || !authPassword) {
+      setAuthError("Please fill in all requested fields.");
+      return;
+    }
+
+    if (authPassword.length < 6) {
+      setAuthError("Password must be at least 6 characters long.");
+      return;
+    }
+
+    if (authMode === 'signup') {
+      if (!authFullName) {
+        setAuthError("Full Name is required.");
+        return;
+      }
+      if (!authBusinessName) {
+        setAuthError("Business Name is required.");
+        return;
+      }
+      if (authPassword !== authConfirmPassword) {
+        setAuthError("Passwords do not match.");
+        return;
+      }
+    }
+
+    setAuthLoading(true);
+
+    try {
+      const endpoint = authMode === 'signup' ? "/api/auth/signup" : "/api/auth/login";
+      const payload: any = { email: authEmail, password: authPassword };
+      
+      if (authMode === 'signup') {
+        payload.fullName = authFullName;
+        payload.businessName = authBusinessName;
+      }
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Authentication failed. Please check details.");
+      }
+
+      const userObj = {
+        id: data.user.id,
+        email: data.user.email,
+        fullName: data.user.fullName || authFullName || data.user.user_metadata?.full_name,
+        businessName: data.user.businessName || authBusinessName || data.user.user_metadata?.business_name,
+        role: data.user.role || "client",
+        user_metadata: data.user.user_metadata || {
+          full_name: authFullName,
+          business_name: authBusinessName
+        }
+      };
+      
+      const sessionToken = data.session?.access_token || "mock_valid_token_session";
+      setAuthSession(userObj, sessionToken);
+
+      // Sync formData with registered/logged in info
+      setFormData(prev => ({
+        ...prev,
+        email: authEmail,
+        ownerName: userObj.fullName || prev.ownerName,
+        businessName: userObj.businessName || prev.businessName
+      }));
+
+      // Trigger the backend's automatic lazy-migration/linking by requesting a protected resource
+      const projId = createdProjectId || safeLocalStorage.getItem('fuser_client_project_id');
+      if (projId) {
+        await fetch(`/api/projects/${projId}/extra`, {
+          headers: {
+            "Authorization": `Bearer ${sessionToken}`
+          }
+        });
+      }
+
+      setAuthSuccess(authMode === 'signup' ? "Client Workspace created successfully!" : "Logged in successfully!");
+      
+      setTimeout(() => {
+        setOnboardingStage('payment');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 1500);
+
+    } catch (err: any) {
+      setAuthError(err.message || "Authentication aborted.");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentErrorMsg, setPaymentErrorMsg] = useState<string | null>(null);
   const [showSandboxFallback, setShowSandboxFallback] = useState(false);
@@ -1920,12 +2041,189 @@ ${formData.ownerName}
                 <button
                   type="button"
                   onClick={() => {
-                    setOnboardingStage('payment');
+                    if (getAuthUser()) {
+                      setOnboardingStage('payment');
+                    } else {
+                      setOnboardingStage('workspace_signup');
+                    }
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                   className="btn-pressure inline-flex items-center justify-center gap-2 bg-white text-black hover:bg-[#eae5d9] font-bold text-xs uppercase tracking-wider px-8 py-4 rounded-full w-full h-12 shadow-[0_12px_24px_rgba(255,255,255,0.06)] hover:-translate-y-0.5 cursor-pointer leading-none active:scale-95 transition-all"
                 >
                   Configure Selection & Proceed <ArrowRight size={14} />
+                </button>
+              </div>
+            </motion.div>
+          ) : onboardingStage === 'workspace_signup' ? (
+            <motion.div
+              key="workspace_signup"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.4 }}
+              className="rounded-3xl border border-neutral-900 bg-[#050505] p-6 sm:p-10 shadow-[0_30px_70px_rgba(0,0,0,0.9)] relative overflow-hidden max-w-xl mx-auto"
+            >
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/20 to-transparent" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-amber-500/[0.015] blur-[120px] pointer-events-none" />
+
+              <div className="text-center mb-8">
+                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-mono font-bold tracking-widest text-amber-400 uppercase mb-4">
+                  🔒 Secure Client Portal Registration
+                </span>
+                <h2 className="font-display text-2xl sm:text-3xl font-black text-white tracking-tight leading-snug">
+                  Create Your Client Workspace
+                </h2>
+                <p className="text-xs text-neutral-400 max-w-md mx-auto mt-2 leading-relaxed font-sans">
+                  Establish your secure credentials to link this blueprint, access the billing portal, and start collaborating on your build.
+                </p>
+              </div>
+
+              {/* Tabs for Sign Up / Sign In */}
+              <div className="flex border-b border-neutral-950 mb-6 font-sans">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('signup');
+                    setAuthError(null);
+                  }}
+                  className={`flex-1 pb-3 text-xs font-bold uppercase tracking-wider text-center border-b-2 transition-all cursor-pointer ${
+                    authMode === 'signup'
+                      ? 'text-amber-400 border-amber-500'
+                      : 'text-neutral-500 border-transparent hover:text-neutral-300'
+                  }`}
+                >
+                  Create Account
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('login');
+                    setAuthError(null);
+                  }}
+                  className={`flex-1 pb-3 text-xs font-bold uppercase tracking-wider text-center border-b-2 transition-all cursor-pointer ${
+                    authMode === 'login'
+                      ? 'text-amber-400 border-amber-500'
+                      : 'text-neutral-500 border-transparent hover:text-neutral-300'
+                  }`}
+                >
+                  Sign In
+                </button>
+              </div>
+
+              <form onSubmit={handleInlineAuthSubmit} className="space-y-4 text-left font-sans">
+                {authError && (
+                  <div className="p-3.5 rounded-xl bg-red-500/5 border border-red-500/20 text-red-400 text-xs font-medium">
+                    {authError}
+                  </div>
+                )}
+                
+                {authSuccess && (
+                  <div className="p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/20 text-emerald-400 text-xs font-medium flex items-center gap-2">
+                    <div className="h-3.5 w-3.5 rounded-full border border-t-transparent border-emerald-400 animate-spin" />
+                    <span>{authSuccess}</span>
+                  </div>
+                )}
+
+                {authMode === 'signup' && (
+                  <>
+                    <div>
+                      <label className="block text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-1.5 font-bold">Full Name</label>
+                      <input
+                        type="text"
+                        value={authFullName}
+                        onChange={(e) => setAuthFullName(e.target.value)}
+                        placeholder="e.g. Jonathan Doe"
+                        className="w-full bg-[#080808] border border-neutral-900 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-700 focus:outline-none focus:border-neutral-700 transition-all"
+                        disabled={authLoading}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-1.5 font-bold">Business / Brand Name</label>
+                      <input
+                        type="text"
+                        value={authBusinessName}
+                        onChange={(e) => setAuthBusinessName(e.target.value)}
+                        placeholder="e.g. Acme Corp"
+                        className="w-full bg-[#080808] border border-neutral-900 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-700 focus:outline-none focus:border-neutral-700 transition-all"
+                        disabled={authLoading}
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div>
+                  <label className="block text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-1.5 font-bold">Email Address</label>
+                  <input
+                    type="email"
+                    value={authEmail}
+                    onChange={(e) => setAuthEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="w-full bg-[#080808] border border-neutral-900 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-700 focus:outline-none focus:border-neutral-700 transition-all"
+                    disabled={authLoading}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-1.5 font-bold">Password</label>
+                  <input
+                    type="password"
+                    value={authPassword}
+                    onChange={(e) => setAuthPassword(e.target.value)}
+                    placeholder="Min. 6 characters"
+                    className="w-full bg-[#080808] border border-neutral-900 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-700 focus:outline-none focus:border-neutral-700 transition-all"
+                    disabled={authLoading}
+                  />
+                </div>
+
+                {authMode === 'signup' && (
+                  <div>
+                    <label className="block text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-1.5 font-bold">Confirm Password</label>
+                    <input
+                      type="password"
+                      value={authConfirmPassword}
+                      onChange={(e) => setAuthConfirmPassword(e.target.value)}
+                      placeholder="Repeat your password"
+                      className="w-full bg-[#080808] border border-neutral-900 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-700 focus:outline-none focus:border-neutral-700 transition-all"
+                      disabled={authLoading}
+                    />
+                  </div>
+                )}
+
+                <div className="pt-4">
+                  <button
+                    type="submit"
+                    disabled={authLoading}
+                    className="btn-pressure flex items-center justify-center gap-2 bg-white text-black hover:bg-[#eae5d9] font-black text-xs uppercase tracking-wider px-8 py-3.5 rounded-full w-full h-12 shadow-lg active:scale-95 transition-all cursor-pointer leading-none disabled:opacity-50 font-sans"
+                  >
+                    {authLoading ? (
+                      <>
+                        <div className="h-3 w-3 rounded-full border border-t-transparent border-black animate-spin" />
+                        <span>Synchronizing Client Portal...</span>
+                      </>
+                    ) : authMode === 'signup' ? (
+                      <>
+                        Register & Sync Workspace <ArrowRight size={13} />
+                      </>
+                    ) : (
+                      <>
+                        Sign In & Access Project <ArrowRight size={13} />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+
+              <div className="mt-6 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOnboardingStage('recommendations');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="text-xs text-neutral-500 hover:text-white underline cursor-pointer"
+                  disabled={authLoading}
+                >
+                  ← Back to Recommendations
                 </button>
               </div>
             </motion.div>
@@ -2531,7 +2829,11 @@ ${formData.ownerName}
                 <button
                   type="button"
                   onClick={() => {
-                    setOnboardingStage('success');
+                    if (getAuthUser()) {
+                      navigate('/dashboard');
+                    } else {
+                      setOnboardingStage('success');
+                    }
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                   className="btn-pressure flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-black hover:shadow-[0_0_15px_rgba(16,185,129,0.25)] font-black text-xs uppercase tracking-wider px-8 py-3.5 rounded-full shadow-lg active:scale-95 transition-all cursor-pointer leading-none"
@@ -2589,50 +2891,64 @@ ${formData.ownerName}
 
               {/* Actions */}
               <div className="mt-8 flex flex-col items-center justify-center gap-3.5 max-w-md mx-auto font-sans">
-                <button
-                  type="button"
-                  onClick={() => {
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                    navigate('/login?signup=true');
-                  }}
-                  className="btn-pressure inline-flex items-center justify-center gap-2 bg-white text-black hover:bg-neutral-100 font-bold text-xs uppercase tracking-wider px-6 py-4 rounded-xl w-full shadow-lg active:scale-95 transition-all cursor-pointer leading-none h-12"
-                >
-                  Create Client Account <ArrowRight size={14} />
-                </button>
+                {getAuthUser() ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigate('/dashboard');
+                    }}
+                    className="btn-pressure inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-black hover:shadow-[0_0_15px_rgba(16,185,129,0.25)] font-black text-xs uppercase tracking-wider px-6 py-4 rounded-xl w-full shadow-lg active:scale-95 transition-all cursor-pointer leading-none h-12"
+                  >
+                    Enter Client Workspace <ArrowRight size={14} />
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        navigate('/login?signup=true');
+                      }}
+                      className="btn-pressure inline-flex items-center justify-center gap-2 bg-white text-black hover:bg-neutral-100 font-bold text-xs uppercase tracking-wider px-6 py-4 rounded-xl w-full shadow-lg active:scale-95 transition-all cursor-pointer leading-none h-12"
+                    >
+                      Create Client Account <ArrowRight size={14} />
+                    </button>
 
-                <div className="relative flex py-1 w-full items-center">
-                  <div className="flex-grow border-t border-neutral-900/65"></div>
-                  <span className="flex-shrink mx-3 text-[9px] text-neutral-600 uppercase font-mono tracking-widest">or</span>
-                  <div className="flex-grow border-t border-neutral-900/65"></div>
-                </div>
+                    <div className="relative flex py-1 w-full items-center">
+                      <div className="flex-grow border-t border-neutral-900/65"></div>
+                      <span className="flex-shrink mx-3 text-[9px] text-neutral-600 uppercase font-mono tracking-widest">or</span>
+                      <div className="flex-grow border-t border-neutral-900/65"></div>
+                    </div>
 
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      const rUri = `${window.location.origin}/login`;
-                      const { error } = await supabase.auth.signInWithOAuth({
-                        provider: "google",
-                        options: {
-                          redirectTo: rUri,
-                        },
-                      });
-                      if (error) throw error;
-                    } catch (e: any) {
-                      console.warn("OAuth sign in failed:", e);
-                      navigate('/login');
-                    }
-                  }}
-                  className="inline-flex items-center justify-center gap-2 bg-neutral-950 hover:bg-neutral-900 text-white font-semibold text-xs border border-neutral-800 py-3.5 rounded-xl w-full transition-all h-12 cursor-pointer"
-                >
-                  <svg className="h-4 w-4 mr-1.5" viewBox="0 0 24 24">
-                    <path
-                      fill="white"
-                      d="M12.24 10.285V13.4h6.887C18.2 15.614 15.645 18 12.24 18c-3.86 0-7-3.14-7-7s3.14-7 7-7c1.71 0 3.27.61 4.5 1.643l2.425-2.424C17.275 1.682 14.89 1 12.24 1 6.58 1 2 5.58 2 11.24s4.58 10.24 10.24 10.24c5.915 0 9.83-4.16 9.83-10 0-.673-.06-1.196-.184-1.196h-9.646z"
-                    />
-                  </svg>
-                  <span>Continue with Google</span>
-                </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const rUri = `${window.location.origin}/login`;
+                          const { error } = await supabase.auth.signInWithOAuth({
+                            provider: "google",
+                            options: {
+                              redirectTo: rUri,
+                            },
+                          });
+                          if (error) throw error;
+                        } catch (e: any) {
+                          console.warn("OAuth sign in failed:", e);
+                          navigate('/login');
+                        }
+                      }}
+                      className="inline-flex items-center justify-center gap-2 bg-neutral-950 hover:bg-neutral-900 text-white font-semibold text-xs border border-neutral-800 py-3.5 rounded-xl w-full transition-all h-12 cursor-pointer"
+                    >
+                      <svg className="h-4 w-4 mr-1.5" viewBox="0 0 24 24">
+                        <path
+                          fill="white"
+                          d="M12.24 10.285V13.4h6.887C18.2 15.614 15.645 18 12.24 18c-3.86 0-7-3.14-7-7s3.14-7 7-7c1.71 0 3.27.61 4.5 1.643l2.425-2.424C17.275 1.682 14.89 1 12.24 1 6.58 1 2 5.58 2 11.24s4.58 10.24 10.24 10.24c5.915 0 9.83-4.16 9.83-10 0-.673-.06-1.196-.184-1.196h-9.646z"
+                        />
+                      </svg>
+                      <span>Continue with Google</span>
+                    </button>
+                  </>
+                )}
               </div>
 
               <div className="mt-8 flex items-center justify-center gap-4">
