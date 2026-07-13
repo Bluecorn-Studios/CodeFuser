@@ -30,6 +30,7 @@ export interface ProjectRecord {
   portalAccessSource?: "automatic" | "manual"; // "automatic" | "manual"
   quote?: any;
   assets?: any[];
+  aiPrompt?: string;
 }
 
 export async function addProject(proj: Omit<ProjectRecord, "id" | "timestamp" | "status">, reqId: string = "N/A"): Promise<ProjectRecord> {
@@ -45,6 +46,7 @@ export async function addProject(proj: Omit<ProjectRecord, "id" | "timestamp" | 
     purchasedPlan: "",
     purchaseDate: "",
     portalAccessSource: "automatic",
+    aiPrompt: "",
     ...proj,
   };
 
@@ -76,7 +78,7 @@ export async function addProject(proj: Omit<ProjectRecord, "id" | "timestamp" | 
     purchased_plan: newProject.purchasedPlan || "",
     purchase_date: newProject.purchaseDate || null,
     portal_access_source: newProject.portalAccessSource || "automatic",
-    quote: null,
+    quote: newProject.aiPrompt ? { aiPrompt: newProject.aiPrompt } : null,
     assets: []
   };
 
@@ -164,7 +166,8 @@ export async function getProjects(reqId: string = "N/A"): Promise<ProjectRecord[
       purchaseDate: item.purchase_date || "",
       portalAccessSource: item.portal_access_source || "automatic",
       quote: item.quote || null,
-      assets: item.assets || []
+      assets: item.assets || [],
+      aiPrompt: item.quote?.aiPrompt || ""
     });
   }
 

@@ -471,7 +471,8 @@ app.post("/api/projects", projectsRateLimiter, validateBody(createProjectSchema)
       hasDomain,
       hasLogo,
       contentReady,
-      userId
+      userId,
+      aiPrompt
     } = req.body;
 
     // Validate required fields
@@ -493,7 +494,8 @@ app.post("/api/projects", projectsRateLimiter, validateBody(createProjectSchema)
       hasDomain: hasDomain || "",
       hasLogo: hasLogo || "",
       contentReady: contentReady || "",
-      userId: userId || ""
+      userId: userId || "",
+      aiPrompt: aiPrompt || ""
     };
 
     checkAbort(req);

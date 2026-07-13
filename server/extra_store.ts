@@ -138,7 +138,15 @@ export async function updateQuote(
   quote: Omit<OfficialQuoteRecord, "status" | "expiryDate" | "timestamp"> | null
 ): Promise<ExtraProjectData> {
   const supabase = getSupabase();
-  let dbQuote: OfficialQuoteRecord | null = null;
+  let dbQuote: any = null;
+
+  // Retrieve current quote to preserve aiPrompt
+  const { data: projData } = await supabase
+    .from("projects")
+    .select("quote")
+    .eq("id", projectId)
+    .single();
+  const existingQuote = projData?.quote || {};
 
   if (quote !== null) {
     const timestamp = new Date().toISOString();
@@ -149,8 +157,13 @@ export async function updateQuote(
       ...quote,
       timestamp,
       expiryDate: expiry.toISOString(),
-      status: "active"
+      status: "active",
+      aiPrompt: existingQuote.aiPrompt || undefined
     };
+  } else {
+    if (existingQuote && existingQuote.aiPrompt) {
+      dbQuote = { aiPrompt: existingQuote.aiPrompt };
+    }
   }
 
   const { error } = await supabase
