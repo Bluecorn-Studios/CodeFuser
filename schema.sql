@@ -55,3 +55,26 @@ CREATE POLICY "Enable insert access for user_profiles" ON public.user_profiles
 
 CREATE POLICY "Enable update access for user_profiles" ON public.user_profiles
   FOR UPDATE USING (true);
+
+-- SQL Schema to initialize the audit_trail table in Supabase
+CREATE TABLE IF NOT EXISTS public.audit_trail (
+  id BIGSERIAL PRIMARY KEY,
+  project_id TEXT,
+  event_type TEXT NOT NULL,
+  request_id TEXT,
+  actor TEXT NOT NULL,
+  status TEXT NOT NULL,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable Row Level Security (RLS) on public.audit_trail table
+ALTER TABLE public.audit_trail ENABLE ROW LEVEL SECURITY;
+
+-- Create Policies to allow public read/write access for audit logging
+CREATE POLICY "Enable read access for audit_trail" ON public.audit_trail
+  FOR SELECT USING (true);
+
+CREATE POLICY "Enable insert access for audit_trail" ON public.audit_trail
+  FOR INSERT WITH CHECK (true);
+

@@ -421,21 +421,21 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Global dynamic request timeout middleware applied to all /api routes
 app.use("/api", (req: any, res: any, next: any) => {
-  let timeoutMs = 10000; // Default 10 seconds
+  let timeoutMs = 15000; // Default 15 seconds
   let operationName = "API Operation";
 
   const url = req.path || "";
   if (url.includes("/upload")) {
-    timeoutMs = 25000;
+    timeoutMs = 45000;
     operationName = "Asset Upload";
   } else if (url.includes("/recommendation")) {
-    timeoutMs = 25000;
+    timeoutMs = 45000;
     operationName = "AI Recommendation";
   } else if (url.includes("/package-upgrade-options")) {
-    timeoutMs = 25000;
+    timeoutMs = 45000;
     operationName = "AI Upgrade Options";
   } else if (url.includes("/razorpay-order") || url.includes("/verify-payment")) {
-    timeoutMs = 15000;
+    timeoutMs = 25000;
     operationName = "Razorpay Transaction";
   }
 
@@ -1893,7 +1893,7 @@ app.post("/api/admin/verify", adminRateLimiter, validateBody(adminVerifySchema),
 });
 
 // API: AI Recommendation Engine
-app.post("/api/recommendation", requestTimeout(25000, "AI Recommendation"), validateBody(recommendationSchema), async (req: any, res) => {
+app.post("/api/recommendation", requestTimeout(45000, "AI Recommendation"), validateBody(recommendationSchema), async (req: any, res) => {
   try {
     const formData = req.body;
     
@@ -2057,7 +2057,7 @@ Ensure absolutely ZERO developer-jargon, confidence scores, technical metrics, A
 });
 
 // API: Start Project Package Upgrade Options (Strategic Pricing Consultant Engine)
-app.post("/api/start-project/package-upgrade-options", requestTimeout(25000, "AI Upgrade Options"), validateBody(packageUpgradeSchema), async (req: any, res) => {
+app.post("/api/start-project/package-upgrade-options", requestTimeout(45000, "AI Upgrade Options"), validateBody(packageUpgradeSchema), async (req: any, res) => {
   try {
     const { packageId, businessName, ownerName, industry, goal, aiPrompt } = req.body;
     

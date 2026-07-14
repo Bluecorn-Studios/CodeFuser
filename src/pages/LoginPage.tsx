@@ -188,7 +188,10 @@ export default function LoginPage() {
         }
       };
       
-      const sessionToken = data.session?.access_token || "mock_valid_token_session";
+      const sessionToken = data.session?.access_token;
+      if (!sessionToken) {
+        throw new Error("Authentication succeeded but no active session was returned. Please try signing in.");
+      }
       setAuthSession(userObj, sessionToken);
 
       if (isSignUp) {

@@ -339,7 +339,10 @@ export const StartProjectPage: React.FC = () => {
         }
       };
       
-      const sessionToken = data.session?.access_token || "mock_valid_token_session";
+      const sessionToken = data.session?.access_token;
+      if (!sessionToken) {
+        throw new Error("Authentication succeeded but no active session was returned. Please try signing in.");
+      }
       setAuthSession(userObj, sessionToken);
 
       // Sync formData with registered/logged in info
@@ -778,17 +781,22 @@ export const StartProjectPage: React.FC = () => {
           })
         });
         if (recResponse.ok) {
-          const recData = await recResponse.json();
-          if (recData && recData.options && recData.options.length === 3) {
-            fetchedCards = recData.options;
-            if (recData.summary) {
-              setAiSummary(recData.summary);
+          const contentType = recResponse.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const recData = await recResponse.json();
+            if (recData && recData.options && recData.options.length === 3) {
+              fetchedCards = recData.options;
+              if (recData.summary) {
+                setAiSummary(recData.summary);
+              }
+            } else {
+              throw new Error("Incorrect cards count in JSON response");
             }
           } else {
-            throw new Error("Incorrect cards count");
+            throw new Error("Received non-JSON content from recommendation API");
           }
         } else {
-          throw new Error("HTTP failure loading recommendations");
+          throw new Error(`HTTP failure loading recommendations: Status ${recResponse.status}`);
         }
       } catch (recErr) {
         console.error("Local fallback used due to recommendation fetch issue:", recErr);

@@ -89,8 +89,13 @@ export const StrategySessionPage: React.FC = () => {
         body: JSON.stringify(formData),
       })
         .then(res => {
-          if (!res.ok) throw new Error('API request failed');
-          return res.json();
+          if (!res.ok) throw new Error(`API request failed with status: ${res.status}`);
+          const contentType = res.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            return res.json();
+          } else {
+            throw new Error("Received non-JSON content from recommendation API");
+          }
         })
         .then(data => {
           if (data && data.recommendations) {
