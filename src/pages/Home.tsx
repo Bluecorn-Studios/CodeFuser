@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { R as Reveal, E as Eyebrow, G as Button, s as scrollToSection, b as getMailtoLink, cn, useAppRouter } from '../components/Reveal';
 import { Ring } from '../components/FinalCta';
 import { Pricing } from '../components/Pricing';
@@ -7,18 +8,81 @@ import { FinalCta } from '../components/FinalCta';
 import { FAQItem, IndustryItem, ProcessStep } from '../types';
 
 // ==========================================
+// PREMIUM REFINE: SEE GROWTH CAPACITY GLASS BUTTON
+// ==========================================
+function SeeGrowthCapacityButton() {
+  return (
+    <div className="relative inline-flex items-center justify-center py-6">
+      {/* Extremely subtle spotlight directly underneath the button to ground it in black space */}
+      <div 
+        className="absolute w-[220px] h-[20px] bg-white/4 rounded-full blur-[14px] -bottom-1 pointer-events-none" 
+      />
+
+      {/* The main interactive button */}
+      <motion.button
+        onClick={() => scrollToSection("pricing")}
+        initial={{ opacity: 0, scale: 0.95, filter: "blur(6px)", y: 15 }}
+        animate={{ opacity: 1, scale: 1, filter: "blur(0px)", y: 0 }}
+        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
+        whileHover={{ 
+          scale: 1.03,
+          borderColor: "rgba(255, 255, 255, 0.95)",
+          boxShadow: "0 0 12px rgba(255, 255, 255, 0.22), 0 0 5px rgba(139, 92, 246, 0.12), inset 0 0 6px rgba(255, 255, 255, 0.25), 0 8px 24px rgba(0, 0, 0, 0.98)"
+        }}
+        whileTap={{ scale: 0.97 }}
+        className="group relative inline-flex items-center justify-center gap-3 rounded-full px-11 py-4 text-[15.5px] sm:text-base font-semibold tracking-wide text-white bg-black/95 backdrop-blur-md cursor-pointer select-none overflow-hidden transition-all duration-300"
+        style={{
+          // Precise, thin high-end white border with luxurious soft outer shadow and subtle purple reflection
+          border: "1.5px solid rgba(255, 255, 255, 0.65)",
+          boxShadow: "0 0 6px rgba(255, 255, 255, 0.08), 0 0 3px rgba(139, 92, 246, 0.05), inset 0 0 4px rgba(255, 255, 255, 0.15), 0 4px 16px rgba(0, 0, 0, 0.95)",
+        }}
+      >
+        {/* Subtle grey metallic inner rim (Grey 2%) */}
+        <span className="absolute inset-[1px] rounded-full border border-white/8 pointer-events-none z-10" />
+
+        {/* Soft, beautiful radial sweep across the button */}
+        <div className="absolute inset-0 overflow-hidden rounded-full pointer-events-none">
+          <motion.div 
+            className="absolute inset-0 w-[200%] h-full bg-[linear-gradient(110deg,transparent_35%,rgba(255,255,255,0.08)_48%,rgba(255,255,255,0.18)_50%,rgba(255,255,255,0.08)_52%,transparent_65%)] -skew-x-12"
+            initial={{ x: "-100%" }}
+            whileHover={{ x: "100%" }}
+            transition={{ duration: 1.2, ease: "easeInOut" }}
+          />
+        </div>
+
+        {/* Clean, premium high-contrast typography without over-the-top text glowing */}
+        <span 
+          className="relative z-20 flex items-center justify-center gap-2 text-white font-medium"
+          style={{
+            textShadow: "0 1px 2px rgba(0, 0, 0, 0.6), 0 0 4px rgba(255, 255, 255, 0.08)"
+          }}
+        >
+          <span>See Growth Capacity</span>
+          
+          {/* Arrow icon moving dynamically on hover */}
+          <span className="inline-block transition-transform duration-300 group-hover:translate-x-1.5 font-sans font-normal text-white">
+            →
+          </span>
+        </span>
+      </motion.button>
+    </div>
+  );
+}
+
+// ==========================================
 // SECTION 01: HERO SECTION
 // ==========================================
 function HeroSection() {
   const { navigate } = useAppRouter();
   return (
-    <section className="relative overflow-hidden px-5 pb-28 pt-24 sm:px-8 sm:pt-32 lg:pt-36">
-      {/* Background Drawing Ring */}
-      <div className="pointer-events-none absolute left-1/2 top-[58%] -z-10 -translate-x-1/2 -translate-y-1/2 opacity-90">
+    <section className="relative overflow-hidden px-5 pb-28 pt-24 sm:px-8 sm:pt-32 lg:pt-36 bg-black">
+      {/* Background Drawing Ring - set to z-0 so it lies behind text but above section background */}
+      <div className="pointer-events-none absolute left-1/2 top-[58%] z-0 -translate-x-1/2 -translate-y-1/2 opacity-20">
         <Ring size={700} progress={0.55} />
       </div>
 
-      <div className="mx-auto flex max-w-5xl flex-col items-center text-center">
+      {/* Hero Content Container - explicitly z-10 so it overlays above the background */}
+      <div className="relative z-10 mx-auto flex max-w-6xl flex-col items-center text-center">
         <Reveal>
           <Eyebrow>The Invisible Ceiling</Eyebrow>
         </Reveal>
@@ -74,7 +138,7 @@ function HeroSection() {
             </svg>
           </div>
 
-          <h1 className="font-display mt-6 text-balance text-[clamp(2.5rem,7.5vw,5.25rem)] leading-[0.98] text-foreground text-glow-strong">
+          <h1 className="font-display mt-6 text-balance text-[clamp(2.25rem,6.8vw,5.25rem)] leading-[1.05] text-foreground text-glow-strong font-bold">
             Your Business Isn't Small.<br />
             <span className="text-platinum">Its Visibility Is.</span>
           </h1>
@@ -95,19 +159,7 @@ function HeroSection() {
         </Reveal>
 
         <Reveal delay={400} className="mt-10 flex flex-col items-center gap-3 sm:flex-row">
-          <Button onClick={() => scrollToSection("pricing")}>
-            See Growth Capacity
-          </Button>
-          <Button 
-            onClick={() => {
-              navigate('/strategy-session');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }} 
-            variant="ghost"
-            className="cursor-pointer"
-          >
-            Book Strategy Session
-          </Button>
+          <SeeGrowthCapacityButton />
         </Reveal>
       </div>
 
@@ -125,7 +177,7 @@ function CeilingSection() {
       <div className="mx-auto grid max-w-6xl items-center gap-14 lg:gap-16 lg:grid-cols-[1.1fr_1fr]">
         <Reveal>
           <Eyebrow>02 — The Invisible Ceiling</Eyebrow>
-          <h2 className="font-display mt-6 text-balance text-[clamp(2rem,4.5vw,3.6rem)] leading-[1.02] text-foreground text-glow">
+          <h2 className="font-display mt-6 text-balance text-[clamp(2.2rem,4.8vw,3.9rem)] leading-[1.02] text-foreground text-glow font-bold">
             The Ceiling You Can't See<br />
             <span className="text-platinum">Is The One Limiting Your Growth.</span>
           </h2>
@@ -161,7 +213,7 @@ function SilentDecisionSection() {
       <div className="mx-auto max-w-5xl">
         <Reveal>
           <Eyebrow>03 — The Silent Decision</Eyebrow>
-          <h2 className="font-display mt-8 text-balance text-[clamp(2rem,4.5vw,3.6rem)] leading-[1.02] text-foreground text-glow">
+          <h2 className="font-display mt-8 text-balance text-[clamp(2.2rem,4.8vw,3.9rem)] leading-[1.02] text-foreground text-glow font-bold">
             While You're Serving Customers,<br />
             <span className="text-platinum">Someone Else Is Being Chosen.</span>
           </h2>
@@ -214,7 +266,7 @@ function GrowthEngineSection() {
       <div className="mx-auto max-w-5xl text-center">
         <Reveal>
           <Eyebrow>04 — The Growth Engine</Eyebrow>
-          <h2 className="font-display mt-8 text-balance text-[clamp(2rem,4.5vw,3.6rem)] leading-[1.02] text-foreground text-glow">
+          <h2 className="font-display mt-8 text-balance text-[clamp(2.2rem,4.8vw,3.9rem)] leading-[1.02] text-foreground text-glow font-bold">
             Growth Doesn't Start With Sales.<br />
             <span className="text-platinum">It Starts With Attention.</span>
           </h2>
@@ -335,7 +387,7 @@ function FusionMethodSection() {
       <div className="mx-auto max-w-5xl">
         <Reveal>
           <Eyebrow>06 — The Fusion Method™</Eyebrow>
-          <h2 className="font-display mt-8 text-balance text-[clamp(2rem,4.5vw,3.6rem)] leading-[1.02] text-foreground text-glow">
+          <h2 className="font-display mt-8 text-balance text-[clamp(2.2rem,4.8vw,3.9rem)] leading-[1.02] text-foreground text-glow font-bold">
             Growth Becomes Predictable<br />
             <span className="text-platinum">When The System Is Connected.</span>
           </h2>
@@ -414,7 +466,7 @@ function WhyCodeFuserSection() {
       <div className="mx-auto grid max-w-6xl items-center gap-12 lg:gap-14 lg:grid-cols-2">
         <Reveal>
           <Eyebrow>07 — Why CodeFuser</Eyebrow>
-          <h2 className="font-display mt-8 text-balance text-[clamp(2rem,4.5vw,3.6rem)] leading-[1.02] text-foreground text-glow/90">
+          <h2 className="font-display mt-8 text-balance text-[clamp(2.2rem,4.8vw,3.9rem)] leading-[1.02] text-foreground text-glow font-bold">
             Most Agencies Build Websites.<br />
             <span className="text-platinum">We Build Growth Infrastructure.</span>
           </h2>
@@ -502,7 +554,7 @@ function IndustriesSection() {
       <div className="mx-auto max-w-5xl text-center">
         <Reveal>
           <Eyebrow>08 — Industries</Eyebrow>
-          <h2 className="font-display mt-8 text-balance text-[clamp(2rem,4.5vw,3.6rem)] leading-[1.02] text-foreground text-glow">
+          <h2 className="font-display mt-8 text-balance text-[clamp(2.2rem,4.8vw,3.9rem)] leading-[1.02] text-foreground text-glow font-bold">
             Built For Businesses<br />
             <span className="text-platinum">That Deserve To Be Seen.</span>
           </h2>
@@ -548,7 +600,7 @@ function ResultsSection() {
       <div className="mx-auto max-w-5xl">
         <Reveal>
           <Eyebrow>09 — Results</Eyebrow>
-          <h2 className="font-display mt-8 text-balance text-[clamp(2rem,4.5vw,3.6rem)] leading-[1.02] text-foreground text-glow">
+          <h2 className="font-display mt-8 text-balance text-[clamp(2.2rem,4.8vw,3.9rem)] leading-[1.02] text-foreground text-glow font-bold">
             Before Visibility,<br />
             There Is Friction.<br />
             <span className="text-platinum">After Visibility, There Is Momentum.</span>

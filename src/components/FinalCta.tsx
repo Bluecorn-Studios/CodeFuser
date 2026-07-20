@@ -106,7 +106,7 @@ export const FinalCta: React.FC = () => {
         <Reveal>
           <Eyebrow>11 — Final Step</Eyebrow>
           
-          <h2 className="font-display mt-8 text-balance text-[clamp(2.25rem,5.5vw,4.5rem)] leading-[1.0] text-foreground text-glow-strong">
+          <h2 className="font-display mt-8 text-balance text-[clamp(2.4rem,5.8vw,4.8rem)] leading-[1.0] text-foreground text-glow-strong font-bold">
             Ready To Break<br />
             <span className="text-platinum">The Invisible Ceiling?</span>
           </h2>
@@ -116,51 +116,20 @@ export const FinalCta: React.FC = () => {
             <p>The question is whether people can see it.</p>
           </div>
 
-          <div className="mt-12 grid gap-6 text-left sm:grid-cols-2 max-w-3xl mx-auto">
-            {/* Card 1: Strategy Session */}
+          <div className="mt-12 max-w-md mx-auto">
+            {/* Start Project */}
             <div className="relative group p-6 rounded-2xl bg-[#050505]/60 border border-neutral-900 shadow-[0_10px_30px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.03)] hover:border-neutral-800/80 hover:bg-[#070707] transition-all duration-300 flex flex-col justify-between">
-              <div className="absolute top-4 right-4 text-[10px] font-mono text-neutral-600 group-hover:text-neutral-400 transition-colors uppercase tracking-wider select-none">
-                Path 01 — Discovery
-              </div>
               <div className="pt-2">
-                <span className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-neutral-950 border border-neutral-900 text-neutral-500 mb-4 group-hover:text-foreground group-hover:border-neutral-800 transition-colors">
-                  <HelpCircle size={18} />
-                </span>
-                <h3 className="font-display text-lg text-white font-medium text-glow-soft">
-                  Strategy Session
-                </h3>
-                <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                  Not sure what your business needs? We'll understand your goals and recommend the best path.
-                </p>
-              </div>
-              <div className="mt-6">
-                <Button 
-                  onClick={() => {
-                    navigate('/strategy-session');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  variant="ghost"
-                  className="w-full justify-center text-xs py-2.5 hover:border-white hover:text-white cursor-pointer"
-                >
-                  Book Strategy Session
-                </Button>
-              </div>
-            </div>
-
-            {/* Card 2: Start Project */}
-            <div className="relative group p-6 rounded-2xl bg-[#050505]/60 border border-neutral-900 shadow-[0_10px_30px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.03)] hover:border-neutral-800/80 hover:bg-[#070707] transition-all duration-300 flex flex-col justify-between">
-              <div className="absolute top-4 right-4 text-[10px] font-mono text-neutral-600 group-hover:text-neutral-400 transition-colors uppercase tracking-wider select-none">
-                Path 02 — Build
-              </div>
-              <div className="pt-2">
-                <span className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-neutral-950 border border-neutral-900 text-neutral-500 mb-4 group-hover:text-foreground group-hover:border-neutral-800 transition-colors">
-                  <Sparkles size={18} />
-                </span>
-                <h3 className="font-display text-lg text-white font-medium text-glow-soft">
+                <div className="flex justify-center">
+                  <span className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-neutral-950 border border-neutral-900 text-neutral-500 mb-4 group-hover:text-foreground group-hover:border-neutral-800 transition-colors">
+                    <Sparkles size={18} />
+                  </span>
+                </div>
+                <h3 className="font-display text-lg text-white font-medium text-glow-soft text-center">
                   Start Project
                 </h3>
-                <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                  Already know what you want or have chosen a package? Let's begin building your project.
+                <p className="mt-2 text-xs text-muted-foreground leading-relaxed text-center">
+                  Ready to launch your digital business? Let's begin building your premium project.
                 </p>
               </div>
               <div className="mt-6">

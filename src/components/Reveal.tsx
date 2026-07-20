@@ -266,66 +266,84 @@ export const Eo: React.FC = () => {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-border/60 bg-background/70 backdrop-blur-xl">
-      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8">
-        <Link to="/" className="flex items-center transition-opacity hover:opacity-85">
-          <img 
-            src="/logo.svg" 
-            alt="CodeFuser" 
-            width={170}
-            height={23}
-            loading="eager"
-            decoding="async"
-            className="h-[21px] w-auto sm:h-[23px] block select-none" 
-            referrerPolicy="no-referrer" 
-          />
-        </Link>
+      <nav className="mx-auto flex h-16 max-w-none w-full items-center justify-between px-6 sm:px-8">
+        {/* Left Side: Logo */}
+        <div className="flex-1 flex justify-start">
+          <Link to="/" className="flex items-center transition-opacity hover:opacity-85">
+            <img 
+              src="/logo.svg" 
+              alt="CodeFuser" 
+              width={170}
+              height={23}
+              loading="eager"
+              decoding="async"
+              className="h-[21px] w-auto sm:h-[23px] block select-none" 
+              referrerPolicy="no-referrer" 
+            />
+          </Link>
+        </div>
         
-        {/* Desktop Navbar */}
-        <div className="hidden items-center gap-8 md:flex">
+        {/* Center Side: Navigation menu (Desktop only) */}
+        <div className="hidden items-center justify-center gap-8 md:flex">
           {Fo.map(nav => (
             <Link 
               key={nav.to} 
               to={nav.to} 
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
               activeProps={{ className: "text-foreground font-medium" }}
             >
               {nav.label}
             </Link>
           ))}
-          {user && (
-            <button 
-              onClick={handleLogout}
-              className="text-[11px] font-mono tracking-wider text-neutral-600 hover:text-red-400 transition-colors uppercase cursor-pointer bg-transparent border-none focus:outline-none"
+          {!user && (
+            <Link 
+              to="/login" 
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
+              activeProps={{ className: "text-foreground font-medium" }}
             >
-              Logout
-            </button>
+              Client Login
+            </Link>
           )}
         </div>
 
-        <G 
-          onClick={() => {
-            if (currentPath === '/') {
-              s('pricing');
-            } else {
-              navigate('/');
-              setTimeout(() => s('pricing'), 300);
-            }
-          }} 
-          className="hidden md:inline-flex text-xs px-5 py-2.5 cursor-pointer"
-        >
-          Start Project
-        </G>
+        {/* Right Side: CTA on desktop, Menu toggle on mobile */}
+        <div className="flex-1 flex justify-end items-center gap-4">
+          {user ? (
+            <G 
+              onClick={() => {
+                navigate('/dashboard');
+              }} 
+              className="hidden md:inline-flex text-xs px-5 py-2.5 cursor-pointer bg-amber-500 hover:bg-amber-600 text-black shadow-[0_0_12px_rgba(245,158,11,0.2)] font-bold border-none"
+            >
+              Start Project
+            </G>
+          ) : (
+            <G 
+              onClick={() => {
+                if (currentPath === '/') {
+                  s('pricing');
+                } else {
+                  navigate('/');
+                  setTimeout(() => s('pricing'), 300);
+                }
+              }} 
+              className="hidden md:inline-flex text-xs px-5 py-2.5 cursor-pointer"
+            >
+              Start Project
+            </G>
+          )}
 
-        {/* Mobile menu toggle */}
-        <button 
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 rounded-full border border-border/40 text-foreground md:hidden hover:border-foreground/45 transition-colors focus:outline-none"
-          aria-label="Toggle menu"
-        >
-          <span className={cn("h-0.5 w-5 bg-foreground transition-transform duration-300", mobileMenuOpen ? "rotate-45 translate-y-2" : "")} />
-          <span className={cn("h-0.5 w-5 bg-foreground transition-opacity duration-300", mobileMenuOpen ? "opacity-0" : "")} />
-          <span className={cn("h-0.5 w-5 bg-foreground transition-transform duration-300", mobileMenuOpen ? "-rotate-45 -translate-y-2" : "")} />
-        </button>
+          {/* Mobile menu toggle */}
+          <button 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 rounded-full border border-border/40 text-foreground md:hidden hover:border-foreground/45 transition-colors focus:outline-none"
+            aria-label="Toggle menu"
+          >
+            <span className={cn("h-0.5 w-5 bg-foreground transition-transform duration-300", mobileMenuOpen ? "rotate-45 translate-y-2" : "")} />
+            <span className={cn("h-0.5 w-5 bg-foreground transition-opacity duration-300", mobileMenuOpen ? "opacity-0" : "")} />
+            <span className={cn("h-0.5 w-5 bg-foreground transition-transform duration-300", mobileMenuOpen ? "-rotate-45 -translate-y-2" : "")} />
+          </button>
+        </div>
       </nav>
 
       {/* Mobile Navbar overlay */}
@@ -342,34 +360,44 @@ export const Eo: React.FC = () => {
                 {nav.label}
               </Link>
             ))}
-            {user && (
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  handleLogout();
-                }}
-                className="text-left py-1 text-neutral-500 hover:text-red-400 font-mono tracking-wider transition-colors uppercase bg-transparent border-none cursor-pointer focus:outline-none text-lg"
+            {!user && (
+              <Link
+                to="/login"
+                className="text-muted-foreground hover:text-foreground transition-colors py-1"
+                activeProps={{ className: "text-foreground font-semibold" }}
               >
-                Logout
-              </button>
+                Client Login
+              </Link>
             )}
           </div>
 
           <div className="mt-auto border-t border-border/60 pt-6">
-            <G 
-              onClick={() => {
-                setMobileMenuOpen(false);
-                if (currentPath === '/') {
-                  s('pricing');
-                } else {
-                  navigate('/');
-                  setTimeout(() => s('pricing'), 300);
-                }
-              }} 
-              className="w-full text-center py-3.5 cursor-pointer"
-            >
-              Start Project
-            </G>
+            {user ? (
+              <G 
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  navigate('/dashboard');
+                }} 
+                className="w-full text-center py-3.5 cursor-pointer bg-amber-500 hover:bg-amber-600 text-black shadow-[0_0_12px_rgba(245,158,11,0.2)] font-bold border-none"
+              >
+                Start Project
+              </G>
+            ) : (
+              <G 
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  if (currentPath === '/') {
+                    s('pricing');
+                  } else {
+                    navigate('/');
+                    setTimeout(() => s('pricing'), 300);
+                  }
+                }} 
+                className="w-full text-center py-3.5 cursor-pointer"
+              >
+                Start Project
+              </G>
+            )}
           </div>
         </div>
       )}
@@ -570,7 +598,15 @@ export const Oo: React.FC = () => {
                     <li>Technical Maintenance</li>
                     <li>Technical Support</li>
                   </ul>
-                  <p className="text-foreground font-medium">
+                  <p className="text-foreground mt-2">
+                    Managed service hosting plans include:
+                  </p>
+                  <ul className="list-disc pl-5 text-foreground space-y-1">
+                    <li><span className="font-bold">Essential Plan:</span> ₹499/mo (optimized for ⚡ Ignite)</li>
+                    <li><span className="font-bold">Growth Plan:</span> ₹999/mo (optimized for ✦ Fusion)</li>
+                    <li><span className="font-bold">Premium Plan:</span> ₹1499/mo (optimized for ⬢ Catalyst)</li>
+                  </ul>
+                  <p className="text-foreground mt-2 font-medium">
                     according to their selected service plan.
                   </p>
                   <p className="text-foreground">
@@ -679,6 +715,22 @@ interface PageContainerProps {
 }
 
 export const P: React.FC<PageContainerProps> = ({ children }) => {
+  const { currentPath } = useAppRouter();
+  const isDashboard = currentPath === '/dashboard';
+  const isMissionControl = currentPath === '/mission-control';
+  const isLogin = currentPath === '/login';
+  const isPrivateSpace = isDashboard || isMissionControl || isLogin;
+
+  if (isPrivateSpace) {
+    return (
+      <div className="relative min-h-screen bg-black text-white flex flex-col justify-between">
+        <main className="w-full flex-grow">
+          {children}
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen bg-background text-foreground flex flex-col justify-between">
       <div className="flex flex-col w-full">

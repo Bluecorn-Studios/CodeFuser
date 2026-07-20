@@ -426,9 +426,9 @@ export const MissionControl: React.FC = () => {
 
   const formatPlanName = (id: string) => {
     switch (id) {
-      case "foundation": return "⚡ Ignite (₹9,999)";
-      case "growth": return "✦ Fusion (₹24,999)";
-      case "dominance": return "⬢ Catalyst (₹49,999)";
+      case "foundation": return "⚡ Ignite (₹7,999)";
+      case "growth": return "✦ Fusion (₹14,999)";
+      case "dominance": return "⬢ Catalyst (₹34,999)";
       default: return id;
     }
   };
@@ -552,9 +552,9 @@ export const MissionControl: React.FC = () => {
               className="border border-border bg-[#050505] rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500/50 min-w-[140px]"
             >
               <option value="all">All Packages</option>
-              <option value="foundation">⚡ Ignite (₹9,999)</option>
-              <option value="growth">✦ Fusion (₹24,999)</option>
-              <option value="dominance">⬢ Catalyst (₹49,999)</option>
+              <option value="foundation">⚡ Ignite (₹7,999)</option>
+              <option value="growth">✦ Fusion (₹14,999)</option>
+              <option value="dominance">⬢ Catalyst (₹34,999)</option>
             </select>
           </div>
         </div>
@@ -1005,7 +1005,7 @@ export const MissionControl: React.FC = () => {
                                     const form = e.currentTarget;
                                     const data = new FormData(form);
                                     const pkg = String(data.get("packageName") || "Fusion Enterprise Spec");
-                                    const pPrice = Number(data.get("price") || 24999);
+                                    const pPrice = Number(data.get("price") || 14999);
                                     const pDisc = Number(data.get("discount") || 0);
                                     const desc = String(data.get("summary") || "Guaranteed custom specs package.");
                                     
@@ -1053,7 +1053,7 @@ export const MissionControl: React.FC = () => {
                                       <input 
                                         type="number" 
                                         name="price" 
-                                        defaultValue={extraProjectMap[proj.id]?.quote?.price || (proj.selectedPackage.includes("ignite") ? 14999 : proj.selectedPackage.includes("catalyst") ? 49999 : 24999)} 
+                                        defaultValue={extraProjectMap[proj.id]?.quote?.price || (proj.selectedPackage.includes("ignite") || proj.selectedPackage.includes("foundation") ? 7999 : proj.selectedPackage.includes("catalyst") || proj.selectedPackage.includes("dominance") ? 34999 : 14999)} 
                                         className="w-full bg-neutral-900 border border-neutral-800 text-xs px-2.5 py-1.5 rounded focus:outline-none focus:border-amber-500 text-white font-mono"
                                         required
                                       />
@@ -1190,13 +1190,13 @@ export const MissionControl: React.FC = () => {
                                 {proposalLoading[proj.id] ? (
                                   <div className="flex flex-col items-center justify-center py-8 space-y-2">
                                     <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-                                    <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest animate-pulse">Running AI Strategy Synthesizer...</span>
+                                    <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest animate-pulse">Running AI Project Synthesizer...</span>
                                   </div>
                                 ) : !extraProjectMap[proj.id]?.quote?.proposal ? (
                                   <div className="flex flex-col items-center justify-center py-8 text-center bg-neutral-950/40 rounded-xl border border-neutral-900 border-dashed p-4 space-y-3">
                                     <div className="text-xl">✨</div>
                                     <div>
-                                      <span className="text-[11px] font-mono font-bold text-zinc-300 block uppercase tracking-wide">Strategic proposal baseline not yet compiled</span>
+                                      <span className="text-[11px] font-mono font-bold text-zinc-300 block uppercase tracking-wide">Project proposal baseline not yet compiled</span>
                                       <span className="text-[9.5px] text-zinc-500 max-w-sm leading-normal mt-1 block">
                                         Administrators can manually initiate our consulting-grade AI proposal generator using the custom business diagnostics audit.
                                       </span>
@@ -1216,7 +1216,7 @@ export const MissionControl: React.FC = () => {
                                           if (body.success) {
                                             setExtraProjectMap(prev => ({ ...prev, [proj.id]: body.data }));
                                             setProposalEdits(prev => ({ ...prev, [proj.id]: body.data.quote?.proposal?.content || "" }));
-                                            alert("Strategic AI Proposal baseline compiled successfully!");
+                                            alert("AI Proposal baseline compiled successfully!");
                                           } else {
                                             alert(body.message || "Failed to generate proposal");
                                           }
@@ -1742,14 +1742,16 @@ export const MissionControl: React.FC = () => {
                                 onChange={(e) => handleUpdateStatus(proj.id, e.target.value)}
                                 className="bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-1.5 text-[10px] font-mono font-bold uppercase text-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/30 cursor-pointer h-8"
                               >
-                                <option value="Project Filed">Project Filed</option>
-                                <option value="Specs Audited">Specs Audited</option>
-                                <option value="Assets Pending">Assets Pending</option>
-                                <option value="Designing">Designing</option>
-                                <option value="Development">Development</option>
-                                <option value="Testing">Testing</option>
-                                <option value="Checklist Ready">Checklist Ready</option>
-                                <option value="Launched">Launched</option>
+                                <option value="Project Filed">1. Payment Received</option>
+                                <option value="Specs Audited">2. Project Created</option>
+                                <option value="Assets Pending">3. Asset Collection</option>
+                                <option value="Designing">4. Design Started</option>
+                                <option value="Development">5. Development</option>
+                                <option value="Client Review">6. Client Review</option>
+                                <option value="Revisions">7. Revisions</option>
+                                <option value="Testing">8. Testing</option>
+                                <option value="Launched">9. Launch</option>
+                                <option value="Delivered">10. Delivery</option>
                               </select>
 
                               <button

@@ -115,7 +115,7 @@ export const Faq: React.FC = () => {
         <div className="grid gap-16 lg:grid-cols-[1fr_1.5fr]">
           <Reveal>
             <Eyebrow>10 — FAQ</Eyebrow>
-            <h2 className="font-display mt-8 text-balance text-3.5xl leading-[1.05] text-foreground text-glow sm:text-4.5xl md:text-5.5xl">
+            <h2 className="font-display mt-8 text-balance text-3.5xl leading-[1.05] text-foreground text-glow sm:text-4.5xl md:text-5.5xl font-bold">
               Quiet Answers<br />
               <span className="text-platinum">To Loud Questions.</span>
             </h2>

@@ -153,15 +153,27 @@ export async function addProject(proj: Omit<ProjectRecord, "id" | "timestamp" | 
   return newProject;
 }
 
-export async function getProjects(reqId: string = "N/A"): Promise<ProjectRecord[]> {
+export async function getProjects(reqId: string = "N/A", filter?: { userId?: string; email?: string }): Promise<ProjectRecord[]> {
   const supabase = getSupabase();
-  console.log("Retrieving projects from Supabase...");
+  console.log("Retrieving projects from Supabase (server-side filtered)...");
   
   const data = await withRetry(async () => {
-    const { data: resData, error } = await supabase
+    let query = supabase
       .from("projects")
-      .select("*")
-      .order("timestamp", { ascending: false });
+      .select("*");
+
+    if (filter) {
+      if (filter.userId && filter.email) {
+        // Find projects matching either the user ID OR the email address
+        query = query.or(`user_id.eq.${filter.userId},email.eq.${filter.email.trim().toLowerCase()}`);
+      } else if (filter.userId) {
+        query = query.eq("user_id", filter.userId);
+      } else if (filter.email) {
+        query = query.eq("email", filter.email.trim().toLowerCase());
+      }
+    }
+
+    const { data: resData, error } = await query.order("timestamp", { ascending: false });
 
     if (error) {
       throw new Error(`Supabase query error: ${error.message}`);
@@ -289,9 +301,48 @@ export async function updateProject(id: string, updates: Partial<ProjectRecord>,
 }
 
 export async function getProjectById(id: string): Promise<ProjectRecord | null> {
+  const supabase = getSupabase();
   try {
-    const projects = await getProjects();
-    return projects.find(p => p.id === id) || null;
+    const { data, error } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return {
+      id: data.id,
+      clientName: data.client_name || data.clientName || "",
+      businessName: data.business_name || data.businessName || "",
+      email: data.email || "",
+      whatsapp: data.whatsapp || "",
+      selectedPackage: data.selected_package || data.selectedPackage || "",
+      ownershipChoice: data.ownership_choice || data.ownershipChoice || "",
+      industry: data.industry || "",
+      customIndustry: data.custom_industry || data.customIndustry || "",
+      goal: data.goal || "",
+      customGoal: data.custom_goal || data.customGoal || "",
+      hasDomain: data.has_domain || data.hasDomain || "",
+      hasLogo: data.has_logo || data.hasLogo || "",
+      contentReady: data.content_ready || data.contentReady || "",
+      timestamp: data.timestamp || "",
+      status: data.status || "Assets Pending",
+      userId: data.user_id || data.userId || "",
+      paymentStatus: data.payment_status !== null && data.payment_status !== undefined ? data.payment_status : "unpaid",
+      portalAccess: data.portal_access !== null && data.portal_access !== undefined ? data.portal_access : false,
+      paymentProvider: data.payment_provider || "",
+      paymentId: data.payment_id || "",
+      orderId: data.order_id || "",
+      purchasedPlan: data.purchased_plan || "",
+      purchaseDate: data.purchase_date || "",
+      portalAccessSource: data.portal_access_source || "automatic",
+      quote: data.quote || null,
+      assets: data.assets || [],
+      aiPrompt: data.quote?.aiPrompt || ""
+    };
   } catch (err) {
     console.error(`Failed to get project by ID ${id}:`, err);
     return null;

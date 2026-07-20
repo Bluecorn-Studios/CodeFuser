@@ -382,7 +382,7 @@ export const saveQuoteSchema: Schema = {
 
 // 6. POST /api/projects/:id/razorpay-order
 export const createOrderSchema: Schema = {
-  term: { type: "string", required: true, allowedValues: ["milestone", "upfront"] }
+  term: { type: "string", required: true, allowedValues: ["milestone", "upfront", "final"] }
 };
 
 // 7. POST /api/projects/:id/verify-payment
@@ -390,7 +390,7 @@ export const verifyPaymentSchema: Schema = {
   razorpay_order_id: { type: "string", required: true, max: 100 },
   razorpay_payment_id: { type: "string", required: true, max: 100 },
   razorpay_signature: { type: "string", required: true, max: 256 },
-  term: { type: "string", required: false, allowedValues: ["milestone", "upfront", ""] }
+  term: { type: "string", required: false, allowedValues: ["milestone", "upfront", "final", ""] }
 };
 
 // 8. POST /api/projects/:id/upload

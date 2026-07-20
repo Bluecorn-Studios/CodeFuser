@@ -11,7 +11,6 @@ const FAQPage = lazy(() => import('./pages/FAQPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
 const Portfolio = lazy(() => import('./pages/Portfolio'));
 const StartProjectPage = lazy(() => import('./pages/StartProjectPage'));
-const StrategySessionPage = lazy(() => import('./pages/StrategySessionPage'));
 const MissionControl = lazy(() => import('./pages/MissionControl'));
 const CustomerDashboard = lazy(() => import('./pages/CustomerDashboard'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
@@ -28,7 +27,7 @@ export default function App() {
   const [currentPath, setCurrentPath] = useState<PagePath>('/');
 
   useEffect(() => {
-    const validPaths: PagePath[] = ['/', '/story', '/process', '/portfolio', '/pricing', '/faq', '/contact', '/start-project', '/strategy-session', '/mission-control', '/dashboard', '/login'];
+    const validPaths: PagePath[] = ['/', '/story', '/process', '/portfolio', '/pricing', '/faq', '/contact', '/start-project', '/mission-control', '/dashboard', '/login'];
     
     // Parse path and state on start
     const path = window.location.pathname as PagePath;
@@ -102,8 +101,6 @@ export default function App() {
         return <Portfolio />;
       case '/start-project':
         return <StartProjectPage />;
-      case '/strategy-session':
-        return <StrategySessionPage />;
       case '/mission-control':
         return <MissionControl />;
       case '/dashboard':

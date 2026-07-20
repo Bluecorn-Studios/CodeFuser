@@ -113,9 +113,9 @@ export const BusinessIntelligenceCRM: React.FC<BusinessIntelligenceCRMProps> = (
     }
 
     // Default package price fallbacks if no quote is set
-    let basePkgPrice = 24999; // growth/Fusion default
-    if (p.selectedPackage === "foundation") basePkgPrice = 9999;
-    if (p.selectedPackage === "dominance") basePkgPrice = 49999;
+    let basePkgPrice = 14999; // growth/Fusion default
+    if (p.selectedPackage === "foundation") basePkgPrice = 7999;
+    if (p.selectedPackage === "dominance") basePkgPrice = 34999;
 
     if (p.purchasedPlan?.toLowerCase().includes("upfront")) {
       return acc + Math.round(basePkgPrice * 0.9);
@@ -135,9 +135,9 @@ export const BusinessIntelligenceCRM: React.FC<BusinessIntelligenceCRMProps> = (
     }
 
     // Else add prospective package value
-    let basePkgPrice = 24999;
-    if (p.selectedPackage === "foundation") basePkgPrice = 9999;
-    if (p.selectedPackage === "dominance") basePkgPrice = 49999;
+    let basePkgPrice = 14999;
+    if (p.selectedPackage === "foundation") basePkgPrice = 7999;
+    if (p.selectedPackage === "dominance") basePkgPrice = 34999;
     return acc + basePkgPrice;
   }, 0);
 
@@ -156,9 +156,9 @@ export const BusinessIntelligenceCRM: React.FC<BusinessIntelligenceCRMProps> = (
   }, {} as Record<string, number>);
 
   const packagePopularity = [
-    { id: "foundation", name: "Ignite (₹9,999)", count: pkgCounts["foundation"] || 0, color: "bg-amber-500" },
-    { id: "growth", name: "Fusion (₹24,999)", count: pkgCounts["growth"] || 0, color: "bg-blue-500" },
-    { id: "dominance", name: "Catalyst (₹49,999)", count: pkgCounts["dominance"] || 0, color: "bg-red-500" }
+    { id: "foundation", name: "Ignite (₹7,999)", count: pkgCounts["foundation"] || 0, color: "bg-amber-500" },
+    { id: "growth", name: "Fusion (₹14,999)", count: pkgCounts["growth"] || 0, color: "bg-blue-500" },
+    { id: "dominance", name: "Catalyst (₹34,999)", count: pkgCounts["dominance"] || 0, color: "bg-red-500" }
   ];
 
   // 4. PIPELINE STAGE CATEGORIZATION
@@ -293,9 +293,9 @@ export const BusinessIntelligenceCRM: React.FC<BusinessIntelligenceCRMProps> = (
           {pipelineStages.map((stage, idx) => {
             const stagePotentialVal = stage.projectsList.reduce((acc, p) => {
               if (p.quote && p.quote.price) return acc + (p.quote.price - (p.quote.discount || 0));
-              let fallbackPrice = 24999;
-              if (p.selectedPackage === "foundation") fallbackPrice = 9999;
-              if (p.selectedPackage === "dominance") fallbackPrice = 49999;
+              let fallbackPrice = 14999;
+              if (p.selectedPackage === "foundation") fallbackPrice = 7999;
+              if (p.selectedPackage === "dominance") fallbackPrice = 34999;
               return acc + fallbackPrice;
             }, 0);
 
@@ -394,7 +394,7 @@ export const BusinessIntelligenceCRM: React.FC<BusinessIntelligenceCRMProps> = (
                   style={{ width: `${totalLeads > 0 ? (totalQuoted / totalLeads) * 100 : 0}%` }}
                 />
                 <span className="text-xs font-semibold text-white relative z-10 font-mono">
-                  {totalLeads > 0 ? ((totalQuoted / totalLeads) * 100).toFixed(1) : 0}% Strategy-Fit Reach
+                  {totalLeads > 0 ? ((totalQuoted / totalLeads) * 100).toFixed(1) : 0}% Qualified-Fit Reach
                 </span>
               </div>
             </div>

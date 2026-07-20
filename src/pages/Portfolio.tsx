@@ -310,13 +310,13 @@ export const Portfolio: React.FC = () => {
             </Button>
             <Button 
               onClick={() => {
-                navigate('/strategy-session');
+                navigate('/start-project');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }} 
               variant="ghost"
               className="cursor-pointer"
             >
-              Start Strategic Session
+              Start Project
             </Button>
           </Reveal>
         </div>
@@ -579,18 +579,18 @@ export const Portfolio: React.FC = () => {
             </h1>
 
             <p className="mx-auto mt-6 max-w-xl text-sm sm:text-base text-muted-foreground leading-relaxed">
-              Start a strategic session and discover how CodeFuser can help remove the barriers holding your business back.
+              Start your project analysis and discover how CodeFuser can help remove the barriers holding your business back.
             </p>
 
             <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button 
                 onClick={() => {
-                  navigate('/strategy-session');
+                  navigate('/start-project');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
                 className="cursor-pointer"
               >
-                Start Strategic Session
+                Start Project
               </Button>
               <Button onClick={() => navigate('/')} variant="ghost">
                 Return Home <ArrowRight className="h-4 w-4 ml-1" />

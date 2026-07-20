@@ -86,7 +86,7 @@ function FounderStoryDetail() {
           <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-6">
             <Reveal>
               <Eyebrow>Founder Story</Eyebrow>
-              <h1 className="font-display mt-6 text-4xl text-foreground sm:text-5xl lg:text-5.5xl font-semibold leading-[1.05] tracking-tight text-glow">
+              <h1 className="font-display mt-6 text-4xl text-foreground sm:text-5xl lg:text-5.5xl font-bold leading-[1.05] tracking-tight text-glow">
                 Why I Started<br />
                 <span className="text-platinum">CodeFuser</span>
               </h1>

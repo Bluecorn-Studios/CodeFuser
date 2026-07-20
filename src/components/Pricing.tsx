@@ -1,47 +1,41 @@
 import React, { useState, useRef } from 'react';
 import { R as Reveal, E as Eyebrow, G as Button, b as getMailtoLink, cn, useAppRouter } from './Reveal';
 import { PricingPlan } from '../types';
+import { motion, AnimatePresence } from 'motion/react';
+import { X, Sparkles, MessageSquare, Gift, Globe, Check } from 'lucide-react';
 
 export const pricingPlans: PricingPlan[] = [
   {
     id: "foundation",
     name: "⚡ Ignite",
-    price: "₹9,999",
-    tagline: "Remove The Ceiling",
+    price: "₹7,999",
+    tagline: "For businesses taking their first digital step.",
     level: 1,
     capacity: "■■□□□",
     features: [
-      "Premium One Page Website",
-      "Mobile Responsive",
+      "Professional Business Website",
       "WhatsApp Integration",
+      "Google Maps Integration",
       "Contact Form",
-      "Google Maps",
-      "Business Information Setup",
-      "Basic SEO Setup",
-      "Fast Loading Optimization",
-      "SSL Assistance",
-      "One Revision Round"
+      "Mobile-Friendly Design",
+      "Customer Enquiry Support"
     ],
     bestFor: "Businesses starting online."
   },
   {
     id: "growth",
     name: "✦ Fusion",
-    price: "₹24,999",
-    tagline: "Expand Visibility",
+    price: "₹14,999",
+    tagline: "Built for businesses ready to grow.",
     level: 2,
     capacity: "■■■□□",
     features: [
-      "Everything in ⚡ Ignite",
-      "Portfolio / Gallery",
-      "Testimonials Section",
-      "FAQ Section",
-      "Booking Integration",
-      "Enhanced SEO Structure",
-      "Premium Design System",
-      "Advanced Animations",
-      "Conversion Focused Layout",
-      "Two Revision Rounds"
+      "Everything in Ignite",
+      "AI Chatbot",
+      "Appointment Booking",
+      "Gallery Showcase",
+      "Customer Testimonials & Reviews",
+      "SEO Foundation Setup"
     ],
     bestFor: "Businesses wanting more visibility and inquiries.",
     highlight: true
@@ -49,21 +43,20 @@ export const pricingPlans: PricingPlan[] = [
   {
     id: "dominance",
     name: "⬢ Catalyst",
-    price: "₹49,999",
-    tagline: "Automate Growth",
+    price: "₹34,999",
+    tagline: "Designed for businesses that want to dominate.",
     level: 3,
     capacity: "■■■■■",
     features: [
-      "Everything in ✦ Fusion",
-      "AI Receptionist Integration",
-      "Lead Capture System",
-      "CRM Ready Structure",
-      "Advanced Automation Setup",
-      "Analytics Dashboard Setup",
-      "Strategy Consultation",
-      "Premium Custom Design",
-      "Priority Delivery",
-      "Three Revision Rounds"
+      "Everything in Fusion",
+      "Online Payment Integration",
+      "CRM Integration",
+      "Smart AI Features",
+      "Email Automation",
+      "WhatsApp Automation",
+      "Advanced SEO Setup",
+      "Analytics Dashboard",
+      "Priority Support"
     ],
     bestFor: "Businesses ready to automate and scale."
   }
@@ -230,6 +223,333 @@ function CapacityBar({ level, highlight, tierId }: CapacityBarProps) {
   return <WhiteGoldVisualizer />;
 }
 
+export function renderTierName(name: string, id: string, className?: string) {
+  const cleanName = name.replace(/[⚡✦⬢]/g, '').trim();
+  const symbol = id === 'foundation' ? '⚡' : id === 'growth' ? '✦' : '⬢';
+  const colorClass = id === 'foundation' 
+    ? 'text-slate-100 [text-shadow:0_0_8px_rgba(255,255,255,0.35)]' 
+    : id === 'growth' 
+    ? 'text-[#EBC351] [text-shadow:0_0_8px_rgba(235,195,81,0.3)]' 
+    : 'text-neutral-900 [text-shadow:0_0_8px_rgba(0,0,0,0.12)]';
+
+  return (
+    <span className={cn("inline-flex items-center gap-2", className)}>
+      <span className={cn(colorClass, "animate-premium-breathe transform translate-y-[0.5px] select-none text-[1.05em]")}>{symbol}</span>
+      <span>{cleanName}</span>
+    </span>
+  );
+}
+
+interface FreePremiumBundleProps {
+  tierId: string;
+}
+
+export const FreePremiumBundle: React.FC<FreePremiumBundleProps> = ({ tierId }) => {
+  let bundleName = "";
+  let worthText = "";
+  let durationBadgeText = "";
+  let domainDescription = "";
+  let workspaceHeading = "⭐ FREE CODEFUSER BUSINESS WORKSPACE";
+  let workspaceDescription = "This is a premium private workspace exclusively provided by CodeFuser for managing your digital journey.";
+  let workspaceFeatures: string[] = [];
+
+  let titleColorClass = "";
+  let worthColorClass = "";
+  let includedFreeColorClass = "";
+  let businessGetsGlowClass = "";
+  let ambientGlowColor = "";
+  let containerBorderClass = "";
+  let badgeStyle = "";
+
+  if (tierId === "foundation") {
+    bundleName = "🎁 FREE BUSINESS STARTER KIT";
+    worthText = "₹1,499";
+    durationBadgeText = "6 MONTHS INCLUDED FREE";
+    domainDescription = "Perfect for getting your business online quickly.";
+    titleColorClass = "text-white/80 [text-shadow:0_0_4px_rgba(255,255,255,0.05)]";
+    worthColorClass = "text-white font-black text-3xl sm:text-[34px] tracking-tight [text-shadow:0_0_8px_rgba(255,255,255,0.1)]";
+    includedFreeColorClass = "text-zinc-400 font-mono tracking-wider text-[11px] font-bold uppercase";
+    businessGetsGlowClass = "text-white/50 [text-shadow:0_0_4px_rgba(255,255,255,0.05)]";
+    ambientGlowColor = "bg-white/[0.002]";
+    containerBorderClass = "border-t border-white/[0.04]";
+    badgeStyle = "bg-white/5 border border-white/10 text-white font-mono text-[11px] sm:text-xs tracking-wider px-4 py-2 rounded-full inline-block font-black [text-shadow:0_0_4px_rgba(255,255,255,0.08)] shadow-[0_0_8px_rgba(255,255,255,0.01)]";
+    workspaceFeatures = [
+      "Track Your Project Progress",
+      "Upload Business Assets",
+      "Collaborate With Our Team",
+      "Priority Workspace Access"
+    ];
+  } else if (tierId === "growth") {
+    bundleName = "🎁 FREE BUSINESS GROWTH KIT";
+    worthText = "₹3,499";
+    durationBadgeText = "12 MONTHS INCLUDED FREE";
+    domainDescription = "Built to help your business grow with confidence.";
+    titleColorClass = "text-[#EBC351]/85 [text-shadow:0_0_4px_rgba(235,195,81,0.08)]";
+    worthColorClass = "text-[#EBC351] font-black text-3xl sm:text-[34px] tracking-tight [text-shadow:0_0_8px_rgba(235,195,81,0.14)]";
+    includedFreeColorClass = "text-amber-500/70 font-mono tracking-wider text-[11px] font-bold uppercase";
+    businessGetsGlowClass = "text-[#EBC351]/60 [text-shadow:0_0_4px_rgba(235,195,81,0.06)]";
+    ambientGlowColor = "bg-[#EBC351]/[0.002]";
+    containerBorderClass = "border-t border-white/[0.04]";
+    badgeStyle = "bg-[#EBC351]/5 border border-[#EBC351]/10 text-[#EBC351] font-mono text-[11px] sm:text-xs tracking-wider px-4 py-2 rounded-full inline-block font-black [text-shadow:0_0_4px_rgba(235,195,81,0.08)] shadow-[0_0_8px_rgba(235,195,81,0.01)]";
+    workspaceFeatures = [
+      "Track Your Project Progress",
+      "Upload Business Assets",
+      "Collaborate With Our Team",
+      "Priority Workspace Access",
+      "Priority Domain Setup Support"
+    ];
+  } else {
+    bundleName = "🎁 FREE PREMIUM BUSINESS KIT";
+    worthText = "₹4,599";
+    durationBadgeText = "24 MONTHS INCLUDED FREE";
+    domainDescription = "Your premium digital foundation is ready from day one.";
+    titleColorClass = "text-neutral-900 tracking-[0.18em] font-black [text-shadow:0_0_3px_rgba(0,0,0,0.02)]";
+    worthColorClass = "text-neutral-900 font-black text-3xl sm:text-[34px] tracking-tight [text-shadow:0_0_4px_rgba(0,0,0,0.02)]";
+    includedFreeColorClass = "text-neutral-500 font-mono tracking-wider text-[11px] font-bold uppercase";
+    businessGetsGlowClass = "text-neutral-500 [text-shadow:0_0_3px_rgba(239,68,68,0.02)]";
+    ambientGlowColor = "bg-red-500/[0.0005]";
+    containerBorderClass = "border-t border-black/[0.04]";
+    badgeStyle = "bg-neutral-900 text-white font-mono text-[11px] sm:text-xs tracking-wider px-4 py-2 rounded-full inline-block font-black shadow-[0_2px_8px_rgba(0,0,0,0.08)]";
+    workspaceFeatures = [
+      "VIP Onboarding Support",
+      "Premium Setup Assistance",
+      "Dedicated Client Experience",
+      "Priority Workspace Access",
+      "Collaborate With Our Team",
+      "Real-Time Project Tracking"
+    ];
+  }
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.05,
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 8, filter: "blur(4px)" },
+    visible: {
+      opacity: 1,
+      y: 0,
+      filter: "blur(0px)",
+      transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] }
+    }
+  };
+
+  // Special visual refinement for the Ignite (foundation) package
+  if (tierId === "foundation") {
+    return (
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-30px" }}
+        className="mt-8 pt-6 relative overflow-hidden flex flex-col items-center justify-center text-center group/bundle px-1 border-t border-white/[0.04]"
+      >
+        {/* Subtle white themed breathing ambient glow */}
+        <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full blur-3xl pointer-events-none opacity-20 transition-all duration-700 group-hover/bundle:opacity-40 animate-ambient-breathe bg-white/[0.003]" />
+
+        {/* Header Section */}
+        <motion.div variants={itemVariants} className="space-y-1.5 select-none w-full mb-5">
+          {/* Second Priority: FREE BUSINESS STARTER KIT */}
+          <h4 className="text-xs sm:text-sm font-display tracking-[0.18em] uppercase font-black text-center text-white/80 [text-shadow:0_0_4px_rgba(255,255,255,0.05)]">
+            🎁 FREE BUSINESS STARTER KIT
+          </h4>
+          
+          {/* Highest Priority: Worth ₹1,499 Included FREE */}
+          <div className="space-y-1 text-center mt-3">
+            <div className="text-white font-black text-3xl sm:text-[34px] tracking-tight [text-shadow:0_0_8px_rgba(255,255,255,0.1)]">
+              Worth ₹1,499
+            </div>
+            <div className="text-zinc-400 font-mono tracking-wider text-[11px] font-bold uppercase">
+              Included FREE
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ONE beautiful premium bundle card with premium black glass / frosted glass aesthetics */}
+        <motion.div 
+          variants={itemVariants} 
+          className="p-5 sm:p-6 rounded-2xl border border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.08] transition-all duration-300 w-full backdrop-blur-md shadow-sm space-y-5 text-left relative overflow-hidden"
+        >
+          {/* Soft platinum reflection / inner glass sheen overlay */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.01] to-white/[0.02] pointer-events-none" />
+
+          {/* Section 1: FREE WEBSITE NAME */}
+          <div className="space-y-2.5 relative z-10">
+            {/* Second Priority Header */}
+            <div className="text-xs sm:text-[12.5px] font-mono font-extrabold uppercase tracking-[0.15em] text-white">
+              🌐 FREE WEBSITE NAME
+            </div>
+            <div className="space-y-2.5">
+              <div className="text-[16px] sm:text-[17px] font-extrabold font-sans tracking-wide text-white">
+                www.YourBusinessName.com
+              </div>
+              {/* Third Priority Badge */}
+              <div className="pt-0.5">
+                <span className="bg-white/5 border border-white/10 text-white font-mono text-[11.5px] sm:text-xs tracking-wider px-4 py-2 rounded-full inline-block font-black [text-shadow:0_0_4px_rgba(255,255,255,0.08)] shadow-[0_0_8px_rgba(255,255,255,0.01)]">
+                  6 MONTHS DOMAIN INCLUDED FREE
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Divider with increased margin */}
+          <div className="border-t border-white/[0.04] my-5" />
+
+          {/* Section 2: ADDITIONAL FREE CODEFUSER BUSINESS WORKSPACE */}
+          <div className="space-y-3 relative z-10">
+            {/* Second Priority Header */}
+            <div className="text-xs sm:text-[12.5px] font-mono font-extrabold uppercase tracking-[0.15em] text-white">
+              ⭐ ADDITIONAL FREE CODEFUSER BUSINESS WORKSPACE
+            </div>
+            
+            {/* Third Priority: Workspace benefits */}
+            <div className="space-y-2.5 text-[12px] sm:text-[13px] font-semibold leading-relaxed">
+              <div className="flex items-start gap-3">
+                <span className="text-xs select-none mt-0.5 leading-none font-bold text-white">•</span>
+                <span className="text-neutral-200/95">Upload Your Business Assets</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-xs select-none mt-0.5 leading-none font-bold text-white">•</span>
+                <span className="text-neutral-200/95">Access Your Complete Website Workspace</span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Lowest Priority Supporting Text - slightly larger */}
+        <motion.div variants={itemVariants} className="mt-5 select-none text-center relative z-10">
+          <p className="text-xs sm:text-xs font-sans opacity-70 text-neutral-400 font-medium leading-relaxed">
+            Perfect for getting your business online quickly.
+          </p>
+        </motion.div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-30px" }}
+      className={cn("mt-8 pt-6 relative overflow-hidden flex flex-col items-center justify-center text-center group/bundle px-1", containerBorderClass)}
+    >
+      {/* Subtle package themed breathing ambient glow */}
+      <div className={cn("absolute -right-8 -top-8 w-24 h-24 rounded-full blur-3xl pointer-events-none opacity-20 transition-all duration-700 group-hover/bundle:opacity-45 animate-ambient-breathe", ambientGlowColor)} />
+
+      {/* High-visibility Section Title */}
+      <motion.div variants={itemVariants} className="space-y-1.5 select-none w-full mb-5">
+        <h4 className={cn("text-xs sm:text-sm font-display tracking-[0.18em] uppercase font-black text-center", titleColorClass)}>
+          {bundleName}
+        </h4>
+        <div className="space-y-1 text-center mt-3">
+          <div className={worthColorClass}>
+            Worth {worthText}
+          </div>
+          <div className={includedFreeColorClass}>
+            Included FREE
+          </div>
+        </div>
+      </motion.div>
+
+      {/* PREMIUM REWARD MOMENT */}
+      <motion.div variants={itemVariants} className="mb-4.5 select-none text-center">
+        <span className={cn("text-[10px] font-mono tracking-[0.3em] font-bold uppercase", businessGetsGlowClass)}>
+          YOUR BUSINESS GETS
+        </span>
+      </motion.div>
+
+      {/* Two Premium Extras Cards */}
+      <div className="space-y-4.5 relative z-10 w-full text-left">
+        {/* Benefit 1 Card */}
+        <motion.div 
+          variants={itemVariants} 
+          className={cn(
+            "p-5 rounded-2xl border transition-all duration-300 w-full backdrop-blur-md shadow-sm space-y-3",
+            tierId === "dominance" 
+              ? "bg-black/[0.015] border-black/[0.05] hover:bg-black/[0.03] hover:border-black/[0.08]" 
+              : "bg-white/[0.015] border-white/[0.05] hover:bg-white/[0.03] hover:border-white/[0.08]"
+          )}
+        >
+          {/* Second Priority: FREE Bundle Title */}
+          <div className={cn(
+            "text-xs sm:text-[12.5px] font-mono font-extrabold uppercase tracking-[0.15em]",
+            tierId === "dominance" ? "text-neutral-950 font-black" : "text-white"
+          )}>
+            🌐 FREE WEBSITE NAME
+          </div>
+          
+          <div className="space-y-3">
+            <div className={cn("text-[16px] sm:text-[17px] font-extrabold font-sans tracking-wide", tierId === "dominance" ? "text-neutral-900" : "text-white")}>
+              www.YourBusinessName.com
+            </div>
+            
+            {/* Duration Badge */}
+            <div className="py-0.5">
+              <span className={badgeStyle}>
+                {durationBadgeText}
+              </span>
+            </div>
+
+            {/* Fourth Priority Supporting Text */}
+            <div className={cn("text-[11.5px] sm:text-xs font-sans leading-relaxed mt-1.5 opacity-80 font-medium", tierId === "dominance" ? "text-neutral-600/95" : "text-neutral-300/90")}>
+              {domainDescription}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Benefit 2 Card */}
+        <motion.div 
+          variants={itemVariants} 
+          className={cn(
+            "p-5 rounded-2xl border transition-all duration-300 w-full backdrop-blur-md shadow-sm space-y-3.5",
+            tierId === "dominance" 
+              ? "bg-black/[0.015] border-black/[0.05] hover:bg-black/[0.03] hover:border-black/[0.08]" 
+              : "bg-white/[0.015] border-white/[0.05] hover:bg-white/[0.03] hover:border-white/[0.08]"
+          )}
+        >
+          {/* Second Priority: FREE Bundle Title */}
+          <div className={cn(
+            "text-xs sm:text-[12.5px] font-mono font-extrabold uppercase tracking-[0.15em]",
+            tierId === "dominance" ? "text-neutral-950 font-black" : "text-white"
+          )}>
+            {workspaceHeading}
+          </div>
+
+          {/* Fourth Priority Supporting Text */}
+          <div className={cn("text-[11.5px] sm:text-xs font-sans leading-relaxed opacity-75 mb-3.5", tierId === "dominance" ? "text-neutral-700/95" : "text-neutral-300")}>
+            {workspaceDescription}
+          </div>
+          
+          {/* Third Priority: Workspace bullet points */}
+          <div className="space-y-2.5 text-[12px] sm:text-[13px] font-semibold leading-relaxed">
+            {workspaceFeatures.map((feature, idx) => (
+              <div key={idx} className="flex items-start gap-3">
+                <span className={cn(
+                  "text-xs select-none mt-0.5 leading-none font-bold", 
+                  tierId === "dominance" ? "text-neutral-900" : tierId === "growth" ? "text-[#EBC351]" : "text-white"
+                )}>
+                  •
+                </span>
+                <span className={tierId === "dominance" ? "text-neutral-900/90" : "text-neutral-200/95"}>
+                  {feature}
+                </span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+    </motion.div>
+  );
+};
+
 interface TierCardProps {
   tier: PricingPlan;
 }
@@ -305,7 +625,7 @@ export function TierCard({ tier }: TierCardProps) {
       <div 
         className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl"
         style={{
-          background: `radial-gradient(circle at ${shine.x}% ${shine.y}%, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.02) 45%, transparent 65%)`,
+          background: `radial-gradient(circle at ${shine.x}% ${shine.y}%, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 45%, transparent 65%)`,
           mixBlendMode: 'overlay'
         }}
       />
@@ -332,13 +652,13 @@ export function TierCard({ tier }: TierCardProps) {
     );
 
   } else if (tier.id === "growth") {
-    // TITANIUM: Tac-brushed space-grade metallic grey catching a brushed, satin sheen
-    cardClass = "bg-gradient-to-b from-[#111111] via-[#0b0b0b] to-[#040404] border-neutral-800 shadow-[0_15px_35px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.07)] hover:border-neutral-700/60";
-    taglineClass = "text-slate-450 text-xs tracking-[0.2em] uppercase font-mono";
+    // TITANIUM / CHAMPAGNE GOLD FUSION: Premium black glass with warm champagne gold edge light and soft ambient glow
+    cardClass = "bg-[#050505] border-[1.5px] border-[#EBC351]/35 shadow-[0_20px_45px_rgba(235,195,81,0.04),0_15px_35px_rgba(0,0,0,0.95),inset_0_1px_1px_rgba(255,255,255,0.05)] hover:border-[#EBC351]/60";
+    taglineClass = "text-slate-400 text-xs tracking-[0.2em] uppercase font-mono";
     headingClass = "text-[#E2E8F0] text-glow";
     priceClass = "text-slate-200 font-display";
     featuresClass = "text-slate-300/90";
-    bulletColor = "bg-slate-500";
+    bulletColor = "bg-[#EBC351]/60";
     bestForLabel = "text-slate-400 font-mono text-[10px] tracking-widest uppercase";
     bestForText = "text-slate-200";
     footerBorder = "border-neutral-800/80";
@@ -347,18 +667,18 @@ export function TierCard({ tier }: TierCardProps) {
       <div 
         className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl"
         style={{
-          background: `radial-gradient(circle at ${shine.x}% ${shine.y}%, rgba(230, 235, 245, 0.08) 0%, rgba(230,235,245,0.01) 45%, transparent 60%)`,
-          mixBlendMode: 'screen'
+          background: `radial-gradient(circle at ${shine.x}% ${shine.y}%, rgba(235,195,81,0.05) 0%, rgba(235,195,81,0.01) 45%, transparent 60%)`,
+          mixBlendMode: 'overlay'
         }}
       />
     );
 
     sweepLayer = (
       <div 
-        className="absolute inset-0 pointer-events-none opacity-[0.04] group-hover:opacity-[0.1] transition-opacity duration-700 rounded-3xl overflow-hidden"
+        className="absolute inset-0 pointer-events-none opacity-[0.05] group-hover:opacity-[0.12] transition-opacity duration-700 rounded-3xl overflow-hidden"
       >
         <div 
-          className="absolute inset-[-100%] bg-[linear-gradient(110deg,transparent_30%,rgba(148,163,184,0.4)_42%,rgba(255,255,255,0.7)_50%,rgba(148,163,184,0.4)_58%,transparent_70%)] animate-card-sweep"
+          className="absolute inset-[-100%] bg-[linear-gradient(110deg,transparent_30%,rgba(235,195,81,0.15)_42%,rgba(255,255,255,0.25)_50%,rgba(235,195,81,0.15)_58%,transparent_70%)] animate-card-sweep"
         />
       </div>
     );
@@ -389,7 +709,7 @@ export function TierCard({ tier }: TierCardProps) {
       <div 
         className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl"
         style={{
-          background: `radial-gradient(circle at ${shine.x}% ${shine.y}%, rgba(255, 255, 255, 1) 0%, rgba(235, 232, 221, 0.45) 50%, transparent 80%)`,
+          background: `radial-gradient(circle at ${shine.x}% ${shine.y}%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 50%, transparent 80%)`,
           mixBlendMode: 'overlay'
         }}
       />
@@ -415,11 +735,12 @@ export function TierCard({ tier }: TierCardProps) {
     );
   }
 
-  // Dynamic perspective scaling & tilt layout styles
+  // Dynamic perspective scaling & tilt layout styles with premium visual elevation for growth (Fusion)
+  const isGrowth = tier.id === "growth";
   const transformStyle = {
     transform: isHovered 
-      ? `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale3d(1.015, 1.015, 1.015)`
-      : 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)',
+      ? `perspective(1000px) translate3d(0, ${isGrowth ? '-14px' : '-8px'}, 0) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale3d(1.015, 1.015, 1.015)`
+      : `perspective(1000px) translate3d(0, ${isGrowth ? '-6px' : '0px'}, 0) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`,
     transition: isHovered 
       ? 'transform 0.08s cubic-bezier(0.25, 1, 0.5, 1)'
       : 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)'
@@ -433,9 +754,13 @@ export function TierCard({ tier }: TierCardProps) {
       onMouseLeave={handleMouseLeave}
       style={transformStyle}
       className={cn(
-        "group relative flex h-full flex-col overflow-hidden rounded-3xl border p-6 sm:p-7 select-none transition-shadow duration-500",
+        "group relative flex h-full flex-col overflow-hidden rounded-3xl border p-6 sm:p-7 select-none transition-all duration-500",
         cardClass,
-        isHovered ? "shadow-[0_25px_50px_-12px_rgba(0,0,0,0.85)]" : ""
+        isHovered 
+          ? (isGrowth 
+            ? "shadow-[0_30px_60px_-15px_rgba(235,195,81,0.12),0_25px_50px_-12px_rgba(0,0,0,0.95)] border-[#EBC351]/60" 
+            : "shadow-[0_25px_50px_-12px_rgba(0,0,0,0.85)]") 
+          : ""
       )}
     >
       {/* Light Sweeper & Pointer-following Spotlights */}
@@ -450,13 +775,13 @@ export function TierCard({ tier }: TierCardProps) {
       
       <div className="mt-6 text-center relative z-10">
         {tier.highlight && (
-          <div className="mb-3.5 inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-0.5 text-[10px] font-mono font-bold tracking-wider text-amber-400 shadow-sm uppercase">
-            ⭐ Most Popular
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#EBC351]/15 to-[#EBC351]/8 border border-[#EBC351]/30 px-4.5 py-1.5 text-[10px] sm:text-[10.5px] font-mono font-extrabold tracking-[0.18em] text-[#EBC351] [text-shadow:0_0_8px_rgba(235,195,81,0.2)] shadow-[0_2px_10px_rgba(235,195,81,0.05)] uppercase select-none animate-premium-breathe">
+            ⭐ MOST POPULAR
           </div>
         )}
         <p className={taglineClass}>{tier.tagline}</p>
         <h3 className={cn("font-display mt-2.5 text-3xl tracking-tight transition-all duration-300", headingClass)}>
-          {tier.name}
+          {renderTierName(tier.name, tier.id)}
         </h3>
         <p className={cn("font-display mt-5 text-5xl tracking-tight transition-all duration-300", priceClass)}>
           {tier.price}
@@ -471,6 +796,9 @@ export function TierCard({ tier }: TierCardProps) {
           </li>
         ))}
       </ul>
+
+      {/* FREE PREMIUM BUNDLE COMPARTMENT */}
+      <FreePremiumBundle tierId={tier.id} />
       
       <div className="mt-auto pt-6 relative z-10">
         <div className={cn("border-t pt-4 transition-all duration-300", footerBorder)}>
@@ -487,12 +815,51 @@ export function TierCard({ tier }: TierCardProps) {
 }
 
 export const Pricing: React.FC = () => {
+  const [isCustomQuoteModalOpen, setIsCustomQuoteModalOpen] = useState(false);
+  const [requirementsText, setRequirementsText] = useState("");
+
+  const handleChipClick = (label: string) => {
+    setRequirementsText(prev => {
+      const trimmed = prev.trim();
+      if (!trimmed) {
+        return `I want to build a custom ${label}: `;
+      }
+      return trimmed + `\n- Custom ${label}: `;
+    });
+  };
+
+  const handleContactUs = () => {
+    if (!requirementsText.trim()) return;
+    const prefilled = `Hi CodeFuser,
+
+I'm interested in a custom solution for my business.
+
+Requirements:
+${requirementsText.trim()}
+
+Looking forward to discussing my project.`;
+
+    const whatsappUrl = `https://wa.me/917449100307?text=${encodeURIComponent(prefilled)}`;
+    window.open(whatsappUrl, '_blank');
+    setIsCustomQuoteModalOpen(false);
+    setRequirementsText("");
+  };
+
+  const presetExamples = [
+    "AI Automations",
+    "Customer Portals",
+    "CRM Systems",
+    "Custom Dashboards",
+    "Booking Systems",
+    "Business Platforms"
+  ];
+
   return (
     <section id="pricing" className="relative overflow-hidden px-5 py-28 lg:py-32 sm:px-8">
       <div className="mx-auto max-w-5xl text-center">
         <Reveal>
           <Eyebrow>05 — Pricing</Eyebrow>
-          <h2 className="font-display mt-8 text-balance text-[clamp(2rem,4.5vw,3.6rem)] leading-[1.02] text-foreground text-glow animate-text-in">
+          <h2 className="font-display mt-8 text-balance text-[clamp(2.2rem,4.8vw,3.9rem)] leading-[1.02] text-foreground text-glow font-bold animate-text-in">
             Choose Your Growth Capacity.
           </h2>
           <p className="font-display mt-5 text-lg text-foreground/75 sm:text-xl">
@@ -512,11 +879,138 @@ export const Pricing: React.FC = () => {
         ))}
       </div>
 
-      <Reveal delay={300} className="mx-auto mt-14 sm:mt-16 max-w-2xl text-center">
-        <p className="font-display text-balance text-lg leading-snug text-foreground/75 sm:text-xl">
-          A stronger system scales further.
-        </p>
+      <Reveal delay={300} className="mx-auto mt-16 sm:mt-24 max-w-4xl text-center">
+        <div className="relative group p-8 sm:p-12 rounded-3xl bg-[#050505]/60 border border-neutral-900 shadow-[0_15px_35px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.03)] hover:border-neutral-800/80 hover:bg-[#070707] transition-all duration-300">
+          <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"
+            style={{
+              background: `radial-gradient(circle at 50% 50%, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 70%)`
+            }}
+          />
+          <h3 className="font-display text-2xl sm:text-3xl text-white font-medium text-glow-soft">
+            Have a bigger vision for your business?
+          </h3>
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            Building something beyond a website? From smart automations to custom business systems, we're here to help you build what's next.
+          </p>
+          <div className="mt-8">
+            <Button 
+              onClick={() => setIsCustomQuoteModalOpen(true)}
+              variant="ghost"
+              className="border-neutral-800 text-neutral-300 hover:border-white hover:text-white cursor-pointer px-8 py-3"
+            >
+              Get a Custom Quote
+            </Button>
+          </div>
+        </div>
       </Reveal>
+
+      {/* Beautiful Custom Quote Inbuilt Mini Chat/Modal */}
+      <AnimatePresence>
+        {isCustomQuoteModalOpen && (
+          <div className="fixed inset-0 z-55 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/85 backdrop-blur-md"
+              onClick={() => setIsCustomQuoteModalOpen(false)}
+            />
+
+            {/* Modal Box */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ type: "spring", duration: 0.4 }}
+              className="relative max-w-lg w-full bg-[#0a0a0a] border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.9)] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Top ambient light glow */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[1px] bg-gradient-to-r from-transparent via-neutral-700 to-transparent" />
+              <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-48 h-24 bg-white/[0.02] rounded-full blur-xl pointer-events-none" />
+
+              {/* Close Button */}
+              <button
+                onClick={() => setIsCustomQuoteModalOpen(false)}
+                className="absolute top-5 right-5 text-neutral-400 hover:text-white transition-colors p-1 rounded-full hover:bg-neutral-900 focus:outline-none"
+                aria-label="Close modal"
+              >
+                <X size={18} />
+              </button>
+
+              {/* Header */}
+              <div className="flex items-start gap-4 mb-6">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-neutral-900 border border-neutral-800 text-neutral-300">
+                  <Sparkles size={18} className="text-amber-500 animate-pulse" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-display text-lg sm:text-xl font-medium text-white tracking-tight">
+                    Tell Us About Your Vision
+                  </h3>
+                  <p className="text-xs text-neutral-400 mt-1 leading-relaxed">
+                    Describe your custom solution below. We'll pre-fill a WhatsApp message to discuss your project directly with our team.
+                  </p>
+                </div>
+              </div>
+
+              {/* Suggestions chips */}
+              <div className="mb-6">
+                <span className="text-[10px] uppercase tracking-widest font-mono text-neutral-500 block mb-3">
+                  Click a system to begin:
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {presetExamples.map((item) => (
+                    <button
+                      key={item}
+                      onClick={() => handleChipClick(item)}
+                      className="text-xs px-3 py-1.5 rounded-full bg-neutral-950 border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700 transition-all duration-200 cursor-pointer"
+                    >
+                      + {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Message Input */}
+              <div className="relative mb-6">
+                <textarea
+                  value={requirementsText}
+                  onChange={(e) => setRequirementsText(e.target.value)}
+                  placeholder="Tell us what you'd like to build... (e.g., I need a custom client dashboard where customers can login, track delivery timelines, and approve assets)"
+                  className="w-full min-h-[140px] bg-[#050505] border border-neutral-800 rounded-2xl p-4 text-sm text-foreground placeholder:text-neutral-600 focus:outline-none focus:border-neutral-700 focus:ring-1 focus:ring-neutral-700 transition-all duration-300 resize-none leading-relaxed"
+                />
+              </div>
+
+              {/* Action */}
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <Button
+                  onClick={handleContactUs}
+                  disabled={!requirementsText.trim()}
+                  className={cn(
+                    "w-full py-3.5 px-6 font-semibold flex items-center justify-center gap-2 cursor-pointer text-xs uppercase tracking-wider rounded-full",
+                    requirementsText.trim()
+                      ? "bg-white text-black hover:bg-neutral-200"
+                      : "bg-neutral-900 text-neutral-600 border border-neutral-900 cursor-not-allowed"
+                  )}
+                >
+                  Contact Us
+                </Button>
+                <button
+                  onClick={() => setIsCustomQuoteModalOpen(false)}
+                  className="w-full sm:w-auto text-xs uppercase tracking-wider font-semibold text-neutral-500 hover:text-white py-3 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+
+              <p className="text-[10px] text-center text-neutral-500 mt-5">
+                This opens WhatsApp with your pre-filled text. No commitment required.
+              </p>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </section>
   );
 };
