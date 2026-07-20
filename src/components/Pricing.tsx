@@ -245,79 +245,44 @@ interface FreePremiumBundleProps {
 }
 
 export const FreePremiumBundle: React.FC<FreePremiumBundleProps> = ({ tierId }) => {
-  let bundleName = "";
+  let bundleName = "🎁 FREE WEBSITE BENEFITS";
   let worthText = "";
-  let durationBadgeText = "";
-  let domainDescription = "";
-  let workspaceHeading = "⭐ FREE CODEFUSER BUSINESS WORKSPACE";
-  let workspaceDescription = "This is a premium private workspace exclusively provided by CodeFuser for managing your digital journey.";
-  let workspaceFeatures: string[] = [];
-
+  
   let titleColorClass = "";
   let worthColorClass = "";
   let includedFreeColorClass = "";
-  let businessGetsGlowClass = "";
   let ambientGlowColor = "";
   let containerBorderClass = "";
   let badgeStyle = "";
+  let cardClass = "";
 
   if (tierId === "foundation") {
-    bundleName = "🎁 FREE BUSINESS STARTER KIT";
     worthText = "₹1,499";
-    durationBadgeText = "6 MONTHS INCLUDED FREE";
-    domainDescription = "Perfect for getting your business online quickly.";
-    titleColorClass = "text-white/80 [text-shadow:0_0_4px_rgba(255,255,255,0.05)]";
-    worthColorClass = "text-white font-black text-3xl sm:text-[34px] tracking-tight [text-shadow:0_0_8px_rgba(255,255,255,0.1)]";
+    titleColorClass = "text-white/85 [text-shadow:0_0_4px_rgba(255,255,255,0.05)]";
+    worthColorClass = "text-white font-black text-3xl sm:text-[32px] tracking-tight [text-shadow:0_0_8px_rgba(255,255,255,0.1)]";
     includedFreeColorClass = "text-zinc-400 font-mono tracking-wider text-[11px] font-bold uppercase";
-    businessGetsGlowClass = "text-white/50 [text-shadow:0_0_4px_rgba(255,255,255,0.05)]";
     ambientGlowColor = "bg-white/[0.002]";
     containerBorderClass = "border-t border-white/[0.04]";
-    badgeStyle = "bg-white/5 border border-white/10 text-white font-mono text-[11px] sm:text-xs tracking-wider px-4 py-2 rounded-full inline-block font-black [text-shadow:0_0_4px_rgba(255,255,255,0.08)] shadow-[0_0_8px_rgba(255,255,255,0.01)]";
-    workspaceFeatures = [
-      "Track Your Project Progress",
-      "Upload Business Assets",
-      "Collaborate With Our Team",
-      "Priority Workspace Access"
-    ];
+    badgeStyle = "bg-white/5 border border-white/10 text-white font-mono text-[11.5px] tracking-wider px-3.5 py-1.5 rounded-full inline-block font-black [text-shadow:0_0_4px_rgba(255,255,255,0.08)]";
+    cardClass = "bg-white/[0.015] border border-white/[0.05] hover:bg-white/[0.03] hover:border-white/[0.08]";
   } else if (tierId === "growth") {
-    bundleName = "🎁 FREE BUSINESS GROWTH KIT";
     worthText = "₹3,499";
-    durationBadgeText = "12 MONTHS INCLUDED FREE";
-    domainDescription = "Built to help your business grow with confidence.";
     titleColorClass = "text-[#EBC351]/85 [text-shadow:0_0_4px_rgba(235,195,81,0.08)]";
-    worthColorClass = "text-[#EBC351] font-black text-3xl sm:text-[34px] tracking-tight [text-shadow:0_0_8px_rgba(235,195,81,0.14)]";
+    worthColorClass = "text-[#EBC351] font-black text-3xl sm:text-[32px] tracking-tight [text-shadow:0_0_8px_rgba(235,195,81,0.14)]";
     includedFreeColorClass = "text-amber-500/70 font-mono tracking-wider text-[11px] font-bold uppercase";
-    businessGetsGlowClass = "text-[#EBC351]/60 [text-shadow:0_0_4px_rgba(235,195,81,0.06)]";
     ambientGlowColor = "bg-[#EBC351]/[0.002]";
     containerBorderClass = "border-t border-white/[0.04]";
-    badgeStyle = "bg-[#EBC351]/5 border border-[#EBC351]/10 text-[#EBC351] font-mono text-[11px] sm:text-xs tracking-wider px-4 py-2 rounded-full inline-block font-black [text-shadow:0_0_4px_rgba(235,195,81,0.08)] shadow-[0_0_8px_rgba(235,195,81,0.01)]";
-    workspaceFeatures = [
-      "Track Your Project Progress",
-      "Upload Business Assets",
-      "Collaborate With Our Team",
-      "Priority Workspace Access",
-      "Priority Domain Setup Support"
-    ];
+    badgeStyle = "bg-[#EBC351]/5 border border-[#EBC351]/10 text-[#EBC351] font-mono text-[11.5px] tracking-wider px-3.5 py-1.5 rounded-full inline-block font-black [text-shadow:0_0_4px_rgba(235,195,81,0.08)]";
+    cardClass = "bg-white/[0.015] border border-white/[0.05] hover:bg-white/[0.03] hover:border-white/[0.08]";
   } else {
-    bundleName = "🎁 FREE PREMIUM BUSINESS KIT";
     worthText = "₹4,599";
-    durationBadgeText = "24 MONTHS INCLUDED FREE";
-    domainDescription = "Your premium digital foundation is ready from day one.";
-    titleColorClass = "text-neutral-900 tracking-[0.18em] font-black [text-shadow:0_0_3px_rgba(0,0,0,0.02)]";
-    worthColorClass = "text-neutral-900 font-black text-3xl sm:text-[34px] tracking-tight [text-shadow:0_0_4px_rgba(0,0,0,0.02)]";
+    titleColorClass = "text-neutral-900 tracking-[0.12em] font-black [text-shadow:0_0_3px_rgba(0,0,0,0.02)]";
+    worthColorClass = "text-neutral-900 font-black text-3xl sm:text-[32px] tracking-tight [text-shadow:0_0_4px_rgba(0,0,0,0.02)]";
     includedFreeColorClass = "text-neutral-500 font-mono tracking-wider text-[11px] font-bold uppercase";
-    businessGetsGlowClass = "text-neutral-500 [text-shadow:0_0_3px_rgba(239,68,68,0.02)]";
     ambientGlowColor = "bg-red-500/[0.0005]";
     containerBorderClass = "border-t border-black/[0.04]";
-    badgeStyle = "bg-neutral-900 text-white font-mono text-[11px] sm:text-xs tracking-wider px-4 py-2 rounded-full inline-block font-black shadow-[0_2px_8px_rgba(0,0,0,0.08)]";
-    workspaceFeatures = [
-      "VIP Onboarding Support",
-      "Premium Setup Assistance",
-      "Dedicated Client Experience",
-      "Priority Workspace Access",
-      "Collaborate With Our Team",
-      "Real-Time Project Tracking"
-    ];
+    badgeStyle = "bg-neutral-900 text-white border border-neutral-850 font-mono text-[11.5px] tracking-wider px-3.5 py-1.5 rounded-full inline-block font-black";
+    cardClass = "bg-black/[0.015] border border-black/[0.05] hover:bg-black/[0.03] hover:border-black/[0.08]";
   }
 
   const containerVariants = {
@@ -341,115 +306,26 @@ export const FreePremiumBundle: React.FC<FreePremiumBundleProps> = ({ tierId }) 
     }
   };
 
-  // Special visual refinement for the Ignite (foundation) package
-  if (tierId === "foundation") {
-    return (
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-30px" }}
-        className="mt-8 pt-6 relative overflow-hidden flex flex-col items-center justify-center text-center group/bundle px-1 border-t border-white/[0.04]"
-      >
-        {/* Subtle white themed breathing ambient glow */}
-        <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full blur-3xl pointer-events-none opacity-20 transition-all duration-700 group-hover/bundle:opacity-40 animate-ambient-breathe bg-white/[0.003]" />
-
-        {/* Header Section */}
-        <motion.div variants={itemVariants} className="space-y-1.5 select-none w-full mb-5">
-          {/* Second Priority: FREE BUSINESS STARTER KIT */}
-          <h4 className="text-xs sm:text-sm font-display tracking-[0.18em] uppercase font-black text-center text-white/80 [text-shadow:0_0_4px_rgba(255,255,255,0.05)]">
-            🎁 FREE BUSINESS STARTER KIT
-          </h4>
-          
-          {/* Highest Priority: Worth ₹1,499 Included FREE */}
-          <div className="space-y-1 text-center mt-3">
-            <div className="text-white font-black text-3xl sm:text-[34px] tracking-tight [text-shadow:0_0_8px_rgba(255,255,255,0.1)]">
-              Worth ₹1,499
-            </div>
-            <div className="text-zinc-400 font-mono tracking-wider text-[11px] font-bold uppercase">
-              Included FREE
-            </div>
-          </div>
-        </motion.div>
-
-        {/* ONE beautiful premium bundle card with premium black glass / frosted glass aesthetics */}
-        <motion.div 
-          variants={itemVariants} 
-          className="p-5 sm:p-6 rounded-2xl border border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.08] transition-all duration-300 w-full backdrop-blur-md shadow-sm space-y-5 text-left relative overflow-hidden"
-        >
-          {/* Soft platinum reflection / inner glass sheen overlay */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.01] to-white/[0.02] pointer-events-none" />
-
-          {/* Section 1: FREE WEBSITE NAME */}
-          <div className="space-y-2.5 relative z-10">
-            {/* Second Priority Header */}
-            <div className="text-xs sm:text-[12.5px] font-mono font-extrabold uppercase tracking-[0.15em] text-white">
-              🌐 FREE WEBSITE NAME
-            </div>
-            <div className="space-y-2.5">
-              <div className="text-[16px] sm:text-[17px] font-extrabold font-sans tracking-wide text-white">
-                www.YourBusinessName.com
-              </div>
-              {/* Third Priority Badge */}
-              <div className="pt-0.5">
-                <span className="bg-white/5 border border-white/10 text-white font-mono text-[11.5px] sm:text-xs tracking-wider px-4 py-2 rounded-full inline-block font-black [text-shadow:0_0_4px_rgba(255,255,255,0.08)] shadow-[0_0_8px_rgba(255,255,255,0.01)]">
-                  6 MONTHS DOMAIN INCLUDED FREE
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Divider with increased margin */}
-          <div className="border-t border-white/[0.04] my-5" />
-
-          {/* Section 2: ADDITIONAL FREE CODEFUSER BUSINESS WORKSPACE */}
-          <div className="space-y-3 relative z-10">
-            {/* Second Priority Header */}
-            <div className="text-xs sm:text-[12.5px] font-mono font-extrabold uppercase tracking-[0.15em] text-white">
-              ⭐ ADDITIONAL FREE CODEFUSER BUSINESS WORKSPACE
-            </div>
-            
-            {/* Third Priority: Workspace benefits */}
-            <div className="space-y-2.5 text-[12px] sm:text-[13px] font-semibold leading-relaxed">
-              <div className="flex items-start gap-3">
-                <span className="text-xs select-none mt-0.5 leading-none font-bold text-white">•</span>
-                <span className="text-neutral-200/95">Upload Your Business Assets</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="text-xs select-none mt-0.5 leading-none font-bold text-white">•</span>
-                <span className="text-neutral-200/95">Access Your Complete Website Workspace</span>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Lowest Priority Supporting Text - slightly larger */}
-        <motion.div variants={itemVariants} className="mt-5 select-none text-center relative z-10">
-          <p className="text-xs sm:text-xs font-sans opacity-70 text-neutral-400 font-medium leading-relaxed">
-            Perfect for getting your business online quickly.
-          </p>
-        </motion.div>
-      </motion.div>
-    );
-  }
-
   return (
     <motion.div
       variants={containerVariants}
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: "-30px" }}
-      className={cn("mt-8 pt-6 relative overflow-hidden flex flex-col items-center justify-center text-center group/bundle px-1", containerBorderClass)}
+      className={cn("mt-8 pt-6 relative overflow-hidden flex flex-col items-center justify-center text-center group/bundle px-1 w-full", containerBorderClass)}
     >
       {/* Subtle package themed breathing ambient glow */}
       <div className={cn("absolute -right-8 -top-8 w-24 h-24 rounded-full blur-3xl pointer-events-none opacity-20 transition-all duration-700 group-hover/bundle:opacity-45 animate-ambient-breathe", ambientGlowColor)} />
 
-      {/* High-visibility Section Title */}
-      <motion.div variants={itemVariants} className="space-y-1.5 select-none w-full mb-5">
-        <h4 className={cn("text-xs sm:text-sm font-display tracking-[0.18em] uppercase font-black text-center", titleColorClass)}>
+      {/* Header Section */}
+      <motion.div variants={itemVariants} className="space-y-1.5 select-none w-full mb-6">
+        {/* FREE WEBSITE BENEFITS */}
+        <h4 className={cn("text-xs sm:text-[13px] font-display tracking-[0.18em] uppercase font-black text-center", titleColorClass)}>
           {bundleName}
         </h4>
-        <div className="space-y-1 text-center mt-3">
+        
+        {/* Value Presentation - FREE feeling comes before value amount */}
+        <div className="space-y-0.5 text-center mt-3">
           <div className={worthColorClass}>
             Worth {worthText}
           </div>
@@ -459,92 +335,151 @@ export const FreePremiumBundle: React.FC<FreePremiumBundleProps> = ({ tierId }) 
         </div>
       </motion.div>
 
-      {/* PREMIUM REWARD MOMENT */}
-      <motion.div variants={itemVariants} className="mb-4.5 select-none text-center">
-        <span className={cn("text-[10px] font-mono tracking-[0.3em] font-bold uppercase", businessGetsGlowClass)}>
-          YOUR BUSINESS GETS
-        </span>
-      </motion.div>
-
       {/* Two Premium Extras Cards */}
-      <div className="space-y-4.5 relative z-10 w-full text-left">
-        {/* Benefit 1 Card */}
-        <motion.div 
-          variants={itemVariants} 
-          className={cn(
-            "p-5 rounded-2xl border transition-all duration-300 w-full backdrop-blur-md shadow-sm space-y-3",
-            tierId === "dominance" 
-              ? "bg-black/[0.015] border-black/[0.05] hover:bg-black/[0.03] hover:border-black/[0.08]" 
-              : "bg-white/[0.015] border-white/[0.05] hover:bg-white/[0.03] hover:border-white/[0.08]"
-          )}
-        >
-          {/* Second Priority: FREE Bundle Title */}
-          <div className={cn(
-            "text-xs sm:text-[12.5px] font-mono font-extrabold uppercase tracking-[0.15em]",
-            tierId === "dominance" ? "text-neutral-950 font-black" : "text-white"
-          )}>
-            🌐 FREE WEBSITE NAME
-          </div>
-          
-          <div className="space-y-3">
-            <div className={cn("text-[16px] sm:text-[17px] font-extrabold font-sans tracking-wide", tierId === "dominance" ? "text-neutral-900" : "text-white")}>
-              www.YourBusinessName.com
-            </div>
-            
-            {/* Duration Badge */}
-            <div className="py-0.5">
-              <span className={badgeStyle}>
-                {durationBadgeText}
-              </span>
-            </div>
-
-            {/* Fourth Priority Supporting Text */}
-            <div className={cn("text-[11.5px] sm:text-xs font-sans leading-relaxed mt-1.5 opacity-80 font-medium", tierId === "dominance" ? "text-neutral-600/95" : "text-neutral-300/90")}>
-              {domainDescription}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Benefit 2 Card */}
-        <motion.div 
-          variants={itemVariants} 
-          className={cn(
-            "p-5 rounded-2xl border transition-all duration-300 w-full backdrop-blur-md shadow-sm space-y-3.5",
-            tierId === "dominance" 
-              ? "bg-black/[0.015] border-black/[0.05] hover:bg-black/[0.03] hover:border-black/[0.08]" 
-              : "bg-white/[0.015] border-white/[0.05] hover:bg-white/[0.03] hover:border-white/[0.08]"
-          )}
-        >
-          {/* Second Priority: FREE Bundle Title */}
-          <div className={cn(
-            "text-xs sm:text-[12.5px] font-mono font-extrabold uppercase tracking-[0.15em]",
-            tierId === "dominance" ? "text-neutral-950 font-black" : "text-white"
-          )}>
-            {workspaceHeading}
-          </div>
-
-          {/* Fourth Priority Supporting Text */}
-          <div className={cn("text-[11.5px] sm:text-xs font-sans leading-relaxed opacity-75 mb-3.5", tierId === "dominance" ? "text-neutral-700/95" : "text-neutral-300")}>
-            {workspaceDescription}
-          </div>
-          
-          {/* Third Priority: Workspace bullet points */}
-          <div className="space-y-2.5 text-[12px] sm:text-[13px] font-semibold leading-relaxed">
-            {workspaceFeatures.map((feature, idx) => (
-              <div key={idx} className="flex items-start gap-3">
-                <span className={cn(
-                  "text-xs select-none mt-0.5 leading-none font-bold", 
-                  tierId === "dominance" ? "text-neutral-900" : tierId === "growth" ? "text-[#EBC351]" : "text-white"
-                )}>
-                  •
-                </span>
-                <span className={tierId === "dominance" ? "text-neutral-900/90" : "text-neutral-200/95"}>
-                  {feature}
-                </span>
+      <div className="space-y-4 relative z-10 w-full text-left">
+        {tierId === "foundation" && (
+          <>
+            {/* Benefit 1 Card */}
+            <motion.div 
+              variants={itemVariants} 
+              className={cn("p-5 rounded-2xl border transition-all duration-300 w-full backdrop-blur-md shadow-sm space-y-3", cardClass)}
+            >
+              <div className="text-xs sm:text-[12.5px] font-mono font-extrabold uppercase tracking-[0.15em] text-white">
+                🌐 YOUR BUSINESS NAME ONLINE
               </div>
-            ))}
-          </div>
-        </motion.div>
+              <div className="space-y-2.5">
+                <div className="text-[16px] sm:text-[17px] font-extrabold font-sans tracking-wide text-white">
+                  www.YourBusinessName.com
+                </div>
+                <div className="pt-0.5">
+                  <span className={badgeStyle}>
+                    FREE for 6 Months
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Benefit 2 Card */}
+            <motion.div 
+              variants={itemVariants} 
+              className={cn("p-5 rounded-2xl border transition-all duration-300 w-full backdrop-blur-md shadow-sm space-y-3.5", cardClass)}
+            >
+              <div className="text-xs sm:text-[12.5px] font-mono font-extrabold uppercase tracking-[0.15em] text-white">
+                ⭐ FREE WEBSITE ADMIN SPACE
+              </div>
+              <div className="space-y-2.5 text-[12px] sm:text-[13px] font-semibold leading-relaxed">
+                <div className="flex items-start gap-3">
+                  <span className="text-xs select-none mt-0.5 leading-none font-bold text-white">•</span>
+                  <span className="text-neutral-200/95">Upload Business Photos</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-xs select-none mt-0.5 leading-none font-bold text-white">•</span>
+                  <span className="text-neutral-200/95">Access Your Complete Website</span>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+
+        {tierId === "growth" && (
+          <>
+            {/* Benefit 1 Card */}
+            <motion.div 
+              variants={itemVariants} 
+              className={cn("p-5 rounded-2xl border transition-all duration-300 w-full backdrop-blur-md shadow-sm space-y-3", cardClass)}
+            >
+              <div className="text-xs sm:text-[12.5px] font-mono font-extrabold uppercase tracking-[0.15em] text-white">
+                🌐 YOUR BUSINESS NAME ONLINE
+              </div>
+              <div className="space-y-2.5">
+                <div className="text-[16px] sm:text-[17px] font-extrabold font-sans tracking-wide text-white">
+                  www.YourBusinessName.com
+                </div>
+                <div className="pt-0.5">
+                  <span className={badgeStyle}>
+                    FREE for 12 Months
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Benefit 2 Card */}
+            <motion.div 
+              variants={itemVariants} 
+              className={cn("p-5 rounded-2xl border transition-all duration-300 w-full backdrop-blur-md shadow-sm space-y-3.5", cardClass)}
+            >
+              <div className="text-xs sm:text-[12.5px] font-mono font-extrabold uppercase tracking-[0.15em] text-white">
+                ⭐ FREE WEBSITE ADMIN SPACE
+              </div>
+              <div className="space-y-2.5 text-[12px] sm:text-[13px] font-semibold leading-relaxed">
+                <div className="flex items-start gap-3">
+                  <span className="text-xs select-none mt-0.5 leading-none font-bold text-[#EBC351]">•</span>
+                  <span className="text-neutral-200/95">Upload Business Photos</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-xs select-none mt-0.5 leading-none font-bold text-[#EBC351]">•</span>
+                  <span className="text-neutral-200/95">Access Your Complete Website</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-xs select-none mt-0.5 leading-none font-bold text-[#EBC351]">•</span>
+                  <span className="text-neutral-200/95">Update Business Information</span>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+
+        {tierId === "dominance" && (
+          <>
+            {/* Benefit 1 Card */}
+            <motion.div 
+              variants={itemVariants} 
+              className={cn("p-5 rounded-2xl border transition-all duration-300 w-full backdrop-blur-md shadow-sm space-y-3", cardClass)}
+            >
+              <div className="text-xs sm:text-[12.5px] font-mono font-extrabold uppercase tracking-[0.15em] text-neutral-950 font-black">
+                ⭐ FREE PREMIUM SETUP SUPPORT
+              </div>
+              <div className="space-y-2.5 text-[12px] sm:text-[13px] font-semibold leading-relaxed">
+                <div className="flex items-start gap-3">
+                  <span className="text-xs select-none mt-0.5 leading-none font-bold text-neutral-900">•</span>
+                  <span className="text-neutral-900/90">VIP Onboarding Support</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-xs select-none mt-0.5 leading-none font-bold text-neutral-900">•</span>
+                  <span className="text-neutral-900/90">Premium Setup Assistance</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Benefit 2 Card */}
+            <motion.div 
+              variants={itemVariants} 
+              className={cn("p-5 rounded-2xl border transition-all duration-300 w-full backdrop-blur-md shadow-sm space-y-3.5", cardClass)}
+            >
+              <div className="text-xs sm:text-[12.5px] font-mono font-extrabold uppercase tracking-[0.15em] text-neutral-950 font-black">
+                ⭐ FREE WEBSITE ADMIN SPACE
+              </div>
+              <div className="space-y-2.5 text-[12px] sm:text-[13px] font-semibold leading-relaxed">
+                <div className="flex items-start gap-3">
+                  <span className="text-xs select-none mt-0.5 leading-none font-bold text-neutral-900">•</span>
+                  <span className="text-neutral-900/90">Access Your Complete Website</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-xs select-none mt-0.5 leading-none font-bold text-neutral-900">•</span>
+                  <span className="text-neutral-900/90">Update Business Information</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-xs select-none mt-0.5 leading-none font-bold text-neutral-900">•</span>
+                  <span className="text-neutral-900/90">Priority Website Access</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-xs select-none mt-0.5 leading-none font-bold text-neutral-900">•</span>
+                  <span className="text-neutral-900/90">Dedicated Client Experience</span>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
       </div>
     </motion.div>
   );
@@ -560,6 +495,7 @@ export function TierCard({ tier }: TierCardProps) {
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [shine, setShine] = useState({ x: 50, y: 50 });
   const [isHovered, setIsHovered] = useState(false);
+  const [showAllFeatures, setShowAllFeatures] = useState(false);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
@@ -754,7 +690,7 @@ export function TierCard({ tier }: TierCardProps) {
       onMouseLeave={handleMouseLeave}
       style={transformStyle}
       className={cn(
-        "group relative flex h-full flex-col overflow-hidden rounded-3xl border p-6 sm:p-7 select-none transition-all duration-500",
+        "group relative flex h-full flex-col overflow-hidden rounded-3xl border p-5 xs:p-6 sm:p-7 select-none transition-all duration-500",
         cardClass,
         isHovered 
           ? (isGrowth 
@@ -789,13 +725,31 @@ export function TierCard({ tier }: TierCardProps) {
       </div>
       
       <ul className={cn("mt-8 space-y-2 text-sm transition-all duration-300 relative z-10", featuresClass)}>
-        {tier.features.map(feat => (
-          <li key={feat} className="flex items-start gap-3">
-            <span className={cn("mt-2 h-[1.5px] w-3 shrink-0 rounded-full", bulletColor)} />
-            {feat}
-          </li>
-        ))}
+        {tier.features.map((feat, idx) => {
+          const isHiddenOnMobile = idx > 2 && !showAllFeatures;
+          return (
+            <li 
+              key={feat} 
+              className={cn(
+                "items-start gap-3",
+                isHiddenOnMobile ? "hidden md:flex" : "flex"
+              )}
+            >
+              <span className={cn("mt-2 h-[1.5px] w-3 shrink-0 rounded-full", bulletColor)} />
+              {feat}
+            </li>
+          );
+        })}
       </ul>
+      
+      {tier.features.length > 3 && (
+        <button 
+          onClick={() => setShowAllFeatures(!showAllFeatures)}
+          className="mt-4 text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground cursor-pointer block md:hidden self-start relative z-10"
+        >
+          {showAllFeatures ? "↑ Hide features" : `↓ See all features (+${tier.features.length - 3})`}
+        </button>
+      )}
 
       {/* FREE PREMIUM BUNDLE COMPARTMENT */}
       <FreePremiumBundle tierId={tier.id} />
@@ -855,7 +809,7 @@ Looking forward to discussing my project.`;
   ];
 
   return (
-    <section id="pricing" className="relative overflow-hidden px-5 py-28 lg:py-32 sm:px-8">
+    <section id="pricing" className="lazy-section relative overflow-hidden px-5 py-[clamp(4.5rem,10vw,8rem)] sm:px-8">
       <div className="mx-auto max-w-5xl text-center">
         <Reveal>
           <Eyebrow>05 — Pricing</Eyebrow>

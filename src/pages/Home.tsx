@@ -75,7 +75,7 @@ function SeeGrowthCapacityButton() {
 function HeroSection() {
   const { navigate } = useAppRouter();
   return (
-    <section className="relative overflow-hidden px-5 pb-28 pt-24 sm:px-8 sm:pt-32 lg:pt-36 bg-black">
+    <section className="relative overflow-hidden px-5 pb-[clamp(4.5rem,10vw,8rem)] pt-[clamp(5rem,10vw,9rem)] sm:px-8 bg-black">
       {/* Background Drawing Ring - set to z-0 so it lies behind text but above section background */}
       <div className="pointer-events-none absolute left-1/2 top-[58%] z-0 -translate-x-1/2 -translate-y-1/2 opacity-20">
         <Ring size={700} progress={0.55} />
@@ -173,7 +173,7 @@ function HeroSection() {
 // ==========================================
 function CeilingSection() {
   return (
-    <section className="relative overflow-hidden px-5 py-28 lg:py-32 sm:px-8">
+    <section className="relative overflow-hidden px-5 py-[clamp(4.5rem,10vw,8rem)] sm:px-8">
       <div className="mx-auto grid max-w-6xl items-center gap-14 lg:gap-16 lg:grid-cols-[1.1fr_1fr]">
         <Reveal>
           <Eyebrow>02 — The Invisible Ceiling</Eyebrow>
@@ -209,7 +209,7 @@ const Slogans = ["Compared.", "Researched.", "Considered.", "Chosen."];
 
 function SilentDecisionSection() {
   return (
-    <section className="relative overflow-hidden px-5 py-28 lg:py-32 sm:px-8">
+    <section className="lazy-section relative overflow-hidden px-5 py-[clamp(4.5rem,10vw,8rem)] sm:px-8">
       <div className="mx-auto max-w-5xl">
         <Reveal>
           <Eyebrow>03 — The Silent Decision</Eyebrow>
@@ -262,7 +262,7 @@ const engineSteps = [
 
 function GrowthEngineSection() {
   return (
-    <section className="relative overflow-hidden px-5 py-28 lg:py-32 sm:px-8 bg-black">
+    <section className="lazy-section relative overflow-hidden px-5 py-[clamp(4.5rem,10vw,8rem)] sm:px-8 bg-black">
       <div className="mx-auto max-w-5xl text-center">
         <Reveal>
           <Eyebrow>04 — The Growth Engine</Eyebrow>
@@ -281,7 +281,7 @@ function GrowthEngineSection() {
       </div>
 
       <Reveal delay={200} className="mx-auto mt-14 sm:mt-16 flex justify-center">
-        <div className="relative" style={{ width: 512, height: 512, maxWidth: "92vw" }}>
+        <div className="relative w-[92vw] max-w-[512px] aspect-square">
           <svg viewBox="0 0 512 512" className="absolute inset-0 h-full w-full" aria-hidden="true">
             <defs>
               <radialGradient id="engine-glow" cx="50%" cy="50%" r="50%">
@@ -383,7 +383,7 @@ const fusionMethodSteps: ProcessStep[] = [
 
 function FusionMethodSection() {
   return (
-    <section className="relative overflow-hidden px-5 py-28 lg:py-32 sm:px-8">
+    <section className="lazy-section relative overflow-hidden px-5 py-[clamp(4.5rem,10vw,8rem)] sm:px-8">
       <div className="mx-auto max-w-5xl">
         <Reveal>
           <Eyebrow>06 — The Fusion Method™</Eyebrow>
@@ -462,7 +462,7 @@ const networkEdges = [
 
 function WhyCodeFuserSection() {
   return (
-    <section className="relative overflow-hidden px-5 py-28 lg:py-32 sm:px-8 bg-black">
+    <section className="lazy-section relative overflow-hidden px-5 py-[clamp(4.5rem,10vw,8rem)] sm:px-8 bg-black">
       <div className="mx-auto grid max-w-6xl items-center gap-12 lg:gap-14 lg:grid-cols-2">
         <Reveal>
           <Eyebrow>07 — Why CodeFuser</Eyebrow>
@@ -550,7 +550,7 @@ const targetIndustries: IndustryItem[] = [
 
 function IndustriesSection() {
   return (
-    <section className="relative overflow-hidden px-5 py-28 lg:py-32 sm:px-8">
+    <section className="lazy-section relative overflow-hidden px-5 py-[clamp(4.5rem,10vw,8rem)] sm:px-8">
       <div className="mx-auto max-w-5xl text-center">
         <Reveal>
           <Eyebrow>08 — Industries</Eyebrow>
@@ -596,7 +596,7 @@ const stages = ["Invisible", "Trusted", "Chosen", "Growing"];
 
 function ResultsSection() {
   return (
-    <section className="relative overflow-hidden px-5 py-28 lg:py-32 sm:px-8 bg-black">
+    <section className="lazy-section relative overflow-hidden px-5 py-[clamp(4.5rem,10vw,8rem)] sm:px-8 bg-black">
       <div className="mx-auto max-w-5xl">
         <Reveal>
           <Eyebrow>09 — Results</Eyebrow>

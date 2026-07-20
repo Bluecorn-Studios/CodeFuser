@@ -29,8 +29,14 @@ export default defineConfig(() => {
               if (id.includes('supabase') || id.includes('websocket')) {
                 return 'vendor-supabase';
               }
-              if (id.includes('lucide-react') || id.includes('motion')) {
-                return 'vendor-ui';
+              if (id.includes('lucide-react')) {
+                return 'vendor-lucide';
+              }
+              if (id.includes('motion') || id.includes('framer-motion')) {
+                return 'vendor-motion';
+              }
+              if (id.includes('recharts') || id.includes('d3')) {
+                return 'vendor-recharts';
               }
               return 'vendor';
             }

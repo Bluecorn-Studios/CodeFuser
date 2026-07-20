@@ -90,13 +90,16 @@ const FAQAccordionItem: React.FC<FAQAccordionItemProps> = ({ item, isOpen, onTog
       </button>
       
       <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          isOpen ? 'max-h-[500px] pb-6 opacity-100' : 'max-h-0 opacity-0'
+        className={`grid transition-all duration-300 ease-in-out ${
+          isOpen ? 'grid-rows-[1fr] pb-6 opacity-100' : 'grid-rows-[0fr] opacity-0'
         }`}
+        style={{ contentVisibility: isOpen ? 'visible' : 'hidden' }}
       >
-        <p className="text-sm leading-relaxed text-muted-foreground max-w-2xl">
-          {item.answer}
-        </p>
+        <div className="overflow-hidden">
+          <p className="text-sm leading-relaxed text-muted-foreground max-w-2xl">
+            {item.answer}
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -110,7 +113,7 @@ export const Faq: React.FC = () => {
   };
 
   return (
-    <section id="faq" className="relative overflow-hidden px-5 py-28 lg:py-32 sm:px-8">
+    <section id="faq" className="lazy-section relative overflow-hidden px-5 py-[clamp(4.5rem,10vw,8rem)] sm:px-8">
       <div className="mx-auto max-w-5xl">
         <div className="grid gap-16 lg:grid-cols-[1fr_1.5fr]">
           <Reveal>

@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
+import compression from "compression";
 import { addProject, getProjects, updateProject, getProjectById, logAuditEvent, getUserProfile, createUserProfile, updateUserProfileRole, getAllUserProfiles } from "./server/db.js";
 import { getSupabase } from "./server/supabase.js";
 import { getExtraData, updateQuote, addAssetFile } from "./server/extra_store.js";
@@ -40,10 +41,12 @@ import {
   checkAbort,
   simulateDelayMiddleware
 } from "./server/timeout.js";
+import { cache } from "./server/cache.js";
 
 dotenv.config();
 
 const app = express();
+app.use(compression());
 const PORT = 3000;
 
 // Whitelist of allowed MIME types for Secure Upload Engine
@@ -458,6 +461,18 @@ app.use("/uploads", express.static(uploadsDir));
 app.post("/api/projects/validate-step1", projectsRateLimiter, async (req: any, res) => {
   try {
     const { email, whatsapp, userId } = req.body;
+    
+    // Check validation cache to prevent repeated database lookup overhead
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    const normalizedWhatsapp = String(whatsapp || "").trim().replace(/\s+/g, "");
+    const cacheKey = `validate:step1:${normalizedEmail}:${normalizedWhatsapp}:${String(userId || "")}`;
+    
+    const cachedResult = await cache.get(cacheKey);
+    if (cachedResult) {
+      logger.info(`[PERF] Step 1 validation cache hit! Key: ${cacheKey}`);
+      return res.json(JSON.parse(cachedResult));
+    }
+
     const supabase = getSupabase();
 
     // 1. Check whether the user already owns an active CodeFuser project.
@@ -472,11 +487,13 @@ app.post("/api/projects/validate-step1", projectsRateLimiter, async (req: any, r
       }
 
       if (userMatch && userMatch.length > 0) {
-        return res.json({
+        const result = {
           duplicate: true,
           reason: "active_project",
           message: "This account already owns an active CodeFuser project."
-        });
+        };
+        await cache.set(cacheKey, JSON.stringify(result), 30);
+        return res.json(result);
       }
     }
 
@@ -493,11 +510,13 @@ app.post("/api/projects/validate-step1", projectsRateLimiter, async (req: any, r
       }
 
       if (emailMatch && emailMatch.length > 0) {
-        return res.json({
+        const result = {
           duplicate: true,
           reason: "email",
           message: "This email address is already linked to an existing CodeFuser project."
-        });
+        };
+        await cache.set(cacheKey, JSON.stringify(result), 30);
+        return res.json(result);
       }
     }
 
@@ -517,20 +536,24 @@ app.post("/api/projects/validate-step1", projectsRateLimiter, async (req: any, r
           if (p.whatsapp) {
             const dbClean = p.whatsapp.replace(/\s+/g, "");
             if (dbClean === cleanWhatsapp || p.whatsapp.trim() === whatsapp.trim()) {
-              return res.json({
+              const result = {
                 duplicate: true,
                 reason: "whatsapp",
                 message: "This WhatsApp number is already registered with CodeFuser."
-              });
+              };
+              await cache.set(cacheKey, JSON.stringify(result), 30);
+              return res.json(result);
             }
           }
         }
       }
     }
 
-    return res.json({
+    const successResult = {
       duplicate: false
-    });
+    };
+    await cache.set(cacheKey, JSON.stringify(successResult), 30);
+    return res.json(successResult);
   } catch (error: any) {
     console.error("Step 1 validation error:", error);
     return res.status(500).json({ error: "Unable to complete validation check. Please try again later." });
@@ -2141,6 +2164,19 @@ app.post("/api/start-project/package-upgrade-options", requestTimeout(45000, "AI
     
     checkAbort(req);
 
+    const cleanBusinessName = String(businessName || "").trim().toLowerCase();
+    const cleanPrompt = String(aiPrompt || "").trim().toLowerCase();
+    const cleanIndustry = String(industry || "").trim().toLowerCase();
+    const cleanGoal = String(goal || "").trim().toLowerCase();
+    const recCacheKey = `recommendations:${String(packageId)}:${cleanBusinessName}:${cleanIndustry}:${cleanGoal}:${cleanPrompt}`;
+
+    const cachedRec = await cache.get(recCacheKey);
+    if (cachedRec) {
+      logger.info(`[PERF] Recommendations cache hit! Key: ${recCacheKey}`);
+      if (res.headersSent || req.timedOut) return;
+      return res.json(JSON.parse(cachedRec));
+    }
+
     // Choose base and upgrade 1 prices and names realistically
     let baseName = "✦ Fusion";
     let basePrice = "₹14,999";
@@ -2205,10 +2241,12 @@ app.post("/api/start-project/package-upgrade-options", requestTimeout(45000, "AI
       
       if (res.headersSent || req.timedOut) return;
 
-      return res.json({
+      const fallbackResult = {
         summary: getFallbackSummary(packageId, businessName, industry, goal, aiPrompt),
         options: getFallbackUpgrades(packageId, businessName, ownerName, industry, goal)
-      });
+      };
+      await cache.set(recCacheKey, JSON.stringify(fallbackResult), 300);
+      return res.json(fallbackResult);
     }
 
     const ai = new GoogleGenAI({
@@ -2359,6 +2397,7 @@ Important:
         
         if (res.headersSent || req.timedOut) return;
 
+        await cache.set(recCacheKey, JSON.stringify(data), 300);
         return res.json(data);
       }
     }
@@ -2370,10 +2409,19 @@ Important:
     console.error("Failed to generate package upgrade recommendations:", err);
     // Fallback response:
     const { packageId, businessName, ownerName, industry, goal, aiPrompt } = req.body;
-    return res.json({
+    
+    const cleanBusinessName = String(businessName || "").trim().toLowerCase();
+    const cleanPrompt = String(aiPrompt || "").trim().toLowerCase();
+    const cleanIndustry = String(industry || "").trim().toLowerCase();
+    const cleanGoal = String(goal || "").trim().toLowerCase();
+    const recCacheKey = `recommendations:${String(packageId)}:${cleanBusinessName}:${cleanIndustry}:${cleanGoal}:${cleanPrompt}`;
+
+    const fallbackResult = {
       summary: getFallbackSummary(packageId, businessName, industry, goal, aiPrompt),
       options: getFallbackUpgrades(packageId, businessName, ownerName, industry, goal)
-    });
+    };
+    await cache.set(recCacheKey, JSON.stringify(fallbackResult), 300);
+    return res.json(fallbackResult);
   }
 });
 

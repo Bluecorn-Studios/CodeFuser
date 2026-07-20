@@ -230,8 +230,166 @@ function loadRazorpayScript(): Promise<boolean> {
   });
 }
 
+// Highly optimized input component wrapped in React.memo with local state buffering to prevent parent re-renders while typing (Part A2 - #26)
+interface PerformanceInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  value: string;
+  onActualChange: (val: string) => void;
+  sanitize?: (val: string) => string;
+}
+
+const PerformanceInput = React.memo<PerformanceInputProps>(({ value, onActualChange, sanitize, ...props }) => {
+  const [localVal, setLocalVal] = React.useState(value);
+
+  React.useEffect(() => {
+    setLocalVal(value);
+  }, [value]);
+
+  const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let newVal = e.target.value;
+    if (sanitize) {
+      newVal = sanitize(newVal);
+    }
+    setLocalVal(newVal);
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      onActualChange(newVal);
+    }, 150);
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    const finalVal = sanitize ? sanitize(localVal) : localVal;
+    onActualChange(finalVal);
+    if (props.onBlur) {
+      props.onBlur(e);
+    }
+  };
+
+  React.useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <input
+      {...props}
+      value={localVal}
+      onChange={handleChange}
+      onBlur={handleBlur}
+    />
+  );
+});
+
+PerformanceInput.displayName = 'PerformanceInput';
+
+// Highly optimized textarea component wrapped in React.memo with local state buffering to prevent parent re-renders while typing (Part A2 - #26)
+interface PerformanceTextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  value: string;
+  onActualChange: (val: string) => void;
+}
+
+const PerformanceTextArea = React.memo<PerformanceTextAreaProps>(({ value, onActualChange, ...props }) => {
+  const [localVal, setLocalVal] = React.useState(value);
+
+  React.useEffect(() => {
+    setLocalVal(value);
+  }, [value]);
+
+  const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newVal = e.target.value;
+    setLocalVal(newVal);
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      onActualChange(newVal);
+    }, 150);
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    onActualChange(localVal);
+    if (props.onBlur) {
+      props.onBlur(e);
+    }
+  };
+
+  React.useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <textarea
+      {...props}
+      value={localVal}
+      onChange={handleChange}
+      onBlur={handleBlur}
+    />
+  );
+});
+
+PerformanceTextArea.displayName = 'PerformanceTextArea';
+
+// Self-contained isolated auto-save indicator component to avoid cascading parent re-renders (Part A2 - #30)
+const DraftSavedIndicator: React.FC = () => {
+  const [visible, setVisible] = React.useState(false);
+
+  React.useEffect(() => {
+    let timer: NodeJS.Timeout;
+    const handleSave = () => {
+      setVisible(true);
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        setVisible(false);
+      }, 2000);
+    };
+
+    window.addEventListener('fuser-draft-saved', handleSave);
+    return () => {
+      window.removeEventListener('fuser-draft-saved', handleSave);
+      clearTimeout(timer);
+    };
+  }, []);
+
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div 
+          initial={{ opacity: 0, y: -8, scale: 0.92 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -8, scale: 0.92 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center gap-1.5 text-[9px] font-mono text-emerald-400 tracking-wider uppercase backdrop-blur-md shadow-[0_4px_16px_rgba(0,0,0,0.6)]"
+        >
+          <span className="h-1 w-1 rounded-full bg-emerald-400 animate-pulse" />
+          Draft Saved
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
 export const StartProjectPage: React.FC = () => {
-  const { navigate } = useAppRouter();
+  const { navigate, currentPath } = useAppRouter();
   const backgroundStars = React.useMemo(() => {
     return Array.from({ length: 45 }).map((_, i) => ({
       id: i,
@@ -509,7 +667,6 @@ export const StartProjectPage: React.FC = () => {
   }, []);
 
   // Pre-fill fields from logged-in session on mount & Restore saved draft automatically (Part 1)
-  const [draftSavedMessage, setDraftSavedMessage] = useState<boolean>(false);
 
   useEffect(() => {
     const authUser = getAuthUser();
@@ -548,27 +705,40 @@ export const StartProjectPage: React.FC = () => {
     }
   }, []);
 
-  // Save changes automatically
+  // Save changes automatically with 1000ms debouncing and requestIdleCallback (Part A2 - #29)
   useEffect(() => {
     if (!isSubmitted && !isSubmitting && (formData.businessName || formData.ownerName || localPhone || step > 1)) {
-      const draftData = {
-        formData,
-        step,
-        localPhone,
-        selectedCountryCode: selectedCountry.code
-      };
-      safeLocalStorage.setItem("codefuser_start_project_draft", JSON.stringify(draftData));
-      
-      setDraftSavedMessage(true);
-      const timer = setTimeout(() => {
-        setDraftSavedMessage(false);
-      }, 2000);
-      return () => clearTimeout(timer);
+      const saveTimer = setTimeout(() => {
+        const draftData = {
+          formData,
+          step,
+          localPhone,
+          selectedCountryCode: selectedCountry.code
+        };
+
+        const writeToStorage = () => {
+          try {
+            safeLocalStorage.setItem("codefuser_start_project_draft", JSON.stringify(draftData));
+            // Trigger the decoupled isolated indicator via window event
+            window.dispatchEvent(new CustomEvent('fuser-draft-saved'));
+          } catch (e) {
+            console.warn("Auto-save draft storage write failed:", e);
+          }
+        };
+
+        if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+          window.requestIdleCallback(() => writeToStorage());
+        } else {
+          setTimeout(writeToStorage, 0);
+        }
+      }, 1000);
+
+      return () => clearTimeout(saveTimer);
     }
   }, [formData, step, localPhone, selectedCountry, isSubmitted, isSubmitting]);
 
-  // Dynamic Validation Error Helper
-  const getValidationErrors = () => {
+  // Memoized Validation Error Helper
+  const validationErrors = React.useMemo(() => {
     const errs: Record<string, string> = {};
     
     // Business Name
@@ -608,14 +778,16 @@ export const StartProjectPage: React.FC = () => {
     }
 
     return errs;
-  };
+  }, [formData.businessName, formData.ownerName, formData.email, localPhone, selectedCountry]);
 
-  const validationErrors = getValidationErrors();
-
-  const filteredCountries = COUNTRIES.filter(c => 
-    c.name.toLowerCase().includes(countrySearch.toLowerCase()) || 
-    c.code.includes(countrySearch)
-  );
+  // Memoized Country Search Filter
+  const filteredCountries = React.useMemo(() => {
+    const query = countrySearch.toLowerCase();
+    return COUNTRIES.filter(c => 
+      c.name.toLowerCase().includes(query) || 
+      c.code.includes(countrySearch)
+    );
+  }, [countrySearch]);
 
   // Reset scroll layout to top on mount to ensure every onboarding session begins at the top
   useEffect(() => {
@@ -633,7 +805,7 @@ export const StartProjectPage: React.FC = () => {
         setIsPlanLocked(true);
       }
     }
-  }, []);
+  }, [currentPath]);
 
   const selectedPlan = pricingPlans.find(p => p.id === formData.packageId) || pricingPlans[1];
 
@@ -769,7 +941,7 @@ export const StartProjectPage: React.FC = () => {
     if (isSubmitting) return; // Prevent duplicate request clicks
 
     // Validate required contact details dynamically
-    const errors = getValidationErrors();
+    const errors = validationErrors;
     if (Object.keys(errors).length > 0) {
       setStep(1);
       setTriggerValidation(true);
@@ -1032,21 +1204,8 @@ ${formData.ownerName}
               {/* Hairline glass light reflection decoration */}
               <div className="absolute inset-x-0 top-0 h-px bg-white/5" />
 
-              {/* Global Draft auto save indicator (Absolute, layout-stable, high-end) */}
-              <AnimatePresence>
-                {draftSavedMessage && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: -8, scale: 0.92 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -8, scale: 0.92 }}
-                    transition={{ duration: 0.25, ease: "easeOut" }}
-                    className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center gap-1.5 text-[9px] font-mono text-emerald-400 tracking-wider uppercase backdrop-blur-md shadow-[0_4px_16px_rgba(0,0,0,0.6)]"
-                  >
-                    <span className="h-1 w-1 rounded-full bg-emerald-400 animate-pulse" />
-                    Draft Saved
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {/* Global Draft auto save indicator (Absolute, layout-stable, high-end, Part A2 - #30) */}
+              <DraftSavedIndicator />
 
               {/* Onboarding Form Header */}
               {step !== 5 && (
@@ -1197,12 +1356,12 @@ ${formData.ownerName}
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 group-focus-within:text-purple-400 transition-colors duration-300">
                           <Building size={16} strokeWidth={1.5} />
                         </span>
-                        <input
+                        <PerformanceInput
                           id="businessName"
                           type="text"
                           required
                           value={formData.businessName}
-                          onChange={(e) => updateField('businessName', e.target.value)}
+                          onActualChange={(val) => updateField('businessName', val)}
                           placeholder="e.g. Blue Horizon Dental"
                           className={`pl-11 pr-5 border bg-black/60 rounded-xl text-xs text-foreground focus:outline-none transition-all font-sans placeholder-zinc-700 h-[48px] w-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)] backdrop-blur-md ${
                             triggerValidation && validationErrors.businessName
@@ -1235,12 +1394,12 @@ ${formData.ownerName}
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 group-focus-within:text-purple-400 transition-colors duration-300">
                           <User size={16} strokeWidth={1.5} />
                         </span>
-                        <input
+                        <PerformanceInput
                           id="ownerName"
                           type="text"
                           required
                           value={formData.ownerName}
-                          onChange={(e) => updateField('ownerName', e.target.value)}
+                          onActualChange={(val) => updateField('ownerName', val)}
                           placeholder="First and last name"
                           className={`pl-11 pr-5 border bg-black/60 rounded-xl text-xs text-foreground focus:outline-none transition-all font-sans placeholder-zinc-700 h-[48px] w-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)] backdrop-blur-md ${
                             triggerValidation && validationErrors.ownerName
@@ -1287,17 +1446,15 @@ ${formData.ownerName}
                             </button>
 
                             {/* Local telephone input */}
-                            <input
+                            <PerformanceInput
                               id="whatsapp"
                               type="tel"
                               inputMode="tel"
                               pattern="[0-9]*"
                               required
                               value={localPhone}
-                              onChange={(e) => {
-                                const sanitized = e.target.value.replace(/\D/g, '').slice(0, selectedCountry.validationRule.maxLength);
-                                  setLocalPhone(sanitized);
-                              }}
+                              sanitize={(val) => val.replace(/\D/g, '').slice(0, selectedCountry.validationRule.maxLength)}
+                              onActualChange={(val) => setLocalPhone(val)}
                               placeholder={`e.g. ${selectedCountry.example}`}
                               className="flex-1 bg-transparent px-3.5 text-xs text-foreground focus:outline-none font-sans placeholder-zinc-700 h-full w-full"
                             />
@@ -1401,12 +1558,12 @@ ${formData.ownerName}
                           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 group-focus-within:text-purple-400 transition-colors duration-300">
                             <Mail size={16} strokeWidth={1.5} />
                           </span>
-                          <input
+                          <PerformanceInput
                             id="email"
                             type="email"
                             required
                             value={formData.email}
-                            onChange={(e) => updateField('email', e.target.value)}
+                            onActualChange={(val) => updateField('email', val)}
                             placeholder="you@company.com"
                             className={`pl-11 pr-5 border bg-black/60 rounded-xl text-xs text-foreground focus:outline-none transition-all font-sans placeholder-zinc-700 h-[48px] w-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)] backdrop-blur-md ${
                               triggerValidation && validationErrors.email
@@ -1442,12 +1599,12 @@ ${formData.ownerName}
                     <label className="block text-xs font-mono uppercase tracking-widest text-neutral-400 font-bold">
                       What kind of business do you run? *
                     </label>
-                    <input
+                    <PerformanceInput
                       type="text"
                       required
                       value={formData.customIndustry}
-                      onChange={(e) => {
-                        updateField('customIndustry', e.target.value);
+                      onActualChange={(val) => {
+                        updateField('customIndustry', val);
                         updateField('industry', 'other');
                       }}
                       placeholder="e.g. Restaurant, Salon, Gym, Clinic, Real Estate, Interior Designer, Tuition Centre, etc."
@@ -2048,22 +2205,22 @@ ${formData.ownerName}
                     <div className="absolute -inset-10 bg-purple-600/[0.03] group-hover:bg-purple-600/[0.08] rounded-3xl blur-2xl pointer-events-none transition-all duration-700 -z-10 animate-pulse" />
                     <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/[0.04] to-transparent pointer-events-none" />
                     
-                    <textarea
-                      value={formData.aiPrompt}
-                      onChange={(e) => setFormData(prev => ({ ...prev, aiPrompt: e.target.value }))}
+                    <PerformanceTextArea
+                      value={formData.aiPrompt || ''}
+                      onActualChange={(val) => setFormData(prev => ({ ...prev, aiPrompt: val }))}
                       rows={10}
                       placeholder={`Tell us anything about your business.
-
+ 
 Examples:
-
+ 
 • What makes your business special?
-
+ 
 • What do you want customers to feel when they visit your website?
-
+ 
 • What are your goals for your business?
-
+ 
 • Is there anything you've always wanted for your website?
-
+ 
 Don't worry if you don't know much about websites. We'll take care of the technical stuff for you.`}
                       className="w-full text-sm font-sans rounded-xl bg-[#030303]/95 p-6 sm:p-8 text-[#f5f5f0] placeholder-zinc-500/80 focus:outline-none focus:ring-0 border-0 outline-none leading-relaxed resize-none transition-all duration-300"
                     />

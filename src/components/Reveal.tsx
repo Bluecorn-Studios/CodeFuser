@@ -277,7 +277,8 @@ export const Eo: React.FC = () => {
               height={23}
               loading="eager"
               decoding="async"
-              className="h-[21px] w-auto sm:h-[23px] block select-none" 
+              className="h-[21px] w-[155.2px] sm:h-[23px] sm:w-[170px] aspect-[170/23] block select-none" 
+              style={{ aspectRatio: "170/23" }}
               referrerPolicy="no-referrer" 
             />
           </Link>
@@ -336,7 +337,7 @@ export const Eo: React.FC = () => {
           {/* Mobile menu toggle */}
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 rounded-full border border-border/40 text-foreground md:hidden hover:border-foreground/45 transition-colors focus:outline-none"
+            className="flex h-11 w-11 flex-col items-center justify-center gap-1.5 rounded-full border border-border/40 text-foreground md:hidden hover:border-foreground/45 transition-colors focus:outline-none"
             aria-label="Toggle menu"
           >
             <span className={cn("h-0.5 w-5 bg-foreground transition-transform duration-300", mobileMenuOpen ? "rotate-45 translate-y-2" : "")} />
@@ -478,11 +479,11 @@ export const Oo: React.FC = () => {
 
         <div>
           <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground/60 font-semibold">Legal</p>
-          <ul className="mt-4 space-y-2.5 text-sm text-foreground/80">
-            <li onClick={() => setActiveModal('privacy')} className="hover:text-foreground transition-colors cursor-pointer">Privacy Policy</li>
-            <li onClick={() => setActiveModal('terms')} className="hover:text-foreground transition-colors cursor-pointer">Terms & Conditions</li>
-            <li onClick={() => setActiveModal('refund')} className="hover:text-foreground transition-colors cursor-pointer">Refund Policy</li>
-            <li onClick={() => setActiveModal('cookie')} className="hover:text-foreground transition-colors cursor-pointer">Cookie Policy</li>
+          <ul className="mt-4 space-y-1 sm:space-y-2.5 text-sm text-foreground/80">
+            <li onClick={() => setActiveModal('privacy')} className="hover:text-foreground transition-colors cursor-pointer py-3 sm:py-0 min-h-[44px] sm:min-h-0 flex items-center">Privacy Policy</li>
+            <li onClick={() => setActiveModal('terms')} className="hover:text-foreground transition-colors cursor-pointer py-3 sm:py-0 min-h-[44px] sm:min-h-0 flex items-center">Terms & Conditions</li>
+            <li onClick={() => setActiveModal('refund')} className="hover:text-foreground transition-colors cursor-pointer py-3 sm:py-0 min-h-[44px] sm:min-h-0 flex items-center">Refund Policy</li>
+            <li onClick={() => setActiveModal('cookie')} className="hover:text-foreground transition-colors cursor-pointer py-3 sm:py-0 min-h-[44px] sm:min-h-0 flex items-center">Cookie Policy</li>
           </ul>
         </div>
       </div>
@@ -495,10 +496,10 @@ export const Oo: React.FC = () => {
           <span className="hidden sm:inline text-muted-foreground/30">•</span>
           <Link to="/mission-control" className="hover:text-foreground transition-colors text-muted-foreground/60">Admin</Link>
         </div>
-        <div className="flex gap-5">
-          <a href={C.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Instagram</a>
-          <a href={C.linkedin} target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">LinkedIn</a>
-          <a href={C.twitter} target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Twitter</a>
+        <div className="flex flex-wrap gap-x-5 gap-y-1 sm:gap-5">
+          <a href={C.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors py-3 sm:py-0 min-h-[44px] sm:min-h-0 flex items-center">Instagram</a>
+          <a href={C.linkedin} target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors py-3 sm:py-0 min-h-[44px] sm:min-h-0 flex items-center">LinkedIn</a>
+          <a href={C.twitter} target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors py-3 sm:py-0 min-h-[44px] sm:min-h-0 flex items-center">Twitter</a>
         </div>
       </div>
 
@@ -732,7 +733,7 @@ export const P: React.FC<PageContainerProps> = ({ children }) => {
   }
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground flex flex-col justify-between">
+    <div className="relative min-h-screen bg-background text-foreground flex flex-col justify-between overflow-x-hidden">
       <div className="flex flex-col w-full">
         <Eo />
         <main className="pt-14 pb-16 w-full">
