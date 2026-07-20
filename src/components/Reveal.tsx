@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState, createContext, useContext } from 'react';
 import { PagePath } from '../types';
-import { supabase } from '../lib/supabase';
 import { safeLocalStorage } from '../utils/safeStorage';
 
 // Company Contact Coordinates
@@ -249,6 +248,7 @@ export const Eo: React.FC = () => {
 
   const handleLogout = async () => {
     try {
+      const { supabase } = await import('../lib/supabase');
       await Promise.all([
         fetch('/api/auth/logout', { method: 'POST' }),
         supabase.auth.signOut()
@@ -277,6 +277,7 @@ export const Eo: React.FC = () => {
               height={23}
               loading="eager"
               decoding="async"
+              fetchPriority="high"
               className="h-[21px] w-[155.2px] sm:h-[23px] sm:w-[170px] aspect-[170/23] block select-none" 
               style={{ aspectRatio: "170/23" }}
               referrerPolicy="no-referrer" 

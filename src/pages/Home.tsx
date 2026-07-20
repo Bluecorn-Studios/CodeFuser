@@ -1,11 +1,11 @@
-import React from 'react';
-import { motion } from 'motion/react';
+import React, { Suspense, lazy } from 'react';
 import { R as Reveal, E as Eyebrow, G as Button, s as scrollToSection, b as getMailtoLink, cn, useAppRouter } from '../components/Reveal';
 import { Ring } from '../components/FinalCta';
-import { Pricing } from '../components/Pricing';
-import { Faq } from '../components/Faq';
-import { FinalCta } from '../components/FinalCta';
 import { FAQItem, IndustryItem, ProcessStep } from '../types';
+
+const Pricing = lazy(() => import('../components/Pricing').then(m => ({ default: m.Pricing })));
+const Faq = lazy(() => import('../components/Faq').then(m => ({ default: m.Faq })));
+const FinalCta = lazy(() => import('../components/FinalCta').then(m => ({ default: m.FinalCta })));
 
 // ==========================================
 // PREMIUM REFINE: SEE GROWTH CAPACITY GLASS BUTTON
@@ -19,18 +19,9 @@ function SeeGrowthCapacityButton() {
       />
 
       {/* The main interactive button */}
-      <motion.button
+      <button
         onClick={() => scrollToSection("pricing")}
-        initial={{ opacity: 0, scale: 0.95, filter: "blur(6px)", y: 15 }}
-        animate={{ opacity: 1, scale: 1, filter: "blur(0px)", y: 0 }}
-        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
-        whileHover={{ 
-          scale: 1.03,
-          borderColor: "rgba(255, 255, 255, 0.95)",
-          boxShadow: "0 0 12px rgba(255, 255, 255, 0.22), 0 0 5px rgba(139, 92, 246, 0.12), inset 0 0 6px rgba(255, 255, 255, 0.25), 0 8px 24px rgba(0, 0, 0, 0.98)"
-        }}
-        whileTap={{ scale: 0.97 }}
-        className="group relative inline-flex items-center justify-center gap-3 rounded-full px-11 py-4 text-[15.5px] sm:text-base font-semibold tracking-wide text-white bg-black/95 backdrop-blur-md cursor-pointer select-none overflow-hidden transition-all duration-300"
+        className="group relative inline-flex items-center justify-center gap-3 rounded-full px-11 py-4 text-[15.5px] sm:text-base font-semibold tracking-wide text-white bg-black cursor-pointer select-none overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:border-white active:scale-[0.97]"
         style={{
           // Precise, thin high-end white border with luxurious soft outer shadow and subtle purple reflection
           border: "1.5px solid rgba(255, 255, 255, 0.65)",
@@ -42,11 +33,8 @@ function SeeGrowthCapacityButton() {
 
         {/* Soft, beautiful radial sweep across the button */}
         <div className="absolute inset-0 overflow-hidden rounded-full pointer-events-none">
-          <motion.div 
-            className="absolute inset-0 w-[200%] h-full bg-[linear-gradient(110deg,transparent_35%,rgba(255,255,255,0.08)_48%,rgba(255,255,255,0.18)_50%,rgba(255,255,255,0.08)_52%,transparent_65%)] -skew-x-12"
-            initial={{ x: "-100%" }}
-            whileHover={{ x: "100%" }}
-            transition={{ duration: 1.2, ease: "easeInOut" }}
+          <div 
+            className="absolute inset-0 w-[200%] h-full bg-[linear-gradient(110deg,transparent_35%,rgba(255,255,255,0.08)_48%,rgba(255,255,255,0.18)_50%,rgba(255,255,255,0.08)_52%,transparent_65%)] -skew-x-12 transition-transform duration-1000 -translate-x-full group-hover:translate-x-full"
           />
         </div>
 
@@ -64,7 +52,7 @@ function SeeGrowthCapacityButton() {
             →
           </span>
         </span>
-      </motion.button>
+      </button>
     </div>
   );
 }
@@ -113,6 +101,15 @@ function HeroSection() {
                   <stop offset="65%" stopColor="rgba(255, 255, 255, 0.02)" />
                   <stop offset="100%" stopColor="rgba(255, 255, 255, 0)" />
                 </linearGradient>
+                <clipPath id="orbit-clip">
+                  <rect 
+                    x="0" 
+                    y="0" 
+                    width="180" 
+                    height="120" 
+                    className="animate-orbit-clip"
+                  />
+                </clipPath>
               </defs>
 
               {/* Underlying thin celestial path */}
@@ -123,18 +120,18 @@ function HeroSection() {
                 strokeWidth="1.0" 
               />
 
-              {/* Animated soft travelling pulse */}
-              <path 
-                d="M 50,85 Q 400,20 750,85" 
-                fill="none" 
-                stroke="url(#orbital-pulse-grad)" 
-                strokeWidth="1.5" 
-                strokeDasharray="160 880"
-                className="animate-orbit-pulse"
-                style={{
-                  strokeLinecap: "round"
-                }}
-              />
+              {/* Animated soft travelling pulse (GPU-composited via clipPath transform) */}
+              <g clipPath="url(#orbit-clip)">
+                <path 
+                  d="M 50,85 Q 400,20 750,85" 
+                  fill="none" 
+                  stroke="url(#orbital-pulse-grad)" 
+                  strokeWidth="1.5" 
+                  style={{
+                    strokeLinecap: "round"
+                  }}
+                />
+              </g>
             </svg>
           </div>
 
@@ -660,13 +657,19 @@ export const Home: React.FC = () => {
       <CeilingSection />
       <SilentDecisionSection />
       <GrowthEngineSection />
-      <Pricing />
+      <Suspense fallback={<div className="min-h-[400px] bg-black" />}>
+        <Pricing />
+      </Suspense>
       <FusionMethodSection />
       <WhyCodeFuserSection />
       <IndustriesSection />
       <ResultsSection />
-      <Faq />
-      <FinalCta />
+      <Suspense fallback={<div className="min-h-[300px] bg-black" />}>
+        <Faq />
+      </Suspense>
+      <Suspense fallback={<div className="min-h-[300px] bg-black" />}>
+        <FinalCta />
+      </Suspense>
     </>
   );
 };

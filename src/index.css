@@ -165,18 +165,19 @@ body {
   background: #000000;
 }
 
-/* Premium orbital arc travel effect */
-@keyframes orbit-pulse {
-  from {
-    stroke-dashoffset: 880;
+/* Premium orbital arc travel effect (GPU-composited via clip-path transform) */
+@keyframes orbit-clip {
+  0% {
+    transform: translateX(-180px);
   }
-  to {
-    stroke-dashoffset: -880;
+  100% {
+    transform: translateX(800px);
   }
 }
 
-.animate-orbit-pulse {
-  animation: orbit-pulse 10s linear infinite;
+.animate-orbit-clip {
+  animation: orbit-clip 8s linear infinite;
+  will-change: transform;
 }
 
 /* Premium collectible cards sweep-reflection effect */
@@ -307,7 +308,7 @@ body {
 }
 
 /* Add hardware acceleration to active loops */
-.animate-orbit-pulse,
+.animate-orbit-clip,
 .animate-orbit-cw,
 .animate-orbit-ccw,
 .animate-premium-breathe,

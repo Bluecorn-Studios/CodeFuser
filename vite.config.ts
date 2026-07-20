@@ -5,7 +5,19 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(), 
+      tailwindcss(),
+      {
+        name: 'defer-css',
+        transformIndexHtml(html) {
+          return html.replace(
+            /<link\s+rel="stylesheet"\s+([^>]*?)href="([^"]+)"([^>]*?)>/g,
+            '<link rel="preload" href="$2" as="style" onload="this.onload=null;this.rel=\'stylesheet\'" $1 $3><noscript><link rel="stylesheet" href="$2" $1 $3></noscript>'
+          );
+        }
+      }
+    ],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

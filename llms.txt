@@ -1,0 +1,23 @@
+# CodeFuser
+
+Premium growth infrastructure for businesses that deserve to be seen. Design, build, and deploy custom modern software and web applications.
+
+## Technical Details
+- **Architecture**: Single-Page Application (SPA) powered by React 18, Vite, and Tailwind CSS. Hosted on Vercel Edge.
+- **Frontend Framework**: React with TypeScript.
+- **Routing**: Client-side custom reactive state router matching standard RESTful URI patterns.
+- **Data Persistence**: Offline-ready safe local storage mechanisms decoupled from the critical path.
+- **Aesthetic Theme**: Dark Celestial Minimalist (black background, high-contrast platinum and neutral-900 accents, Space Grotesk and Satoshi typography).
+- **Optimization Level**: Mobile performance auditing level 2 (optimized preloads, deferred CSS, lazy routing, dynamic library imports, zero-layout shift, and GPU-composited hardware accelerated SVG animations).
+
+## Relevant Links
+- [CodeFuser Home](/) - Primary digital entrypoint and core presentation.
+- [Pricing](/pricing) - Full transparent premium plans and billing capacities.
+- [Story](/story) - Philosophy and background behind CodeFuser.
+- [Process](/process) - The step-by-step custom engineering workflow.
+- [Portfolio](/portfolio) - Case studies and verified design productions.
+- [FAQ](/faq) - Frequently asked questions on operations.
+- [Contact](/contact) - Secure project initiation and direct coordinate lines.
+- [Start Project](/start-project) - Dynamic configuration form to select plans and initiate agency development.
+- [Mission Control](/mission-control) - System administration bypass and metrics control console.
+- [Customer Dashboard](/dashboard) - Real-time building roadmap and live workspace metrics.
