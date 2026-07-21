@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { R as Reveal, E as Eyebrow, G as Button, b as getMailtoLink, cn, useAppRouter } from './Reveal';
 import { PricingPlan } from '../types';
-import { motion, AnimatePresence } from 'motion/react';
 import { X, Sparkles, MessageSquare, Gift, Globe, Check } from 'lucide-react';
 
 export const pricingPlans: PricingPlan[] = [
@@ -285,40 +284,15 @@ export const FreePremiumBundle: React.FC<FreePremiumBundleProps> = ({ tierId }) 
     cardClass = "bg-black/[0.015] border border-black/[0.05] hover:bg-black/[0.03] hover:border-black/[0.08]";
   }
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.05,
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 8, filter: "blur(4px)" },
-    visible: {
-      opacity: 1,
-      y: 0,
-      filter: "blur(0px)",
-      transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] }
-    }
-  };
-
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-30px" }}
+    <div
       className={cn("mt-8 pt-6 relative overflow-hidden flex flex-col items-center justify-center text-center group/bundle px-1 w-full", containerBorderClass)}
     >
       {/* Subtle package themed breathing ambient glow */}
       <div className={cn("absolute -right-8 -top-8 w-24 h-24 rounded-full blur-3xl pointer-events-none opacity-20 transition-all duration-700 group-hover/bundle:opacity-45 animate-ambient-breathe", ambientGlowColor)} />
 
       {/* Header Section */}
-      <motion.div variants={itemVariants} className="space-y-1.5 select-none w-full mb-6">
+      <div className="space-y-1.5 select-none w-full mb-6">
         {/* FREE WEBSITE BENEFITS */}
         <h4 className={cn("text-xs sm:text-[13px] font-display tracking-[0.18em] uppercase font-black text-center", titleColorClass)}>
           {bundleName}
@@ -333,15 +307,14 @@ export const FreePremiumBundle: React.FC<FreePremiumBundleProps> = ({ tierId }) 
             Included FREE
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Two Premium Extras Cards */}
       <div className="space-y-4 relative z-10 w-full text-left">
         {tierId === "foundation" && (
           <>
             {/* Benefit 1 Card */}
-            <motion.div 
-              variants={itemVariants} 
+            <div 
               className={cn("p-5 rounded-2xl border transition-all duration-300 w-full backdrop-blur-md shadow-sm space-y-3", cardClass)}
             >
               <div className="text-xs sm:text-[12.5px] font-mono font-extrabold uppercase tracking-[0.15em] text-white">
@@ -357,11 +330,10 @@ export const FreePremiumBundle: React.FC<FreePremiumBundleProps> = ({ tierId }) 
                   </span>
                 </div>
               </div>
-            </motion.div>
+            </div>
 
             {/* Benefit 2 Card */}
-            <motion.div 
-              variants={itemVariants} 
+            <div 
               className={cn("p-5 rounded-2xl border transition-all duration-300 w-full backdrop-blur-md shadow-sm space-y-3.5", cardClass)}
             >
               <div className="text-xs sm:text-[12.5px] font-mono font-extrabold uppercase tracking-[0.15em] text-white">
@@ -377,15 +349,14 @@ export const FreePremiumBundle: React.FC<FreePremiumBundleProps> = ({ tierId }) 
                   <span className="text-neutral-200/95">Access Your Complete Website</span>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </>
         )}
 
         {tierId === "growth" && (
           <>
             {/* Benefit 1 Card */}
-            <motion.div 
-              variants={itemVariants} 
+            <div 
               className={cn("p-5 rounded-2xl border transition-all duration-300 w-full backdrop-blur-md shadow-sm space-y-3", cardClass)}
             >
               <div className="text-xs sm:text-[12.5px] font-mono font-extrabold uppercase tracking-[0.15em] text-white">
@@ -401,11 +372,10 @@ export const FreePremiumBundle: React.FC<FreePremiumBundleProps> = ({ tierId }) 
                   </span>
                 </div>
               </div>
-            </motion.div>
+            </div>
 
             {/* Benefit 2 Card */}
-            <motion.div 
-              variants={itemVariants} 
+            <div 
               className={cn("p-5 rounded-2xl border transition-all duration-300 w-full backdrop-blur-md shadow-sm space-y-3.5", cardClass)}
             >
               <div className="text-xs sm:text-[12.5px] font-mono font-extrabold uppercase tracking-[0.15em] text-white">
@@ -425,15 +395,14 @@ export const FreePremiumBundle: React.FC<FreePremiumBundleProps> = ({ tierId }) 
                   <span className="text-neutral-200/95">Update Business Information</span>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </>
         )}
 
         {tierId === "dominance" && (
           <>
             {/* Benefit 1 Card */}
-            <motion.div 
-              variants={itemVariants} 
+            <div 
               className={cn("p-5 rounded-2xl border transition-all duration-300 w-full backdrop-blur-md shadow-sm space-y-3", cardClass)}
             >
               <div className="text-xs sm:text-[12.5px] font-mono font-extrabold uppercase tracking-[0.15em] text-neutral-950 font-black">
@@ -449,11 +418,10 @@ export const FreePremiumBundle: React.FC<FreePremiumBundleProps> = ({ tierId }) 
                   <span className="text-neutral-900/90">Premium Setup Assistance</span>
                 </div>
               </div>
-            </motion.div>
+            </div>
 
             {/* Benefit 2 Card */}
-            <motion.div 
-              variants={itemVariants} 
+            <div 
               className={cn("p-5 rounded-2xl border transition-all duration-300 w-full backdrop-blur-md shadow-sm space-y-3.5", cardClass)}
             >
               <div className="text-xs sm:text-[12.5px] font-mono font-extrabold uppercase tracking-[0.15em] text-neutral-950 font-black">
@@ -477,11 +445,11 @@ export const FreePremiumBundle: React.FC<FreePremiumBundleProps> = ({ tierId }) 
                   <span className="text-neutral-900/90">Dedicated Client Experience</span>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 };
 
@@ -859,112 +827,104 @@ Looking forward to discussing my project.`;
       </Reveal>
 
       {/* Beautiful Custom Quote Inbuilt Mini Chat/Modal */}
-      <AnimatePresence>
-        {isCustomQuoteModalOpen && (
-          <div className="fixed inset-0 z-55 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/85 backdrop-blur-md"
+      {isCustomQuoteModalOpen && (
+        <div className="fixed inset-0 z-55 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/85 backdrop-blur-md animate-fade-in"
+            onClick={() => setIsCustomQuoteModalOpen(false)}
+          />
+
+          {/* Modal Box */}
+          <div
+            className="relative max-w-lg w-full bg-[#0a0a0a] border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.9)] overflow-hidden animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top ambient light glow */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[1px] bg-gradient-to-r from-transparent via-neutral-700 to-transparent" />
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-48 h-24 bg-white/[0.02] rounded-full blur-xl pointer-events-none" />
+
+            {/* Close Button */}
+            <button
               onClick={() => setIsCustomQuoteModalOpen(false)}
-            />
-
-            {/* Modal Box */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              transition={{ type: "spring", duration: 0.4 }}
-              className="relative max-w-lg w-full bg-[#0a0a0a] border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-[0_25px_60px_rgba(0,0,0,0.9)] overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
+              className="absolute top-5 right-5 text-neutral-400 hover:text-white transition-colors p-1 rounded-full hover:bg-neutral-900 focus:outline-none"
+              aria-label="Close modal"
             >
-              {/* Top ambient light glow */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[1px] bg-gradient-to-r from-transparent via-neutral-700 to-transparent" />
-              <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-48 h-24 bg-white/[0.02] rounded-full blur-xl pointer-events-none" />
+              <X size={18} />
+            </button>
 
-              {/* Close Button */}
+            {/* Header */}
+            <div className="flex items-start gap-4 mb-6">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-neutral-900 border border-neutral-800 text-neutral-300">
+                <Sparkles size={18} className="text-amber-500 animate-pulse" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-display text-lg sm:text-xl font-medium text-white tracking-tight">
+                  Tell Us About Your Vision
+                </h3>
+                <p className="text-xs text-neutral-400 mt-1 leading-relaxed">
+                  Describe your custom solution below. We'll pre-fill a WhatsApp message to discuss your project directly with our team.
+                </p>
+              </div>
+            </div>
+
+            {/* Suggestions chips */}
+            <div className="mb-6">
+              <span className="text-[10px] uppercase tracking-widest font-mono text-neutral-500 block mb-3">
+                Click a system to begin:
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {presetExamples.map((item) => (
+                  <button
+                    key={item}
+                    onClick={() => handleChipClick(item)}
+                    className="text-xs px-3 py-1.5 rounded-full bg-neutral-950 border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700 transition-all duration-200 cursor-pointer"
+                  >
+                    + {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Message Input */}
+            <div className="relative mb-6">
+              <textarea
+                value={requirementsText}
+                onChange={(e) => setRequirementsText(e.target.value)}
+                placeholder="Tell us what you'd like to build... (e.g., I need a custom client dashboard where customers can login, track delivery timelines, and approve assets)"
+                className="w-full min-h-[140px] bg-[#050505] border border-neutral-800 rounded-2xl p-4 text-sm text-foreground placeholder:text-neutral-600 focus:outline-none focus:border-neutral-700 focus:ring-1 focus:ring-neutral-700 transition-all duration-300 resize-none leading-relaxed"
+              />
+            </div>
+
+            {/* Action */}
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <Button
+                onClick={handleContactUs}
+                disabled={!requirementsText.trim()}
+                className={cn(
+                  "w-full py-3.5 px-6 font-semibold flex items-center justify-center gap-2 cursor-pointer text-xs uppercase tracking-wider rounded-full",
+                  requirementsText.trim()
+                    ? "bg-white text-black hover:bg-neutral-200"
+                    : "bg-neutral-900 text-neutral-600 border border-neutral-900 cursor-not-allowed"
+                )}
+              >
+                Contact Us
+              </Button>
               <button
                 onClick={() => setIsCustomQuoteModalOpen(false)}
-                className="absolute top-5 right-5 text-neutral-400 hover:text-white transition-colors p-1 rounded-full hover:bg-neutral-900 focus:outline-none"
-                aria-label="Close modal"
+                className="w-full sm:w-auto text-xs uppercase tracking-wider font-semibold text-neutral-500 hover:text-white py-3 transition-colors cursor-pointer"
+                aria-label="Cancel custom quote"
               >
-                <X size={18} />
+                Cancel
               </button>
+            </div>
 
-              {/* Header */}
-              <div className="flex items-start gap-4 mb-6">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-neutral-900 border border-neutral-800 text-neutral-300">
-                  <Sparkles size={18} className="text-amber-500 animate-pulse" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-display text-lg sm:text-xl font-medium text-white tracking-tight">
-                    Tell Us About Your Vision
-                  </h3>
-                  <p className="text-xs text-neutral-400 mt-1 leading-relaxed">
-                    Describe your custom solution below. We'll pre-fill a WhatsApp message to discuss your project directly with our team.
-                  </p>
-                </div>
-              </div>
-
-              {/* Suggestions chips */}
-              <div className="mb-6">
-                <span className="text-[10px] uppercase tracking-widest font-mono text-neutral-500 block mb-3">
-                  Click a system to begin:
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {presetExamples.map((item) => (
-                    <button
-                      key={item}
-                      onClick={() => handleChipClick(item)}
-                      className="text-xs px-3 py-1.5 rounded-full bg-neutral-950 border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700 transition-all duration-200 cursor-pointer"
-                    >
-                      + {item}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Message Input */}
-              <div className="relative mb-6">
-                <textarea
-                  value={requirementsText}
-                  onChange={(e) => setRequirementsText(e.target.value)}
-                  placeholder="Tell us what you'd like to build... (e.g., I need a custom client dashboard where customers can login, track delivery timelines, and approve assets)"
-                  className="w-full min-h-[140px] bg-[#050505] border border-neutral-800 rounded-2xl p-4 text-sm text-foreground placeholder:text-neutral-600 focus:outline-none focus:border-neutral-700 focus:ring-1 focus:ring-neutral-700 transition-all duration-300 resize-none leading-relaxed"
-                />
-              </div>
-
-              {/* Action */}
-              <div className="flex flex-col sm:flex-row items-center gap-3">
-                <Button
-                  onClick={handleContactUs}
-                  disabled={!requirementsText.trim()}
-                  className={cn(
-                    "w-full py-3.5 px-6 font-semibold flex items-center justify-center gap-2 cursor-pointer text-xs uppercase tracking-wider rounded-full",
-                    requirementsText.trim()
-                      ? "bg-white text-black hover:bg-neutral-200"
-                      : "bg-neutral-900 text-neutral-600 border border-neutral-900 cursor-not-allowed"
-                  )}
-                >
-                  Contact Us
-                </Button>
-                <button
-                  onClick={() => setIsCustomQuoteModalOpen(false)}
-                  className="w-full sm:w-auto text-xs uppercase tracking-wider font-semibold text-neutral-500 hover:text-white py-3 transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-              </div>
-
-              <p className="text-[10px] text-center text-neutral-500 mt-5">
-                This opens WhatsApp with your pre-filled text. No commitment required.
-              </p>
-            </motion.div>
+            <p className="text-[10px] text-center text-neutral-500 mt-5">
+              This opens WhatsApp with your pre-filled text. No commitment required.
+            </p>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </section>
   );
 };
