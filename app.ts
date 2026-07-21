@@ -60,7 +60,8 @@ app.use((req, res, next) => {
     'googlebot', 'gptbot', 'gemini', 'claudebot', 'perplexity', 'bingbot', 
     'facebookexternalhit', 'n8n', 'crm', 'crawler', 'spider', 'bot', 
     'semrush', 'ahrefs', 'yandex', 'baidu', 'curl', 'axios', 'node-fetch', 
-    'postman', 'automation', 'slackbot', 'twitterbot', 'telegrambot'
+    'postman', 'automation', 'slackbot', 'twitterbot', 'telegrambot',
+    'hubspot', 'zapier', 'integromat', 'make.com'
   ];
   
   const isBot = botKeywords.some(keyword => ua.includes(keyword));
