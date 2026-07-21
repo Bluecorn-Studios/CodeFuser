@@ -286,27 +286,30 @@ export const Eo: React.FC = () => {
         </div>
         
         {/* Center Side: Navigation menu (Desktop only) */}
-        <div className="hidden items-center justify-center gap-8 md:flex">
+        <ul className="hidden items-center justify-center gap-8 md:flex">
           {Fo.map(nav => (
-            <Link 
-              key={nav.to} 
-              to={nav.to} 
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
-              activeProps={{ className: "text-foreground font-medium" }}
-            >
-              {nav.label}
-            </Link>
+            <li key={nav.to}>
+              <Link 
+                to={nav.to} 
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
+                activeProps={{ className: "text-foreground font-medium" }}
+              >
+                {nav.label}
+              </Link>
+            </li>
           ))}
           {!user && (
-            <Link 
-              to="/login" 
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
-              activeProps={{ className: "text-foreground font-medium" }}
-            >
-              Client Login
-            </Link>
+            <li>
+              <Link 
+                to="/login" 
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
+                activeProps={{ className: "text-foreground font-medium" }}
+              >
+                Client Login
+              </Link>
+            </li>
           )}
-        </div>
+        </ul>
 
         {/* Right Side: CTA on desktop, Menu toggle on mobile */}
         <div className="flex-1 flex justify-end items-center gap-4">
