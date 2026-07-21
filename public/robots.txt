@@ -1,4 +1,8 @@
 User-agent: *
 Allow: /
+Disallow: /start-project
+Disallow: /dashboard
+Disallow: /mission-control
+Disallow: /payments
 
 Sitemap: https://codefuser.in/sitemap.xml

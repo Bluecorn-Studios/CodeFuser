@@ -47,6 +47,53 @@ dotenv.config();
 
 const app = express();
 app.use(compression());
+
+// User-Agent Static Fallback Middleware for Bots and Crawlers
+app.use((req, res, next) => {
+  const userAgent = req.headers["user-agent"];
+  if (!userAgent) {
+    return next();
+  }
+  
+  const ua = userAgent.toLowerCase();
+  const botKeywords = [
+    'googlebot', 'gptbot', 'gemini', 'claudebot', 'perplexity', 'bingbot', 
+    'facebookexternalhit', 'n8n', 'crm', 'crawler', 'spider', 'bot', 
+    'semrush', 'ahrefs', 'yandex', 'baidu', 'curl', 'axios', 'node-fetch', 
+    'postman', 'automation', 'slackbot', 'twitterbot', 'telegrambot'
+  ];
+  
+  const isBot = botKeywords.some(keyword => ua.includes(keyword));
+  if (!isBot) {
+    return next();
+  }
+
+  // Strip trailing slashes and query parameters for clean path matching
+  const cleanPath = req.path.replace(/\/$/, "") || "/";
+  
+  const staticFilesMap: { [key: string]: string } = {
+    "/": "homepage.html",
+    "/index.html": "homepage.html",
+    "/story": "story.html",
+    "/process": "process.html",
+    "/portfolio": "portfolio.html",
+    "/pricing": "pricing.html",
+    "/faq": "faq.html",
+    "/contact": "contact.html"
+  };
+
+  const filename = staticFilesMap[cleanPath];
+  if (filename) {
+    const filePath = path.join(process.cwd(), filename);
+    if (fs.existsSync(filePath)) {
+      console.log(`[BOT DETECTED] Serving static fallback file ${filename} to User-Agent: ${userAgent} on path: ${req.path}`);
+      return res.sendFile(filePath);
+    }
+  }
+
+  next();
+});
+
 const PORT = 3000;
 
 // Whitelist of allowed MIME types for Secure Upload Engine
